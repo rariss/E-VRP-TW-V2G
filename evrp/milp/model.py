@@ -12,6 +12,11 @@ class MILP:
     """
 
     def __init__(self, instance):
+
+        # Instantiate pyomo Abstract Model
+        self.m = AbstractModel()
+
+
         self. =
 
     def parse_instance(self):
