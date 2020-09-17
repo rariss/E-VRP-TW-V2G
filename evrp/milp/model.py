@@ -5,8 +5,7 @@ import numpy as np
 
 
 class MILP:
-    """
-    Electric Vehicle Routing Problem with Time Windows, Vehicle-to-Grid, and Heterogeneous Fleet Design (E-VRP-TWV2GHFD)
+    """ Electric Vehicle Routing Problem with Time Windows, Vehicle-to-Grid, and Heterogeneous Fleet Design (E-VRP-TWV2GHFD).
     Builds pyomo Mixed Integer Linear Program (MILP) model for exact-form solutions.
     Author: Rami Ariss
     """
