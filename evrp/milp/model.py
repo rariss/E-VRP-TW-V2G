@@ -1,5 +1,5 @@
 from pyomo.environ import *
-from utils.utilities import
+# from utils.utilities import
 import pandas as pd
 import numpy as np
 
@@ -17,6 +17,6 @@ class MILP:
         self.m = AbstractModel()
 
 
-        self. =
-
-    def parse_instance(self):
+    #     self. =
+    #
+    # def parse_instance(self):

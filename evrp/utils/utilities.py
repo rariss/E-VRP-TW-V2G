@@ -2,11 +2,15 @@ import pandas as pd
 
 
 def parse_csv_tables(fpath: str,
-                     table_names: tuple = ('D', 'S', 'M', 'Parameters', 'W', 'T')) -> dict(pd.DataFrame):
-    """
-    Parses an csv with multiple tables into a dictionary of pandas DataFrames for each table.
+                     table_names: tuple = ('D', 'S', 'M', 'Parameters', 'W', 'T')) -> dict:
+    """Parses an csv with multiple tables into a dictionary of pandas DataFrames for each table.
+
     :param fpath: csv file path
+    :type fpath: str
+    :param table_names: list of table names in CSV
+    :type table_names: tuple
     :return: dictionary of table_names as key, pd.DataFrames for each table as values
+    :rtype: dict
     """
     # Import tabublated CSV
     df = pd.read_csv(fpath, header=None)
