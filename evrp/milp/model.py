@@ -2,6 +2,7 @@ from pyomo.environ import *
 from evrp.utils.utilities import parse_csv_tables, calculate_distance_matrix, generate_index_mapping
 import pandas as pd
 import numpy as np
+import logging
 
 
 class MILP:
@@ -11,6 +12,8 @@ class MILP:
     """
 
     def __init__(self, instance_filepath: str):
+        self.instance_name = instance_filepath.split('/')[-1].split('.')[0]
+        logging.info('Building MILP for instance: {}'.format(self.instance_name))
 
         # Read in csv
         self.data = parse_csv_tables(instance_filepath)
@@ -26,3 +29,24 @@ class MILP:
 
         # Instantiate pyomo Abstract Model
         self.m = AbstractModel()
+        self.build_model()
+
+    def build_model(self):
+        self.define_parameters_and_sets()
+        self.define_constraints()
+
+
+    def define_parameters_and_sets(self):
+        # Defining sets
+        self.m.V = Set(initialize=self.data['V'], doc='Graph nodes')
+        self.m.E = Set(initialize=self.m.E * self.m.E, within=self.m.E * self.m.E, doc='Graph edges')
+
+        # Defining fixed parameters
+        self.m.t_T = Param(within=NonNegativeIntegers, doc='Optimization time horizon')
+        self.m.t_S = Param(within=NonNegativeIntegers, doc='Time step size')
+        # self.m.d =
+
+
+    # def define_constraints(self):
+    #     # Defining routing constraints
+
