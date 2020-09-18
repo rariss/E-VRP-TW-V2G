@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from scipy.spatial import distance
+import logging
 
 
 def parse_csv_tables(filepath: str,
@@ -52,7 +53,7 @@ def calculate_distance_matrix(df: 'pd.DataFrame', metric: str = 'euclidean') -> 
     """
     Calculates a square distance matrix given a set of vertices with (x,y) coordinates.
 
-    :param df: Mx2 matrix for M vertices with (x,y) coordinates
+    :param df: Vx2 matrix for V vertices with (x,y) coordinates
     :type df: np.array
     :param metric: scipy distance metric, default is 'euclidean'
     :type metric: str
@@ -76,3 +77,55 @@ def generate_index_mapping(v: 'ndarray') -> [dict, dict]:
     i2v = dict(enumerate(v))
     v2i = dict(zip(v, range(len(v))))
     return i2v, v2i
+
+
+def create_flat_distance_matrix(d: 'pd.DataFrame') -> 'pd.DataFrame':
+    """
+    Creates a flat distance matrix from a square distance matrix.
+
+    :param d: square distance matrix
+    :type d: pd.DataFrame
+    :return: flat distance matrix
+    :rtype: pd.DataFrame
+    """
+    # Stacks columns as new rows
+    dflat = d.stack()
+
+    # relabel multiindex names to "from" and "to" nodes
+    dflat.index.set_names(['from', 'to'], inplace=True)
+
+    # Reset index and rename the distance column "d"
+    dflat = dflat.reset_index()
+    dflat.rename({0: 'd'}, axis=1, inplace=True)
+    return dflat
+
+
+def create_coordinate_dict(v: 'pd.DataFrame') -> dict:
+    """
+    Creates a dictionary mapping node_id keys to their array(x, y) coordinates.
+
+    :param v: dataframe of nodes and their coordinates
+    :type v: pd.DataFrame
+    :return: dictionary mapping node_ids to coordinates
+    :rtype: dict
+    """
+    return dict(zip(v.index, v[['d_x', 'd_y']].values))
+
+
+def create_plotting_edges(v: 'pd.DataFrame', d: 'pd.DataFrame') -> 'np.array':
+    """
+    Creates a 2D np.array of edges betwee provided from and to nodes, with (None, None) indices
+    creating the disconnection between edges in the array.
+
+    :param v: dataframe of nodes and their coordinates
+    :type v: pd.DataFrame
+    :param d: square distance matrix
+    :type d: pd.DataFrame
+    :return: 2*Vx2 np.array of edge coordinates
+    :rtype: np.array
+    """
+    d_flat = create_flat_distance_matrix(d)
+    coordinates = create_coordinate_dict(v)
+
+    edges = np.concatenate([np.vstack((coordinates[a], coordinates[b], [None, None])) for a, b in d_flat[['from', 'to']].values])
+    return edges

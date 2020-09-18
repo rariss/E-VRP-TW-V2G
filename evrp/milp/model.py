@@ -16,10 +16,10 @@ class MILP:
         self.data = parse_csv_tables(instance_filepath)
 
         # Create graph by concatenating D, S, M nodes
-        self.data['V'] = pd.concat([self.data[k][['d_x', 'd_y']] for k in 'DSM'])
+        self.data['V'] = pd.concat([self.data[k][['node_type', 'node_description', 'd_x', 'd_y']] for k in 'DSM'])
 
         # Calculate distance matrix
-        self.data['d'] = calculate_distance_matrix(self.data['V'])
+        self.data['d'] = calculate_distance_matrix(self.data['V'][['d_x','d_y']])
 
         # Generate index mappings
         self.i2v, self.v2i = generate_index_mapping(self.data['V'].index)
