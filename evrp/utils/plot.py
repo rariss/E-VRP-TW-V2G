@@ -34,21 +34,22 @@ def plot_interactive_graph(v: 'pd.DataFrame', **kwargs) -> 'fig':
                         )
 
     # Add trace for edges
-    # fig.add_trace(
-    #     go.Scatter(
-    #         x=edges[:, 0],
-    #         y=edges[:, 1],
-    #         name='Edges',
-    #         line=dict(width=0.5, color='#888'),
-    #         hoverinfo='none',
-    #         mode='lines')
-    # )
-
-    fig['layout']['annotations'] += tuple(
-        [dict(x=e['from_d_x'], y=e['from_d_y'], ax=e['to_d_x'], ay=e['to_d_y'],
-              xref='x', yref='y', axref='x', ayref='y',
-              text='', showarrow=True, arrowcolor='#888', arrowhead=5, arrowsize=1, arrowwidth=2)
-         for i, e in edges.iterrows()])
+    if 'd' in kwargs.keys():
+        fig.add_trace(
+            go.Scatter(
+                x=edges[:, 0],
+                y=edges[:, 1],
+                name='Edges',
+                line=dict(width=0.5, color='#888'),
+                hoverinfo='none',
+                mode='lines')
+        )
+    elif 'e' in kwargs.keys():
+        fig['layout']['annotations'] += tuple(
+            [dict(x=e['from_d_x'], y=e['from_d_y'], ax=e['to_d_x'], ay=e['to_d_y'],
+                  xref='x', yref='y', axref='x', ayref='y',
+                  text='', showarrow=True, arrowcolor='#888', arrowhead=5, arrowsize=1, arrowwidth=2)
+             for i, e in edges.iterrows()])
 
     # Add trace for nodes
     fig.add_trace(

@@ -167,3 +167,21 @@ def instance_to_df(instance, **kwargs):
     dfs.append(df)
     logFile.close()
     return dfs
+
+
+def create_flat_optimal_edges(m: 'obj') -> 'pd.DataFrame':
+    c = create_coordinate_dict(m.data['V'])
+
+    e = pd.DataFrame([(*k, v()) for k, v in m.m.xgamma.items()])
+    e.rename({0: 'from', 1: 'to', 2: 'state'}, axis=1, inplace=True)
+    e['from_d_x'], e['from_d_y'] = np.vstack([c[e] for e in e['from']]).T
+    e['to_d_x'], e['to_d_y'] = np.vstack([c[e] for e in e['to']]).T
+    e = e[e['state'] == 1]
+
+    return e
+
+
+def create_optimal_edges(m: 'obj') -> 'pd.DataFrame':
+    e_flat = create_flat_optimal_edges(m)
+
+    return e_flat.pivot(index='from', columns='to', values='state'), e_flat
