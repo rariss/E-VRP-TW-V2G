@@ -4,6 +4,14 @@ evrp.utils package
 Submodules
 ----------
 
+evrp.utils.graph module
+-----------------------
+
+.. automodule:: evrp.utils.graph
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 evrp.utils.plot module
 ----------------------
 

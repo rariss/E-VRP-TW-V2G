@@ -12,6 +12,14 @@ evrp.milp.model module
    :undoc-members:
    :show-inheritance:
 
+evrp.milp.tsp module
+--------------------
+
+.. automodule:: evrp.milp.tsp
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 
