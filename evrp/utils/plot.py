@@ -2,8 +2,9 @@ from evrp.config.GLOBAL_CONFIG import node_colors_rgba
 from evrp.utils.utilities import create_plotting_edges
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
+import logging
 
-def plot_interactive_graph(v: 'pd.DataFrame', d: 'pd.DataFrame') -> 'fig':
+def plot_interactive_graph(v: 'pd.DataFrame', **kwargs) -> 'fig':
     """
     Plots an interactive undirected network graph with labeled and colored nodes and edges.
 
@@ -13,7 +14,13 @@ def plot_interactive_graph(v: 'pd.DataFrame', d: 'pd.DataFrame') -> 'fig':
     :type d: pd.DataFrame
     :return: plotly figure
     """
-    edges = create_plotting_edges(v, d)
+    if 'd' in kwargs.keys():
+        edges = create_plotting_edges(v, kwargs['d'])
+    elif 'e' in kwargs.keys():
+        # edges = create_plotting_edges(v, kwargs['e'])
+        edges = kwargs['e']
+    else:
+        logging.error('Must provide distance matrix "d" or optimal edge matrix "e".')
 
     # Initialize plotly figure
     fig = make_subplots(rows=1, cols=1, shared_xaxes=True, shared_yaxes=True,
@@ -22,15 +29,21 @@ def plot_interactive_graph(v: 'pd.DataFrame', d: 'pd.DataFrame') -> 'fig':
                         )
 
     # Add trace for edges
-    fig.add_trace(
-        go.Scatter(
-            x=edges[:, 0],
-            y=edges[:, 1],
-            name='Edges',
-            line=dict(width=0.5, color='#888'),
-            hoverinfo='none',
-            mode='lines')
-    )
+    # fig.add_trace(
+    #     go.Scatter(
+    #         x=edges[:, 0],
+    #         y=edges[:, 1],
+    #         name='Edges',
+    #         line=dict(width=0.5, color='#888'),
+    #         hoverinfo='none',
+    #         mode='lines')
+    # )
+
+    fig['layout']['annotations'] += tuple(
+        [dict(x=e['from_d_x'], y=e['from_d_y'], ax=e['to_d_x'], ay=e['to_d_y'],
+              xref='x', yref='y', axref='x', ayref='y',
+              text='', showarrow=True, arrowcolor='#888', arrowhead=5, arrowsize=1, arrowwidth=2)
+         for i, e in edges.iterrows()])
 
     # Add trace for nodes
     fig.add_trace(

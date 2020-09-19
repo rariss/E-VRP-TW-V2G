@@ -1,7 +1,11 @@
 import pandas as pd
 import numpy as np
 from scipy.spatial import distance
+import datetime
 import logging
+import pprint
+
+now = datetime.datetime.now()
 
 
 def parse_csv_tables(filepath: str,
@@ -129,3 +133,37 @@ def create_plotting_edges(v: 'pd.DataFrame', d: 'pd.DataFrame') -> 'np.array':
 
     edges = np.concatenate([np.vstack((coordinates[a], coordinates[b], [None, None])) for a, b in d_flat[['from', 'to']].values])
     return edges
+
+
+def instance_to_df(instance, **kwargs):
+    logFile = open('results/' + now.strftime('%y%m%d-%H%M%S') + '_gurobi_' + instance.instance_name + '.txt', 'a+')
+
+    logging.info('===============Summary===============')
+    logging.info('Total distance traveled:     {}'.format(round(instance.m.obj, 2)))
+    # logging.info(instance.m.pprint())
+    instance.m.pprint(logFile)
+
+    dfs = []
+
+    # Get scalars
+    scalars = {str(v): v.value for v in instance.component_data_objects(Var) if v.index() is None}
+    summary = {'obj_net_profit': -round(value(obj_net_profit(instance)),2),
+               'RD': round(value(RD(instance)),2),
+               'RE': round(value(RE(instance)),2),
+               'Ccap': round(value(Ccap(instance)),2),
+               'Cop': round(value(Cop(instance)),2),
+               'net_profit_truck': -round(value(obj_net_profit(instance))/value(instance.xN),2)}
+    scalars.update(summary)
+    dfs.append(pd.Series(scalars))
+
+    # Create I set
+    df = pd.DataFrame([floor(t/instance.tI) for t in instance.T.data()], columns=['I'])
+    df['xd'] = [getattr(instance, 'xd').extract_values()[floor(t/instance.tI)] for t in instance.T.data()]
+    df['IP'] = df['xd'] * -value(IP(instance))
+
+    for n in ['xg', 'xb', 'E', 'P_E']:
+        df[n] = df.index.map(getattr(instance, n).extract_values())
+
+    dfs.append(df)
+    logFile.close()
+    return dfs
