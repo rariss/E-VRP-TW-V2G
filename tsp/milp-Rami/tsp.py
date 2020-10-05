@@ -31,8 +31,8 @@ class TSP:
         self.define_constraints()
         logging.info('Defining objective')
         self.define_objective()
-        logging.info('Constructing model')
-        self.m.construct()
+        # logging.info('Constructing model')
+        # self.m.construct()
         logging.info('Done building model')
 
     def define_parameters_and_sets(self):
@@ -108,6 +108,3 @@ class TSP:
         return results
 
         # solve()
-# path='C:/Users/berwa/Documents/CMU/Curricula/Research/EV Fleet/Code/e-vrp-1/evrp/config/test_instances/test1_D1S3C10_TSP.csv'
-# tsp=TSP(path)
-# tsp.solve()
