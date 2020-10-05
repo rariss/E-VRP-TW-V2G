@@ -1,5 +1,5 @@
 """
-Implementation of a traveling salesman problem
+Implementation of a traveling salesman problem (modified to accomodate the dummy final depot node)
 By: Leandre Berwa
 """
 
@@ -31,7 +31,7 @@ m.Arcs = Set(initialize=arcs, doc='All possible arcs')
 m.x = Var(m.V01, m.V01, within=Boolean)  # Route decision of each edge for each EV
 
 # Dummy variable ui
-m.u = Var(m.V01, within=NonNegativeIntegers, bounds=(0, 9 - 1))
+m.u = Var(m.V1, within=NonNegativeIntegers, bounds=(0, 10 - 1)) 
 #TODO: read node number from instance file
 
 
@@ -50,31 +50,37 @@ m.obj = Objective(rule=obj_total_distance, sense=minimize)
 
 def constraint_single_visit(m, j):
     """Nodes can be visited at most once in the graph"""
-    return sum(m.x[i, j] for i in m.V01 if i != j) == 1
+    return sum(m.x[i, j] for i in m.V0 if i != j) == 1
 
 # Create single visit constraint
-m.constraint_single_visit = Constraint(m.V01, rule=constraint_single_visit)
+m.constraint_single_visit = Constraint(m.V1, rule=constraint_single_visit)
 
 def constraint_single_route(m, i):
     """At most one route assigned"""
+    
+    route_in = sum(m.x[j, i] for j in m.V0)
+    route_out = sum(m.x[i, j] for j in m.V1)
 
-    route_in = sum(m.x[j, i] for j in m.V01)
-    route_out = sum(m.x[i, j] for j in m.V01)
-
-    return route_in - route_out == 0
-
+    return route_in - route_out == 0 
+    
 # Create single route constraint
-m.constraint_single_route = Constraint(m.V01, rule=constraint_single_route)
+m.constraint_single_route = Constraint(m.V, rule=constraint_single_route)
 
 
 def constraint_single_subtour(m, i, j):
-
-    if i!=j:
-        return m.u[i] - m.u[j] + m.x[i,j] * 9 <= 9-1
+    
+    if i!=j: 
+        return m.u[i] + 10 * m.x[i,j] - (10-1) <= m.u[j]
+        # return m.u[i] - m.u[j] + m.x[i,j] * 9 <= 9-1
     else:
-        return Constraint.Skip
+        return Constraint.Skip 
 
-m.constraint_single_subtour = Constraint(m.V, m.V01, rule=constraint_single_subtour)
+m.constraint_single_subtour = Constraint(m.V, m.V1, rule=constraint_single_subtour)
+
+def constraint_route_number(m, i):
+    return sum(m.x[i, j] for j in m.V) == 1
+
+m.constraint_route_number = Constraint({'D0'}, rule=constraint_route_number)
 
 
 # %% SOLUTION
