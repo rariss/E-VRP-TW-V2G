@@ -46,11 +46,11 @@ class TSP:
         logging.info('Defining constraints')
         # Defining routing constraints
         def constraint_in_arcs(m, j):
-            return sum([m.xgamma[i, j] for i in m.V01 - j]) == 1
+            return sum([m.xgamma[i, j] for i in m.V01 if i != j]) == 1
         self.m.constraint_in_arcs = Constraint(self.m.V01, rule=constraint_in_arcs)
 
         def constraint_out_arcs(m, i):
-            return sum([m.xgamma[i, j] for j in m.V01 - i]) == 1
+            return sum([m.xgamma[i, j] for j in m.V01 if j != i]) == 1
         self.m.constraint_out_arcs = Constraint(self.m.V01, rule=constraint_out_arcs)
 
         def constraint_single_subtour(m, i, j):

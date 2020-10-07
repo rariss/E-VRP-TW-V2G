@@ -57,11 +57,11 @@ class VRPTW:
         logging.info('Defining constraints')
         # Defining routing constraints
         def constraint_visit_customers(m, i):
-            return sum([m.xgamma[k, i, j] for k in m.W for j in m.V1 - i]) == 1
-        self.m.constraint_visit_customers = Constraint(self.m.V0, rule=constraint_visit_customers)
+            return sum([m.xgamma[k, i, j] for k in m.W for j in m.V1 if j != i]) == 1
+        self.m.constraint_visit_customers = Constraint(self.m.V, rule=constraint_visit_customers) # TODO: Removed V0 to V in constraints to try to get multiple assignments
 
         def constraint_in_and_out_arcs(m, k, i):
-            return sum([m.xgamma[k, i, j] for j in m.V1 - i]) - sum([m.xgamma[k, j, i] for j in m.V0 - i]) == 0
+            return sum([m.xgamma[k, i, j] for j in m.V1 if j != i]) - sum([m.xgamma[k, j, i] for j in m.V0 if j != i]) == 0
         self.m.constraint_in_and_out_arcs = Constraint(self.m.W, self.m.V, rule=constraint_in_and_out_arcs)
 
         def constraint_vehicle_assignment(m, k):
@@ -93,7 +93,7 @@ class VRPTW:
 
         def objective_net_amortized_profit(m):
             """Objective: Calculate net amortized profit across fleet"""
-            return sum(m.xgamma[k, i, j] for k in m.W for i in m.V for j in m.V1 if j != i) - \
+            return 100*sum(m.xgamma[k, i, j] for k in m.W for i in m.V for j in m.V1 if j != i) - \
                    m.cc * sum(m.xgamma[k, s, j] for k in m.W for j in m.V1 for s in m.start_node) - \
                    m.c_F * m.rW * m.v * sum(total_time_traveled(m, k) for k in m.W)
         self.m.obj = Objective(rule=objective_net_amortized_profit, sense=maximize)

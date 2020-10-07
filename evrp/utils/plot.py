@@ -48,7 +48,7 @@ def plot_interactive_graph(v: 'pd.DataFrame', **kwargs) -> 'fig':
         )
     elif 'e' in kwargs.keys():
         fig['layout']['annotations'] += tuple(
-            [dict(x=e['from_d_x'], y=e['from_d_y'], ax=e['to_d_x'], ay=e['to_d_y'],
+            [dict(ax=e['from_d_x'], ay=e['from_d_y'], x=e['to_d_x'], y=e['to_d_y'],
                   xref='x', yref='y', axref='x', ayref='y',
                   text='', showarrow=True, arrowcolor='#888', arrowhead=5, arrowsize=1, arrowwidth=2)
              for i, e in edges.iterrows()])

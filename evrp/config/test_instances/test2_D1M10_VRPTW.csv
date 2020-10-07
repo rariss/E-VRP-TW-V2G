@@ -12,9 +12,9 @@ m4,customer,m,17,34,0,24,1
 m5,customer,m,26,52,0,24,1
 m6,customer,m,53,43,0,12,1
 m7,customer,m,45,65,0,12,1
-m8,customer,m,20,26,12,24,1
-m9,customer,m,50,35,12,24,1
-m10,customer,m,45,20,12,24,1
+m8,customer,m,20,26,20,24,1
+m9,customer,m,50,35,20,24,1
+m10,customer,m,45,20,20,24,1
 ,,,,,,,
 Parameters,,,,,,,
 parameter,description,value,,,,,
