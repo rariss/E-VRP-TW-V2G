@@ -22,10 +22,12 @@ def plot_interactive_graph(v: 'pd.DataFrame', **kwargs) -> 'fig':
     else:
         logging.error('Must provide distance matrix "d" or optimal edge matrix "e".')
 
+    title = ''
+    if 'instance_name' in kwargs.keys():
+        title += '{}<br>'.format(kwargs['instance_name'])
+
     if 'obj' in kwargs.keys():
-        title = 'Objective: {}'.format(round(kwargs['obj'], 2))
-    else:
-        title=''
+        title += 'Objective: {}'.format(round(kwargs['obj'], 2))
 
     # Initialize plotly figure
     fig = make_subplots(rows=1, cols=1, shared_xaxes=True, shared_yaxes=True,
