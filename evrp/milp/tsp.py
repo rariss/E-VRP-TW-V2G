@@ -19,7 +19,7 @@ class TSP:
     def build_model(self):
         logging.info('Defining parameters and sets')
 
-        # Defining full node set
+        # Defining node sets
         self.m.V01 = Set(dimen=1, doc='Graph nodes')
         self.m.start_node = Set(within=self.m.V01, doc='Starting node')
         self.m.end_node = Set(within=self.m.V01, doc='Ending node')
@@ -37,7 +37,7 @@ class TSP:
 
         logging.info('Defining variables')
         # Defining variables
-        self.m.xgamma = Var(self.m.E, within=Boolean, doc='Edge link')
+        self.m.xgamma = Var(self.m.E, within=Boolean, doc='Route decision of each edge')
 
         # Dummy variable ui
         self.m.u = Var(self.m.V1, within=NonNegativeIntegers,
@@ -45,18 +45,12 @@ class TSP:
 
         logging.info('Defining constraints')
         # Defining routing constraints
-
-        # Defining constraint functions and dependent functions
         def constraint_in_arcs(m, j):
             return sum([m.xgamma[i, j] for i in m.V01 - j]) == 1
-
-        # Create constraint
         self.m.constraint_in_arcs = Constraint(self.m.V01, rule=constraint_in_arcs)
 
         def constraint_out_arcs(m, i):
             return sum([m.xgamma[i, j] for j in m.V01 - i]) == 1
-
-        # Create constraint
         self.m.constraint_out_arcs = Constraint(self.m.V01, rule=constraint_out_arcs)
 
         def constraint_single_subtour(m, i, j):
@@ -69,13 +63,9 @@ class TSP:
                                                       rule=constraint_single_subtour)
 
         logging.info('Defining objective')
-
-        # Defining objective function and dependent functions
         def objective_distance(m):
-            """Objective: Calculate net amortized profit across fleet"""
+            """Objective: Calculate total distance traveled"""
             return sum(m.xgamma[e] * m.d[e] for e in m.E)
-
-        # Create objective function in Abstract
         self.m.obj = Objective(rule=objective_distance, sense=minimize)
 
         logging.info('Done building model')
@@ -101,8 +91,9 @@ class TSP:
 
         # Create graph by concatenating D, S, M nodes
         logging.info('Creating graph')
+        node_types = [k for k in self.data.keys() if k in 'DSM']
         self.data['V'] = pd.concat(
-            [self.data[k][['node_type', 'node_description', 'd_x', 'd_y']] for k in 'DSM'])
+            [self.data[k][['node_type', 'node_description', 'd_x', 'd_y']] for k in node_types])
         # self.data['num_nodes'] = len(self.data['V'])
 
         # Calculate distance matrix
