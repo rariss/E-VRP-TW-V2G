@@ -5,6 +5,8 @@ import itertools as itt
 import matplotlib.pyplot as plt
 from pyomo.environ import value
 
+from config.default_params1 import * #TODO
+
 def instance_reader(filename):
     
     instance_data = pd.read_csv(filename, delimiter= '\s+').dropna()
@@ -43,7 +45,7 @@ def instance_reader(filename):
         nodes_pairs_dist.append(nodes_dist[(i,j)])
         
     #TODO: return table
-    return nodes, nodes_pairs, nodes_pairs_dist, arcs, nodes_coords, demand, node_start_time, node_end_time, service_time
+    return nodes, nodes_pairs, nodes_pairs_dist, arcs, nodes_coords, demand, node_start_time, node_end_time, service_time, station_nodes, customer_nodes
 
         
 def solution_saver(inst, inst_name):
@@ -52,27 +54,29 @@ def solution_saver(inst, inst_name):
     solution_file.write('# solution for ' + inst_name[:-4] + 
                         '\n' + format(value(inst.obj)))
     
-    solution = getattr(inst, 'x').extract_values()
-    active_arcs = [n for n in list(solution.items()) if n[1] == 1.0]
+    x = getattr(inst, 'x').extract_values()
+    active_arcs = [n for n in list(x.items()) if n[1] == 1.0]
     active_arcs = list(list(zip(*active_arcs))[0])
+    
     
     start_nodes, end_nodes = list(list(zip(*active_arcs)))
     
     routes = []    
-    route = []
     
     for n,m in enumerate(start_nodes):
         
         curent_node = m
-        
+        route = []
         if curent_node == 'D0':
+            
             route.append(curent_node)
             next_node = end_nodes[n]
             solution_file.write('\n' + curent_node + ', ')
             
-            while next_node in start_nodes:
+            while next_node in end_nodes:
     
-                if next_node == 'D0':
+                if next_node == 'D1':
+                    
                     route.append(next_node)
                     solution_file.write(next_node)
                     break
@@ -84,9 +88,10 @@ def solution_saver(inst, inst_name):
                 solution_file.write(next_node + ', ')
                 
                 next_node = end_nodes[idx]
-                
-    routes.append(route)
-
+            
+        if len(route) != 0:         #TODO: avoid
+            routes.append(route)
+    
     solution_file.close() 
         
     print('\n****************SOLUTION SUMMARY****************')
@@ -97,7 +102,49 @@ def solution_saver(inst, inst_name):
     return routes
 
 
-def solution_plotter(nodes, nodes_coords, routes):
+def solution_plotter(nodes, nodes_coords, routes, instance, tA, tB):
+    
+    xs, ys = list(zip(*nodes_coords))
+    
+    xq = getattr(instance, 'xq').extract_values()
+    xw = getattr(instance, 'xw').extract_values()
+    xw_sorted = {k: v for k, v in sorted(xw.items(), key=lambda item: item[1])}
+    
+    # plot nodes
+    fig, ax = plt.subplots()
+    ax.scatter(xs, ys)
+    
+    # label nodes
+    plotted = []
+    
+    for i, node in enumerate(nodes):
+        if node not in ['D1']:
+            x = xs[i]
+            y = ys[i] 
+            time_window = (int(tA[i]), int(tB[i]))
+            
+            # if ys.count(y) > 1 and xs.count(x) > 1 and y not in plotted: #TODO: ???
+            #     plotted.append(y)
+            #     y = y - 6
+            #     plotted.append(y)
+            ax.annotate(node, (x-0.5, y-1.5)) # nodes
+            ax.annotate(time_window, (x-1.5, y-3)) # time windows
+            ax.annotate(int(xw.get(node)), (x-0.5, y+1.5), color='Red') # arrival time
+            ax.annotate(xq.get(node), (x-0.5, y+3), color='Green') # payload
+           
+    # plot routes
+    for route in routes:
+        for i, node in enumerate(route):
+            coords = nodes_coords[(nodes==node).argmax()]
+            if i < len(route)-1:
+                coords_next = nodes_coords[(nodes==route[i+1]).argmax()]
+            x = coords[0]
+            y = coords[1]
+            dx = coords_next[0] - x
+            dy = coords_next[1] - y
+            ax.arrow(x, y, dx, dy, length_includes_head=True, head_width=0.5, head_length=1, color = 'Grey')
+            
+def solution_plotter_xw(nodes, nodes_coords, routes):
     
     xs, ys = list(zip(*nodes_coords))
     
