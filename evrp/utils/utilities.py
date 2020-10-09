@@ -172,8 +172,14 @@ def instance_to_df(instance, **kwargs):
 def create_flat_optimal_edges(m: 'obj') -> 'pd.DataFrame':
     c = create_coordinate_dict(m.data['V'])
 
-    e = pd.DataFrame([(*k, v()) for k, v in m.m.xgamma.items()])
-    e.rename({0: 'from', 1: 'to', 2: 'state'}, axis=1, inplace=True)
+    e = pd.DataFrame([(*k, v()) for k, v in m.instance.xgamma.items()])
+    if len(e.columns) == 3:
+        col_renames = {0: 'from', 1: 'to', 2: 'state'}
+    elif len(e.columns) == 4:
+        col_renames = {0: 'vehicle', 1: 'from', 2: 'to', 3: 'state'}
+    else:
+        logging.error('Check size of xgamma columns. Must be 3 (if not vehicle indexed) or 4 (if vehicle indexed)')
+    e.rename(col_renames, axis=1, inplace=True)
     e['from_d_x'], e['from_d_y'] = np.vstack([c[e] for e in e['from']]).T
     e['to_d_x'], e['to_d_y'] = np.vstack([c[e] for e in e['to']]).T
     e = e[e['state'] == 1]
