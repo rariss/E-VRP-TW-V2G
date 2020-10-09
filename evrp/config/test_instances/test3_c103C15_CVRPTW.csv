@@ -1,0 +1,26 @@
+﻿D,,,,,,,,
+node_id,node_description,node_type,d_x,d_y,tA,tB,,
+d0,start depot,d,40,50,0,1236,,
+d-1,terminal depot,d,40,50,0,1236,,
+,,,,,,,,
+M,,,,,,,,
+node_id,node_description,node_type,d_x,d_y,q,tA,tB,tS
+m1,customer,m,57,82,10,0,1236,90
+m2,customer,m,21,83,10,0,1236,90
+m3,customer,m,22,34,10,0,1236,90
+m4,customer,m,39,26,10,0,1236,90
+m5,customer,m,50,30,10,980,1064,90
+m6,customer,m,20,55,10,0,1125,90
+m7,customer,m,58,75,10,0,1115,90
+m8,customer,m,38,15,10,66,124,90
+m9,customer,m,5,35,10,655,725,90
+m10,customer,m,22,75,10,1042,1106,90
+m11,customer,m,35,66,10,779,845,90
+m12,customer,m,32,30,10,0,1124,90
+m13,customer,m,26,32,10,0,1123,90
+m14,customer,m,62,80,10,0,1108,90
+m15,customer,m,15,75,10,0,1110,90
+m16,customer,m,8,40,10,355,437,90
+m17,customer,m,68,60,10,0,1116,90
+m18,customer,m,15,80,10,455,513,90
+m19,customer,m,35,30,10,143,199,90
