@@ -2,6 +2,7 @@ from evrp.config.GLOBAL_CONFIG import node_colors_rgba
 from evrp.utils.utilities import create_plotting_edges
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
+import matplotlib.pyplot as plt
 import logging
 
 def plot_interactive_graph(v: 'pd.DataFrame', **kwargs) -> 'fig':
@@ -46,24 +47,50 @@ def plot_interactive_graph(v: 'pd.DataFrame', **kwargs) -> 'fig':
                 mode='lines')
         )
     elif 'e' in kwargs.keys():
-        fig['layout']['annotations'] += tuple(
-            [dict(ax=e['from_d_x'], ay=e['from_d_y'], x=e['to_d_x'], y=e['to_d_y'],
-                  xref='x', yref='y', axref='x', ayref='y',
-                  text='', showarrow=True, arrowcolor='#888', arrowhead=5, arrowsize=1, arrowwidth=2)
-             for i, e in edges.iterrows()])
+        if 'vehicle' in edges.columns:
+            c = plt.get_cmap('Blues')
+            vehicles = edges['vehicle'].unique()
+            for vehicle in vehicles:
+                fig['layout']['annotations'] += tuple(
+                    [dict(ax=e['from_d_x'], ay=e['from_d_y'], x=e['to_d_x'], y=e['to_d_y'],
+                          xref='x', yref='y', axref='x', ayref='y',
+                          text='', showarrow=True, arrowcolor='rgba{}'.format(c(vehicle/len(vehicles))), arrowhead=2, arrowsize=1,
+                          arrowwidth=2)
+                     for i, e in edges[edges['vehicle'] == vehicle].iterrows()])
+        else:
+            fig['layout']['annotations'] += tuple(
+                [dict(ax=e['from_d_x'], ay=e['from_d_y'], x=e['to_d_x'], y=e['to_d_y'],
+                      xref='x', yref='y', axref='x', ayref='y',
+                      text='', showarrow=True, arrowcolor='#888', arrowhead=2, arrowsize=1, arrowwidth=2)
+                 for i, e in edges.iterrows()])
 
     # Add trace for nodes
+    if 'e' in kwargs.keys():
+        customdata = [[v.loc[i, ['node_description']],
+                       v.loc[i, ['q']],
+                       edges[edges['to']==i]['vehicle'],
+                       edges[edges['to']==i]['xw'],
+                       edges[edges['to']==i]['xq']] for i in v.index]
+        hovertemplate = '<b>%{text}</b>: %{customdata[0]}' + \
+                        '<br>Vehicle: %{customdata[2]}' + \
+                        '<br>Arrival Time: %{customdata[3]}' + \
+                        '<br>Payload: %{customdata[4]}' + \
+                        '<br>Demand: %{customdata[1]}' + \
+                        '<br>X: %{x}' + \
+                        '<br>Y: %{y}'
+    else:
+        customdata = v['node_description']
+        hovertemplate = '<b>%{text}</b>: %{customdata}' + \
+                        '<br>X: %{x}' + \
+                        '<br>Y: %{y}'
     fig.add_trace(
         go.Scatter(
             x=v['d_x'],
             y=v['d_y'],
             text=v.index, #['{}: {}'.format(n, v['node_description'][n]) for n in v.index],
             name='Nodes',
-            customdata=v['node_description'],
-            hovertemplate=
-            '<b>%{text}</b>: %{customdata}' +
-            '<br>X: %{x}' +
-            '<br>Y: %{y}',
+            customdata=customdata,
+            hovertemplate=hovertemplate,
             hoverinfo='none',
             mode='markers+text',
             marker=dict(size=25, color=[node_colors_rgba[n] for n in v['node_type']]),

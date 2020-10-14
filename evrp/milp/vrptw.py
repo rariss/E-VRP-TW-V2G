@@ -83,12 +83,12 @@ class VRPTW:
                 return m.xw[k, i] + (m.tS[i] + m.d[i, j]/m.v + m.tQ[i] * m.q[i])*m.xgamma[k, i, j] - m.t_T*(1-m.xgamma[k, i, j]) <= m.xw[k, j]
             else:
                 return Constraint.Skip
-        self.m.constraint_service_time = Constraint(self.m.W, self.m.V, self.m.V1, rule=constraint_service_time)
+        self.m.constraint_service_time = Constraint(self.m.W, self.m.V0, self.m.V1, rule=constraint_service_time) # TODO: Changed V to V0 to capture start times
 
         def constraint_end_node_end_time(m, k):
             for i in m.end_node:
                 return m.xw[k, i] + m.tS[i] + m.tQ[i] * (m.QMAX - m.q[i]) <= m.tB[i]
-        # self.m.constraint_end_node_end_time = Constraint(self.m.W, rule=constraint_end_node_end_time)
+        self.m.constraint_end_node_end_time = Constraint(self.m.W, rule=constraint_end_node_end_time)
 
         def constraint_end_time(m, k, j):
             return m.xw[k, j] <= m.tB[j]
@@ -135,7 +135,7 @@ class VRPTW:
             """Objective: Calculate net amortized profit across fleet"""
             # return R_L(m) - C(m) - O_F(m)
             return sum(sum(sum(m.xgamma[k, i, j] * m.d[i, j] for k in m.W) for i in m.V0) for j in m.V1)
-        self.m.obj = Objective(rule=objective_net_amortized_profit, sense=maximize)
+        self.m.obj = Objective(rule=objective_net_amortized_profit, sense=minimize)
 
         logging.info('Done building model')
 

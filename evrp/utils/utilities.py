@@ -169,17 +169,21 @@ def instance_to_df(instance, **kwargs):
     return dfs
 
 
-def create_flat_optimal_edges(m: 'obj') -> 'pd.DataFrame':
+def create_flat_optimal_edges(m: 'obj', **kwargs) -> 'pd.DataFrame':
     c = create_coordinate_dict(m.data['V'])
 
-    e = pd.DataFrame([(*k, v()) for k, v in m.instance.xgamma.items()])
-    if len(e.columns) == 3:
-        col_renames = {0: 'from', 1: 'to', 2: 'state'}
-    elif len(e.columns) == 4:
-        col_renames = {0: 'vehicle', 1: 'from', 2: 'to', 3: 'state'}
+    if 'x' in kwargs.keys():
+        e = kwargs['x']
     else:
-        logging.error('Check size of xgamma columns. Must be 3 (if not vehicle indexed) or 4 (if vehicle indexed)')
-    e.rename(col_renames, axis=1, inplace=True)
+        e = pd.DataFrame([(*k, v()) for k, v in m.instance.xgamma.items()])
+        if len(e.columns) == 3:
+            col_renames = {0: 'from', 1: 'to', 2: 'state'}
+        elif len(e.columns) == 4:
+            col_renames = {0: 'vehicle', 1: 'from', 2: 'to', 3: 'state'}
+        else:
+            logging.error('Check size of xgamma columns. Must be 3 (if not vehicle indexed) or 4 (if vehicle indexed)')
+        e.rename(col_renames, axis=1, inplace=True)
+
     e['from_d_x'], e['from_d_y'] = np.vstack([c[e] for e in e['from']]).T
     e['to_d_x'], e['to_d_y'] = np.vstack([c[e] for e in e['to']]).T
     e = e[e['state'] == 1]
@@ -187,7 +191,31 @@ def create_flat_optimal_edges(m: 'obj') -> 'pd.DataFrame':
     return e
 
 
-def create_optimal_edges(m: 'obj') -> 'pd.DataFrame':
-    e_flat = create_flat_optimal_edges(m)
+def create_optimal_edges(m: 'obj', **kwargs) -> 'pd.DataFrame':
+    e_flat = create_flat_optimal_edges(m, **kwargs)
 
     return e_flat.pivot(index='from', columns='to', values='state'), e_flat
+
+
+def merge_variable_results(m: 'obj', var_list: str) -> 'pd.DataFrame':
+    v = 'xgamma'
+    var_list.remove(v)
+    x = getattr(m.instance, v)
+
+    keys, values = zip(*x.get_values().items())
+    idx = pd.MultiIndex.from_tuples(keys)
+    x = pd.DataFrame(values, index=idx)
+    x.columns = [v]
+    x.reset_index(inplace=True)
+    x.columns = ['vehicle', 'from', 'to', 'state']
+
+    for v in var_list:
+        x_right = getattr(m.instance, v)
+        keys, values = zip(*x_right.get_values().items())
+        idx = pd.MultiIndex.from_tuples(keys)
+        x_right = pd.DataFrame(values, index=idx)
+        x_right.columns = [v]
+        x_right.reset_index(inplace=True)
+        x_right.rename(columns={'level_0': 'vehicle', 'level_1': 'to'}, inplace=True)
+        x = pd.merge(x, x_right, how='inner', on=['vehicle', 'to'])
+    return x
