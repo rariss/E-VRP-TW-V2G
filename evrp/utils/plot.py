@@ -17,7 +17,6 @@ def plot_interactive_graph(v: 'pd.DataFrame', **kwargs) -> 'fig':
     if 'd' in kwargs.keys():
         edges = create_plotting_edges(v, kwargs['d'])
     elif 'e' in kwargs.keys():
-        # edges = create_plotting_edges(v, kwargs['e'])
         edges = kwargs['e']
     else:
         logging.error('Must provide distance matrix "d" or optimal edge matrix "e".')

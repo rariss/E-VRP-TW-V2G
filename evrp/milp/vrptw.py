@@ -37,28 +37,34 @@ class VRPTW:
                        doc='Graph edges')
 
         # Defining fixed parameters
+        self.m.V01_type = Param(self.m.V01, within=Any, doc='Graph nodes type')  # TODO: Determine a better way to carry through node types
         self.m.d = Param(self.m.E, doc='Distance matrix')
         self.m.num_nodes = Param(doc='Number of nodes')
         self.m.tA = Param(self.m.V01, doc='Start time window')
         self.m.tB = Param(self.m.V01, doc='End time window')
         self.m.tS = Param(self.m.V01, doc='Fixed service time')
+        self.m.tQ = Param(self.m.V01, doc='Delivery service time rate')
         self.m.t_T = Param(doc='Time horizon')
         self.m.t_S = Param(doc='Time step size')
         self.m.rW = Param(doc='Fuel consumption per unit distance')
         self.m.v = Param(doc='Average speed')
-        self.m.cc = Param(doc='Amomrtized capital cost for purchasing a vehicle')
+        self.m.cc = Param(doc='Amortized capital cost for purchasing a vehicle')
         self.m.c_F = Param(doc='Fuel cost')
+        self.m.q = Param(self.m.V01, doc='Delivery demand of each node')
+        self.m.QMAX = Param(doc='Maximum payload per vehicle')
+        self.m.cq = Param(self.m.V01, doc='Delivery payment per unit at each node')
 
         logging.info('Defining variables')
         # Defining variables
         self.m.xgamma = Var(self.m.W * self.m.E, initialize=0, within=Boolean, doc='Route decision of each edge for each vehicle')
-        self.m.xw = Var(self.m.W * self.m.V01, initialize=0, within=NonNegativeReals, doc='Arrival time for each vehicle at each node')
+        self.m.xw = Var(self.m.W * self.m.V01, initialize=0, within=NonNegativeIntegers, doc='Arrival time for each vehicle at each node')
+        self.m.xq = Var(self.m.W * self.m.V01, initialize=self.m.QMAX, within=NonNegativeIntegers, doc='Payload of each vehicle arriving at each node')
 
         logging.info('Defining constraints')
         # Defining routing constraints
         def constraint_visit_customers(m, i):
             return sum([m.xgamma[k, i, j] for k in m.W for j in m.V1 if j != i]) == 1
-        self.m.constraint_visit_customers = Constraint(self.m.V, rule=constraint_visit_customers) # TODO: Removed V0 to V in constraints to try to get multiple assignments
+        self.m.constraint_visit_customers = Constraint(self.m.V, rule=constraint_visit_customers) # TODO: Changed V0 to V in constraints to try to get multiple assignments
 
         def constraint_in_and_out_arcs(m, k, i):
             return sum([m.xgamma[k, i, j] for j in m.V1 if j != i]) - sum([m.xgamma[k, j, i] for j in m.V0 if j != i]) == 0
@@ -71,31 +77,64 @@ class VRPTW:
         # Defining time constraints
         def constraint_service_time(m, k, i, j):
             if i != j:
-                return m.xw[k, i] + (m.tS[i] + m.d[i, j]/m.v)*m.xgamma[k, i, j] - m.t_T*(1-m.xgamma[k, i, j]) <= m.xw[k, j]
+                # if m.V01_type[i] == 'd':
+                #     return m.xw[k, i] + (m.tS[i] + m.d[i, j] / m.v + m.tQ[i] * (m.QMAX - m.q[i])) * m.xgamma[k, i, j] - m.t_T * (1 - m.xgamma[k, i, j]) <= m.xw[k, j]
+                # else:
+                return m.xw[k, i] + (m.tS[i] + m.d[i, j]/m.v + m.tQ[i] * m.q[i])*m.xgamma[k, i, j] - m.t_T*(1-m.xgamma[k, i, j]) <= m.xw[k, j]
             else:
                 return Constraint.Skip
-        self.m.constraint_service_time = Constraint(self.m.W, self.m.V, self.m.V1,
-                                                    rule=constraint_service_time)
+        self.m.constraint_service_time = Constraint(self.m.W, self.m.V, self.m.V1, rule=constraint_service_time)
+
+        def constraint_end_node_end_time(m, k):
+            for i in m.end_node:
+                return m.xw[k, i] + m.tS[i] + m.tQ[i] * (m.QMAX - m.q[i]) <= m.tB[i]
+        # self.m.constraint_end_node_end_time = Constraint(self.m.W, rule=constraint_end_node_end_time)
 
         def constraint_end_time(m, k, j):
             return m.xw[k, j] <= m.tB[j]
-        self.m.constraint_end_time = Constraint(self.m.W, self.m.V1,
-                                                rule=constraint_end_time)
+        self.m.constraint_end_time = Constraint(self.m.W, self.m.V1, rule=constraint_end_time)
 
         def constraint_start_time(m, k, i):
             return m.tA[i] <= m.xw[k, i]
-        self.m.constraint_start_time = Constraint(self.m.W, self.m.V01,
-                                                  rule=constraint_start_time)
+        self.m.constraint_start_time = Constraint(self.m.W, self.m.V01, rule=constraint_start_time)
+
+        # Defining payload constraints
+        def constraint_payload(m, k, i, j):
+            if i != j:
+                # if m.V01_type[i] == 'd':
+                #     return m.xq[k, i] + (m.QMAX - m.xq[k, i]) * m.xgamma[k, i, j] - m.QMAX * (1 - m.xgamma[k, i, j]) <= m.xq[k, j]
+                # else:
+                return m.xq[k, i] - m.q[i] * m.xgamma[k, i, j] + m.QMAX * (1 - m.xgamma[k, i, j]) >= m.xq[k, j]
+            else:
+                return Constraint.Skip
+        self.m.constraint_payload = Constraint(self.m.W, self.m.V0, self.m.V1, rule=constraint_payload)
+
+        def constraint_start_payload(m, k, i):
+            return m.xq[k, i] == m.QMAX
+        self.m.constraint_start_payload = Constraint(self.m.W, self.m.start_node, rule=constraint_start_payload)
+
+        def constraint_max_payload(m, k, i):
+            return m.xq[k, i] <= m.QMAX
+        self.m.constraint_max_payload = Constraint(self.m.W, self.m.V01, rule=constraint_max_payload)
+
 
         logging.info('Defining objective')
         def total_time_traveled(m, k):
             return sum(m.d[i, j] * m.xgamma[k, i, j] / m.v for i in m.V0 for j in m.V1 if j != i)
 
+        def R_L(m):
+            return sum(m.cq[i] * m.q[i] * m.xgamma[k, i, j] for k in m.W for i in m.V for j in m.V1 if j != i)
+
+        def C(m):
+            return m.cc * sum(m.xgamma[k, s, j] for k in m.W for j in m.V1 for s in m.start_node)
+
+        def O_F(m):
+            return m.c_F * m.rW * m.v * sum(total_time_traveled(m, k) for k in m.W)
+
         def objective_net_amortized_profit(m):
             """Objective: Calculate net amortized profit across fleet"""
-            return 100*sum(m.xgamma[k, i, j] for k in m.W for i in m.V for j in m.V1 if j != i) - \
-                   m.cc * sum(m.xgamma[k, s, j] for k in m.W for j in m.V1 for s in m.start_node) - \
-                   m.c_F * m.rW * m.v * sum(total_time_traveled(m, k) for k in m.W)
+            # return R_L(m) - C(m) - O_F(m)
+            return sum(sum(sum(m.xgamma[k, i, j] * m.d[i, j] for k in m.W) for i in m.V0) for j in m.V1)
         self.m.obj = Objective(rule=objective_net_amortized_profit, sense=maximize)
 
         logging.info('Done building model')
@@ -104,20 +143,25 @@ class VRPTW:
         self.p = {
             None: {
                 'V01': {None: self.data['V'].index.values},
+                'V01_type': self.data['V']['node_type'].to_dict(),
                 'start_node': {None: [self.data['start_node']]},
                 'end_node': {None: [self.data['end_node']]},
                 'd': self.data['d'].stack().to_dict(),
                 'num_nodes': {None: len(self.data['V'])},
+                'q': self.data['V']['q'].to_dict(),
+                'cq': self.data['V']['cq'].to_dict(),
                 'tA': self.data['V']['tA'].to_dict(),
                 'tB': self.data['V']['tB'].to_dict(),
                 'tS': self.data['V']['tS'].to_dict(),
+                'tQ': self.data['V']['tQ'].to_dict(),
                 't_T': {None: self.data['Parameters'].loc['t_T', 'value']},
                 't_S': {None: self.data['Parameters'].loc['t_S', 'value']},
                 'NW': {None: self.data['W'].loc[:, 'NW'].sum()},
                 'rW': {None: self.data['W'].loc[:, 'rW'].mean()},
                 'v': {None: self.data['W'].loc[:, 'v'].mean()},
                 'cc': {None: self.data['W'].loc[:, 'cc'].mean()},
-                'c_F': {None: self.data['W'].loc[:, 'c_F'].mean()}
+                'c_F': {None: self.data['W'].loc[:, 'c_F'].mean()},
+                'QMAX': {None: int(self.data['W'].loc[:, 'QMAX'].mean())}
             }
         }
 
