@@ -186,8 +186,8 @@ class VRPTW:
 
         # TODO: Bring upstream for user passthrough
         # Define start and end nodes
-        self.data['start_node'] = 'd0'
-        self.data['end_node'] = 'd-1'
+        self.data['start_node'] = self.data['D'].index[0]
+        self.data['end_node'] = self.data['D'].index[1]
 
         # Generate index mappings
         self.i2v, self.v2i = generate_index_mapping(self.data['V'].index)
