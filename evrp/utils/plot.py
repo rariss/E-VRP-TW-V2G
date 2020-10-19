@@ -66,18 +66,26 @@ def plot_interactive_graph(v: 'pd.DataFrame', **kwargs) -> 'fig':
 
     # Add trace for nodes
     if 'e' in kwargs.keys():
-        customdata = [[v.loc[i, ['node_description']],
-                       v.loc[i, ['q']],
-                       edges[edges['to']==i]['vehicle'],
-                       edges[edges['to']==i]['xw'],
-                       edges[edges['to']==i]['xq']] for i in v.index]
-        hovertemplate = '<b>%{text}</b>: %{customdata[0]}' + \
-                        '<br>Vehicle: %{customdata[2]}' + \
-                        '<br>Arrival Time: %{customdata[3]}' + \
-                        '<br>Payload: %{customdata[4]}' + \
-                        '<br>Demand: %{customdata[1]}' + \
-                        '<br>X: %{x}' + \
-                        '<br>Y: %{y}'
+        # TODO: Modify plot by type of VRP problem
+        try:
+            customdata = [[v.loc[i, ['node_description']],
+                           v.loc[i, ['q']],
+                           edges[edges['to']==i]['vehicle'],
+                           edges[edges['to']==i]['xw'],
+                           edges[edges['to']==i]['xq']] for i in v.index]
+            hovertemplate = '<b>%{text}</b>: %{customdata[0]}' + \
+                            '<br>Vehicle: %{customdata[2]}' + \
+                            '<br>Arrival Time: %{customdata[3]}' + \
+                            '<br>Payload: %{customdata[4]}' + \
+                            '<br>Demand: %{customdata[1]}' + \
+                            '<br>X: %{x}' + \
+                            '<br>Y: %{y}'
+        except:
+            customdata = [[v.loc[i, ['node_description']]] for i in v.index]
+            hovertemplate = '<b>%{text}</b>: %{customdata[0]}' + \
+                            '<br>X: %{x}' + \
+                            '<br>Y: %{y}'
+
     else:
         customdata = v['node_description']
         hovertemplate = '<b>%{text}</b>: %{customdata}' + \
