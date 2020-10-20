@@ -137,6 +137,12 @@ class VRPTW:
             # return R_L(m) - C(m) - O_F(m)
             # return sum(sum(sum(m.xgamma[k, i, j] * m.d[i, j] for k in m.W) for i in m.V0) for j in m.V1)
         self.m.obj = Objective(rule=objective_net_amortized_profit, sense=minimize)
+        self.m.obj_C = Objective(rule=C, sense=minimize)
+        self.m.obj_O_F = Objective(rule=O_F, sense=minimize)
+
+        self.m.obj_C.deactivate()
+        self.m.obj_O_F.deactivate()
+        self.m.obj.activate()
 
         logging.info('Done building model')
 
@@ -201,7 +207,7 @@ class VRPTW:
         opt = SolverFactory('gurobi', solver_io="python")
 
         # Solver options
-        solver_options = {'Threads': 8, 'MIPGap': 0.05, 'TimeLimit': 10*60}  # 'keep': True, 'LocRes': True, 'results': True,
+        solver_options = {'Threads': 8, 'MIPGap': 0.01, 'TimeLimit': 5*60}  # 'keep': True, 'LocRes': True, 'results': True,
 
         # Import instance
         self.import_instance(instance_filepath)
