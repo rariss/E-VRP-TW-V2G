@@ -1,8 +1,8 @@
-from pyomo.environ import *
 from evrp.utils.utilities import parse_csv_tables, calculate_distance_matrix, generate_index_mapping
 import pandas as pd
 import numpy as np
 import logging
+from pyomo.environ import * # Import last so no pyomo-provided math functions get overwritten
 
 
 class VRPTW:
@@ -120,7 +120,7 @@ class VRPTW:
 
         logging.info('Defining objective')
         def total_time_traveled(m, k):
-            return sum(m.d[i, j] * m.xgamma[k, i, j] / m.v for i in m.V0 for j in m.V1 if j != i)
+            return sum(m.d[i, j] * m.xgamma[k, i, j] for i in m.V0 for j in m.V1 if j != i) / m.v
 
         def R_L(m):
             return sum(m.cq[i] * m.q[i] * m.xgamma[k, i, j] for k in m.W for i in m.V for j in m.V1 if j != i)
@@ -129,12 +129,13 @@ class VRPTW:
             return m.cc * sum(m.xgamma[k, s, j] for k in m.W for j in m.V1 for s in m.start_node)
 
         def O_F(m):
-            return m.c_F * m.rW * m.v * sum(total_time_traveled(m, k) for k in m.W)
+            return m.c_F * m.rW * sum(total_time_traveled(m, k) for k in m.W) # TODO: keep getting NoneType error when multiplying * m.v
 
         def objective_net_amortized_profit(m):
             """Objective: Calculate net amortized profit across fleet"""
+            return C(m) + O_F(m)
             # return R_L(m) - C(m) - O_F(m)
-            return sum(sum(sum(m.xgamma[k, i, j] * m.d[i, j] for k in m.W) for i in m.V0) for j in m.V1)
+            # return sum(sum(sum(m.xgamma[k, i, j] * m.d[i, j] for k in m.W) for i in m.V0) for j in m.V1)
         self.m.obj = Objective(rule=objective_net_amortized_profit, sense=minimize)
 
         logging.info('Done building model')
@@ -158,7 +159,7 @@ class VRPTW:
                 't_S': {None: self.data['Parameters'].loc['t_S', 'value']},
                 'NW': {None: self.data['W'].loc[:, 'NW'].sum()},
                 'rW': {None: self.data['W'].loc[:, 'rW'].mean()},
-                'v': {None: self.data['W'].loc[:, 'v'].mean()},
+                'v': {None: float(self.data['W'].loc[:, 'v'].mean())},
                 'cc': {None: self.data['W'].loc[:, 'cc'].mean()},
                 'c_F': {None: self.data['W'].loc[:, 'c_F'].mean()},
                 'QMAX': {None: int(self.data['W'].loc[:, 'QMAX'].mean())}
@@ -200,7 +201,7 @@ class VRPTW:
         opt = SolverFactory('gurobi', solver_io="python")
 
         # Solver options
-        solver_options = {'threads': 4}  # 'keep': True, 'LocRes': True, 'results': True,
+        solver_options = {'Threads': 8, 'MIPGap': 0.05, 'TimeLimit': 10*60}  # 'keep': True, 'LocRes': True, 'results': True,
 
         # Import instance
         self.import_instance(instance_filepath)
