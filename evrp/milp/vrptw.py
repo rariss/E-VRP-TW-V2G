@@ -57,8 +57,8 @@ class VRPTW:
         logging.info('Defining variables')
         # Defining variables
         self.m.xgamma = Var(self.m.W * self.m.E, initialize=0, within=Boolean, doc='Route decision of each edge for each vehicle')
-        self.m.xw = Var(self.m.W * self.m.V01, initialize=0, within=NonNegativeIntegers, doc='Arrival time for each vehicle at each node')
-        self.m.xq = Var(self.m.W * self.m.V01, initialize=self.m.QMAX, within=NonNegativeIntegers, doc='Payload of each vehicle arriving at each node')
+        self.m.xw = Var(self.m.W * self.m.V01, initialize=0, within=NonNegativeReals, doc='Arrival time for each vehicle at each node')
+        self.m.xq = Var(self.m.W * self.m.V01, initialize=self.m.QMAX, within=NonNegativeReals, doc='Payload of each vehicle arriving at each node')
 
         logging.info('Defining constraints')
         # Defining routing constraints
@@ -168,7 +168,7 @@ class VRPTW:
                 'v': {None: float(self.data['W'].loc[:, 'v'].mean())},
                 'cc': {None: self.data['W'].loc[:, 'cc'].mean()},
                 'c_F': {None: self.data['W'].loc[:, 'c_F'].mean()},
-                'QMAX': {None: int(self.data['W'].loc[:, 'QMAX'].mean())}
+                'QMAX': {None: float(self.data['W'].loc[:, 'QMAX'].mean())}
             }
         }
 
