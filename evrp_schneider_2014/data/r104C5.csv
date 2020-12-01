@@ -1,0 +1,27 @@
+D,,,,,,,,,,
+node_id,node_type,node_description,d_x,d_y,q,tA,tB,tS,tQ,cq
+D0,d,d,35,35,0,0,230,0,0,0
+D1,d,d,35,35,0,0,230,0,0,0
+,,,,,,,,,,
+S,,,,,,,,,,
+node_id,node_type,node_description,d_x,d_y,q,tA,tB,tS,tQ,cq
+S0,s,s,35,35,0,0,230,0,0,0
+,,,,,,,,,,
+M,,,,,,,,,,
+node_id,node_type,node_description,d_x,d_y,q,tA,tB,tS,tQ,cq
+C3,m,m,48,60,0,0,230,0,0,0
+C9,m,m,15,42,0,0,230,0,0,0
+C71,m,m,57,68,15,0,180,10,0,0
+C1,m,m,41,49,10,36,46,10,0,0
+C5,m,m,15,30,26,0,199,10,0,0
+C87,m,m,28,18,26,166,176,10,0,0
+C99,m,m,20,26,9,0,202,10,0,0
+,,,,,,,,,,
+Parameters,,,,,,,,,,
+parameter,description,value,,,,,,,,
+t_T,optimization time horizon,230,,,,,,,,
+t_S,time step size,1,,,,,,,,
+,,,,,,,,,,
+W,,,,,,,,,,
+vehicle_type_id,vehicle_type,NW,rW,v,cc,c_F,QMAX,,,
+z1,C,4,1,1,500,1,200,,,

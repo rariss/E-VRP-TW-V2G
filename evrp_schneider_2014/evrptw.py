@@ -120,7 +120,7 @@ class EVRPTW:
             # return 0 <= m.xq[i] <= m.QMAX
             return inequality(0, m.xq[i], m.QMAX)
 
-        self.m.constraint_payload_limit = Constraint({'D0_0', 'D1_0', 'D0_1', 'D1_1', 'D0_2', 'D1_2', 'D0_3', 'D1_3', 'D0_4'}, rule=constraint_payload_limit)  # TODO: self.start_node
+        self.m.constraint_payload_limit = Constraint({'D0_0'})#, 'D1_0', 'D0_1', 'D1_1', 'D0_2', 'D1_2', 'D0_3', 'D1_3', 'D0_4'}, rule=constraint_payload_limit)  # TODO: self.start_node
 
         # %% ENERGY CONSTRAINTS
 

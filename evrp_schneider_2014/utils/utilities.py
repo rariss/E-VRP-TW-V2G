@@ -233,7 +233,7 @@ def create_duplicates(df: 'pd.DataFrame') -> 'pd.DataFrame':
     
     div = len(df)
 
-    df = df.append([df]*5)
+    df = df.append([df]*0)
     df = df.reset_index()
     
     df_new = pd.DataFrame(columns=df.columns)
