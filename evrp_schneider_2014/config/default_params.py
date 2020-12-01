@@ -19,8 +19,8 @@ def create_data_dictionary(data):  # TODO: get hardcoded values from instance fi
         'tS': data['V']['tS'].to_dict(),  # Fixed service time for a vehicle at node i
         'tA': data['V']['tA'].to_dict(),  # Delivery demand at each customer
         'tB': data['V']['tB'].to_dict(),  # Delivery demand at each customer
-        'start_node': {None: [data['start_node']]},
-        'end_node': {None: [data['end_node']]},
+        'start_node': {None: data['start_node']},
+        'end_node': {None: data['end_node']},
         # 'v': {None: 1},
         'rE': {None: 1}  # Electric consumption per unit distance for EV
 

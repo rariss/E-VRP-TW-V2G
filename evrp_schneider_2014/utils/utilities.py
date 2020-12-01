@@ -202,6 +202,14 @@ def import_instance(instance_filepath: str):
 
     # Read in csv
     data = parse_csv_tables(instance_filepath)
+    
+    # # __ #TODO: check parse_csv_table
+
+    data['D'] = create_duplicates(data['D'])
+    data['S'] = create_duplicates(data['S'])
+    # data['M'] = pd.concat(data[k] for k in customer_nodes)
+
+    # # --
 
     # Create graph by concatenating D, S, M nodes
     node_types = [k for k in data.keys() if k in 'DSM']
@@ -209,24 +217,35 @@ def import_instance(instance_filepath: str):
         [data[k] for k in node_types])
     # data['num_nodes'] = len(data['V'])
 
-    # __ #TODO: check parse_csv_table
-    station_nodes = [k for k in data.keys() if k in 'S']
-    customer_nodes = [k for k in data.keys() if k in 'M']
-
-    data['S'] = pd.concat(data[k] for k in station_nodes)
-    data['M'] = pd.concat(data[k] for k in customer_nodes)
-
-    # --
-
+    
     # Calculate distance matrix
     data['d'] = calculate_distance_matrix(data['V'][['d_x', 'd_y']])
 
     # TODO: Bring upstream for user passthrough
     # Define start and end nodes
-    data['start_node'] = 'D0'
-    data['end_node'] = 'D1'
+    
+    data['start_node'] = set([n for n in data['D'].index if 'D0' in n]) 
+    data['end_node'] = set([n for n in data['D'].index if 'D1' in n]) 
 
     return data
+
+def create_duplicates(df: 'pd.DataFrame') -> 'pd.DataFrame':
+    
+    div = len(df)
+
+    df = df.append([df]*5)
+    df = df.reset_index()
+    
+    df_new = pd.DataFrame(columns=df.columns)
+
+    for i, row in df.iterrows():
+        new_id = row['node_id'] + '_' + str(int(i/div))
+        row['node_id'] = new_id
+        df_new = df_new.append(row)
+
+    df_new = df_new.set_index('node_id')
+    
+    return df_new
 
 
 def merge_variable_results(m: 'obj',
