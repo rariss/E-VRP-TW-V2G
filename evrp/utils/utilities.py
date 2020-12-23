@@ -170,7 +170,12 @@ def instance_to_df(instance, **kwargs):
 
 
 def create_flat_optimal_edges(m: 'obj', **kwargs) -> 'pd.DataFrame':
-    c = create_coordinate_dict(m.data['V'])
+    if 'graph' in kwargs.keys():
+        graph = kwargs['graph']
+    else:
+        graph = 'V'
+
+    c = create_coordinate_dict(m.data[graph])
 
     if 'x' in kwargs.keys():
         e = kwargs['x']
@@ -197,8 +202,9 @@ def create_optimal_edges(m: 'obj', **kwargs) -> 'pd.DataFrame':
     return e_flat.pivot(index='from', columns='to', values='state'), e_flat
 
 
-def merge_variable_results(m: 'obj', var_list: str) -> 'pd.DataFrame':
-    v = 'xgamma'
+def merge_variable_results(m: 'obj', var_list: str, include_vehicle=False) -> 'pd.DataFrame':
+    v0 = var_list[0]
+    v = v0
     var_list.remove(v)
     x = getattr(m.instance, v)
 
@@ -207,15 +213,33 @@ def merge_variable_results(m: 'obj', var_list: str) -> 'pd.DataFrame':
     x = pd.DataFrame(values, index=idx)
     x.columns = [v]
     x.reset_index(inplace=True)
-    x.columns = ['vehicle', 'from', 'to', 'state']
+    if include_vehicle and (v0 == 'xgamma'):
+        x.columns = ['vehicle', 'from', 'to', 'state']
+    elif v0 == 'xgamma':
+        x.columns = ['from', 'to', 'state']
+    elif v0 == 'xkappa':
+        x.columns = ['node', 't', 'state']
+    else:
+        logging.error('Must provide either "xgamma" or "xkappa" as first value in var_list.')
+        AttributeError
 
     for v in var_list:
         x_right = getattr(m.instance, v)
         keys, values = zip(*x_right.get_values().items())
-        idx = pd.MultiIndex.from_tuples(keys)
+        if (not include_vehicle) & (v0 == 'xgamma'):
+            idx = keys
+        else:
+            idx = pd.MultiIndex.from_tuples(keys)
         x_right = pd.DataFrame(values, index=idx)
         x_right.columns = [v]
         x_right.reset_index(inplace=True)
-        x_right.rename(columns={'level_0': 'vehicle', 'level_1': 'to'}, inplace=True)
-        x = pd.merge(x, x_right, how='inner', on=['vehicle', 'to'])
+        if include_vehicle:
+            x_right.rename(columns={'level_0': 'vehicle', 'level_1': 'to'}, inplace=True)
+            x = pd.merge(x, x_right, how='inner', on=['vehicle', 'to'])
+        elif v0 == 'xgamma':
+            x_right.rename(columns={'index': 'to'}, inplace=True)
+            x = pd.merge(x, x_right, how='inner', on=['to'])
+        elif v0 == 'xkappa':
+            x_right.rename(columns={'level_0': 'node', 'level_1': 't'}, inplace=True)
+            x = pd.merge(x, x_right, how='inner', on=['node', 't'])
     return x
