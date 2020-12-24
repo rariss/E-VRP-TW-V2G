@@ -2,9 +2,15 @@ D,,,,,,,,,,
 node_id,node_type,node_description,d_x,d_y,q,tA,tB,tS,tQ,cq
 D0,d,d,35,35,0,0,230,0,0,0
 D1,d,d,35,35,0,0,230,0,0,0
+,,,,,,,,,,
+S,,,,,,,,,,
+node_id,node_type,node_description,d_x,d_y,q,tA,tB,tS,tQ,cq
 S0,s,s,35,35,0,0,230,0,0,0
 S3,s,s,48,60,0,0,230,0,0,0
 S9,s,s,15,42,0,0,230,0,0,0
+,,,,,,,,,,
+M,,,,,,,,,,
+node_id,node_type,node_description,d_x,d_y,q,tA,tB,tS,tQ,cq
 C71,m,m,57,68,15,0,180,10,0,0
 C1,m,m,41,49,10,36,46,10,0,0
 C5,m,m,15,30,26,0,199,10,0,0

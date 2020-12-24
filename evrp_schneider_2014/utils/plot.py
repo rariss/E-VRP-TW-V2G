@@ -52,7 +52,7 @@ def plot_interactive_graph(v: 'pd.DataFrame', **kwargs) -> 'fig':
         logging.error('Must provide distance matrix "d" or optimal edge matrix "e".')
 
     if 'obj' in kwargs.keys():
-        title = 'Objective: {}'.format(round(kwargs['obj'], 2))
+        title = '{} - Objective: {}'.format(kwargs['instance_name'], round(kwargs['obj'], 2))
     else:
         title = ''
 

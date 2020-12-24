@@ -29,6 +29,7 @@ class EVRPTW:
         self.m.QMAX = Param(doc='Maximum payload limit for all vehicles')
         self.m.EMAX = Param(doc='Maximum EV battery SOE limit for all EVs')
         self.m.rE = Param(doc='Electric consumption per unit distance for EV')
+        self.m.rC = Param(doc='Charging rate for EV')
 
         # Defining sets
         self.m.V01_ = Set(dimen=1, doc='All nodes extended')
@@ -96,8 +97,8 @@ class EVRPTW:
         def constraint_time_station(m, i, j):
             # return m.xw[i] + m.d[i, j] * m.xgamma[i, j] + m.rE * (m.QMAX - m.xa[j]) - (m.Mt + m.rE * m.QMAX) * (
             #         1 - m.xgamma[i, j]) <= m.xw[j]
-            return inequality(None, m.xw[i] + m.d[i, j] * m.xgamma[i, j] + (m.rE * (m.QMAX - m.xa[j])) - (
-                        m.Mt + (m.rE * m.QMAX)) * (
+            return inequality(None, m.xw[i] + m.d[i, j] * m.xgamma[i, j] + (m.rC * (m.QMAX - m.xa[j])) - (
+                        m.Mt + (m.rC * m.QMAX)) * (
                                       1 - m.xgamma[i, j]), m.xw[j])
 
         self.m.constraint_time_station = Constraint(self.m.F, self.m.V1_, rule=constraint_time_station)
@@ -120,12 +121,12 @@ class EVRPTW:
             # return 0 <= m.xq[i] <= m.QMAX
             return inequality(0, m.xq[i], m.QMAX)
 
-        self.m.constraint_payload_limit = Constraint({'D0_0'})#, 'D1_0', 'D0_1', 'D1_1', 'D0_2', 'D1_2', 'D0_3', 'D1_3', 'D0_4'}, rule=constraint_payload_limit)  # TODO: self.start_node
+        self.m.constraint_payload_limit = Constraint(self.m.start_node, rule=constraint_payload_limit)
 
         # %% ENERGY CONSTRAINTS
 
         def constraint_energy_customer(m, i, j):  # TODO: lower bound = 0
-            # return 0 <= m.xa[j] <= m.xa[i] - (m.rE * m.d[i, j]) * m.xgamma[i, j] + m.Me * (1 - m.xgamma[i, j])
+            # return m.xa[j] <= m.xa[i] - (m.rE * m.d[i, j]) * m.xgamma[i, j] + m.Me * (1 - m.xgamma[i, j])
             return inequality(None, m.xa[j],
                               m.xa[i] - (m.rE * m.d[i, j]) * m.xgamma[i, j] + m.Me * (1 - m.xgamma[i, j]))
 
@@ -147,7 +148,7 @@ class EVRPTW:
 
         def fleet_cost(m):
             """Cost of total number vehicles"""
-            return sum(sum(m.xgamma[i, j] * m.cW for i in {'D0'}) for j in m.V0_)
+            return sum(sum(m.xgamma[i, j] * m.cW for i in self.m.start_node) for j in m.V0_)
 
         def obj_dist_fleet(m):
             """Objective: minimize the total traveled distance and the fleet size"""
@@ -156,7 +157,7 @@ class EVRPTW:
         # Create objective function
         self.m.obj = Objective(rule=total_distance, sense=minimize)
 
-    def solve(self, instance_filepath: str):
+    def solve(self, instance_filepath: str, duplicates: Boolean):
         # Specify solver
         opt = SolverFactory('gurobi')
 
@@ -164,7 +165,7 @@ class EVRPTW:
         self.instance_name = instance_filepath.split('/')[-1].split('.')[0]
         logging.info('Importing VRPTW MILP instance: {}'.format(self.instance_name))
 
-        self.data = import_instance(instance_filepath)
+        self.data = import_instance(instance_filepath, duplicates)
 
         # Create parameters
         logging.info('Creating parameters')
@@ -175,9 +176,9 @@ class EVRPTW:
         self.instance = self.m.create_instance(self.p)
 
         # Solver options
-        solv_options = {'MaxTime': 10e10}
+        # solv_options = {'MaxTime': 10e10}
 
         # Solve instance
         logging.info('Solving instance...')
-        self.results = opt.solve(self.instance, tee=True, options=solv_options)
+        self.results = opt.solve(self.instance, tee=True) #, options=solv_options)
         logging.info('Done')

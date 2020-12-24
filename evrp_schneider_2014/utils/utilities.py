@@ -198,15 +198,16 @@ def create_optimal_edges(m: 'obj', **kwargs) -> 'pd.DataFrame':
     return e_flat.pivot(index='from', columns='to', values='state'), e_flat
 
 
-def import_instance(instance_filepath: str):
+def import_instance(instance_filepath: str, duplicates):
 
     # Read in csv
     data = parse_csv_tables(instance_filepath)
     
     # # __ #TODO: check parse_csv_table
 
-    data['D'] = create_duplicates(data['D'])
-    data['S'] = create_duplicates(data['S'])
+    # data['D'] = create_duplicates(data['D'])
+    if duplicates:
+        data['S'] = create_duplicates(data['S'])
     # data['M'] = pd.concat(data[k] for k in customer_nodes)
 
     # # --
@@ -224,8 +225,8 @@ def import_instance(instance_filepath: str):
     # TODO: Bring upstream for user passthrough
     # Define start and end nodes
     
-    data['start_node'] = set([n for n in data['D'].index if 'D0' in n]) 
-    data['end_node'] = set([n for n in data['D'].index if 'D1' in n]) 
+    data['start_node'] = {'D0'} #set([n for n in data['D'].index if 'D0' in n])
+    data['end_node'] = {'D1'} #set([n for n in data['D'].index if 'D1' in n])
 
     return data
 
@@ -233,7 +234,7 @@ def create_duplicates(df: 'pd.DataFrame') -> 'pd.DataFrame':
     
     div = len(df)
 
-    df = df.append([df]*0)
+    df = df.append([df]*4)
     df = df.reset_index()
     
     df_new = pd.DataFrame(columns=df.columns)
@@ -312,7 +313,10 @@ def merge_variable_results(m: 'obj',
 def trace_routes_util(from_node, end_node, visited, current_route, routes, graph):
     current_route.append(from_node)
 
-    if from_node == end_node:
+    # if from_node == end_node:
+    #     routes.append(tuple(current_route))
+    
+    if end_node in from_node:
         routes.append(tuple(current_route))
 
     else:
