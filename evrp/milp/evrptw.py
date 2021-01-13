@@ -7,7 +7,7 @@ from pyomo.environ import *
 class EVRPTW:
     """
     Implementation of E-VRP-TW-V2G
-    Authors: Leandre Berwa and Rami Ariss
+    Authors: Rami Ariss and Leandre Berwa
     """
 
     def __init__(self):
@@ -75,11 +75,12 @@ class EVRPTW:
         self.m.xkappa = Var(self.m.S_, self.m.T, within=Boolean, initialize=0)
         self.m.xw = Var(self.m.V01_, within=NonNegativeReals)  # Arrival time for each vehicle at each node
         self.m.xq = Var(self.m.V01_, within=NonNegativeReals)  # Payload of each vehicle before visiting each node
-        self.m.xa = Var(self.m.V01_, within=NonNegativeReals)  # Energy of each EV arriving at each node
+        self.m.xa = Var(self.m.V01_, within=NonNegativeReals, initialize=self.m.EMAX)  # Energy of each EV arriving at each node
         # self.m.xd = Var(self.m.S, within=NonNegativeReals)  # Each station’s net peak electric demand
         self.m.xp = Var(self.m.S_, self.m.T, within=Reals)  # Charge or discharge rate of each EV
 
         # %% ROUTING CONSTRAINTS # TODO: consistency for ranged inequality expressions -
+        #  TODO: upper bound on maximum number of vehicles in fleet based off starting routes?
         #  WARNING:pyomo.core:DEPRECATED: Chained inequalities are deprecated.
 
         logging.info('Defining constraints')
@@ -147,7 +148,7 @@ class EVRPTW:
 
         # %% ENERGY CONSTRAINTS
 
-        def constraint_energy_station(m, i, j):
+        def constraint_energy_station(m, i, j):  # TODO: Check if number of xkappa variables can be reduced for same energy / depot periods
             """Energy transition for each EV while at an intermediate charging station node i and traveling across edge (i, j)"""
             if i != j:
                 return m.xa[j] <= m.xa[i] + m.t_S * sum(m.xkappa[i, t] * m.xp[i, t] for t in m.T) - \
@@ -156,13 +157,29 @@ class EVRPTW:
                 return Constraint.Skip
         self.m.constraint_energy_station = Constraint(self.m.S_, self.m.V1_, rule=constraint_energy_station)
 
+        def constraint_energy_xkappa_xgamma_lb(m, i, j):  # TODO: Check if this constraint can be simplified
+            """Constraint to ensure that EV can only charge at station if visiting that station."""
+            if i != j:
+                return sum(m.xkappa[i, t] for t in m.T) / sum(t for t in m.T) >= m.xgamma[i, j]
+            else:
+                return Constraint.Skip
+        # self.m.constraint_energy_xkappa_xgamma_lb = Constraint(self.m.S_, self.m.V1_, rule=constraint_energy_xkappa_xgamma_lb)
+
+        def constraint_energy_xkappa_xgamma_ub(m, i, j):  # TODO: Check if this constraint can be simplified
+            """Constraint to ensure that EV can only charge at station if visiting that station."""
+            if i != j:
+                return sum(m.xkappa[i, t] for t in m.T) / sum(t for t in m.T) <= m.xgamma[i, j]
+            else:
+                return Constraint.Skip
+        # self.m.constraint_energy_xkappa_xgamma_ub = Constraint(self.m.S_, self.m.V1_, rule=constraint_energy_xkappa_xgamma_ub)
+
         def constraint_energy_customer(m, i, j):  # TODO: Can we drop this constraint for the start_node?
             """Energy transition for each EV while at customer node i and traveling across edge (i, j)"""
             if i != j:
                 return m.xa[j] <= m.xa[i] - (m.r * m.d[i, j]) * m.xgamma[i, j] + m.ME * (1 - m.xgamma[i, j])
             else:
                 return Constraint.Skip
-        self.m.constraint_energy_customer = Constraint(self.m.M & self.m.start_node, self.m.V1_, rule=constraint_energy_customer)
+        self.m.constraint_energy_customer = Constraint(self.m.M | self.m.start_node, self.m.V1_, rule=constraint_energy_customer)
 
         def constraint_energy_ev_limit(m, i, t):  # TODO: Non-fixed bound or weight because xkappa (variable) on both ends of inequality
             """Maximum charge and discharge limit for each EV at charging stations"""
@@ -177,7 +194,7 @@ class EVRPTW:
         def constraint_energy_start_end_soe(m, i, j):
             """Start and end energy state must be equal for each EV"""
             return m.xa[i] == m.xa[j]
-        self.m.constraint_energy_start_end_soe = Constraint(self.m.start_node, self.m.end_node, rule=constraint_energy_start_end_soe)
+        # self.m.constraint_energy_start_end_soe = Constraint(self.m.start_node, self.m.end_node, rule=constraint_energy_start_end_soe)
 
         def constraint_energy_soe(m, i):
             """Minimum and Maximum SOE limit for each EV"""
@@ -201,7 +218,7 @@ class EVRPTW:
         #     else:
         #         Constraint.Skip
         #     return
-        # self.m.constraint_payload_depot = Constraint(self.m.D_ & self.m.start_node, self.m.V1_, rule=constraint_payload_depot)
+        # self.m.constraint_payload_depot = Constraint(self.m.D_ | self.m.start_node, self.m.V1_, rule=constraint_payload_depot)
 
         def constraint_payload(m, i, j):
             """Vehicles must unload payload for full customer demand when visiting a customer"""
@@ -225,7 +242,7 @@ class EVRPTW:
 
         def C_fleet_capital_cost(m):
             """Cost of total number vehicles"""
-            return m.cW * sum(m.xgamma[m.start_node, j] for j in m.V_ if j != m.start_node)
+            return m.cc * sum(sum(m.xgamma[i, j] for j in m.V_ if j != i) for i in m.start_node)
 
         def O_delivery_operating_cost(m):
             """Amortized delivery operating cost for utilized vehicles (wages)"""
@@ -258,10 +275,10 @@ class EVRPTW:
 
         def obj_dist_fleet(m):
             """Objective: minimize the total traveled distance and the fleet size"""
-            return total_distance(m)
+            return total_distance(m) #+ C_fleet_capital_cost(m)
 
         # Create objective function
-        self.m.obj = Objective(rule=total_distance, sense=minimize)
+        self.m.obj = Objective(rule=obj_dist_fleet, sense=minimize)
 
     def create_data_dictionary(self):  # TODO: Move to utils
         self.p = {
@@ -351,8 +368,8 @@ class EVRPTW:
         self.data['d'] = calculate_distance_matrix(self.data['V_'][['d_x', 'd_y']])
 
         # Create duplicates mappings
-        self.s2s_ = {s: [s_ for s_ in self.data['S_'].index if s in s_] for s in self.data['S'].index}  # S -> S_
-        self.s_2s = {s_: s for s in self.data['S'].index for s_ in self.data['S_'].index if s in s_}  # S_ -> S
+        self.s2s_ = {s: [s_ for s_ in self.data['S_'].index if s+'_' in s_] for s in self.data['S'].index}  # S -> S_
+        self.s_2s = {s_: s for s in self.data['S'].index for s_ in self.data['S_'].index if s+'_' in s_}  # S_ -> S
 
         # Generate index mappings
         self.i2v, self.v2i = generate_index_mapping(self.data['V'].index)

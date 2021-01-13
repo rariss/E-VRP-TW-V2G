@@ -169,7 +169,7 @@ def instance_to_df(instance, **kwargs):
     return dfs
 
 
-def create_flat_optimal_edges(m: 'obj', **kwargs) -> 'pd.DataFrame':
+def create_flat_optimal_edges(m: 'obj', tol=1e-4, **kwargs) -> 'pd.DataFrame':
     if 'graph' in kwargs.keys():
         graph = kwargs['graph']
     else:
@@ -191,7 +191,7 @@ def create_flat_optimal_edges(m: 'obj', **kwargs) -> 'pd.DataFrame':
 
     e['from_d_x'], e['from_d_y'] = np.vstack([c[e] for e in e['from']]).T
     e['to_d_x'], e['to_d_y'] = np.vstack([c[e] for e in e['to']]).T
-    e = e[e['state'] == 1]
+    e = e[e['state'] > tol]
 
     return e
 
