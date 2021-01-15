@@ -157,21 +157,21 @@ class EVRPTW:
                 return Constraint.Skip
         self.m.constraint_energy_station = Constraint(self.m.S_, self.m.V1_, rule=constraint_energy_station)
 
-        def constraint_energy_xkappa_xgamma_lb(m, i, j):  # TODO: Check if this constraint can be simplified
-            """Constraint to ensure that EV can only charge at station if visiting that station."""
-            if i != j:
-                return sum(m.xkappa[i, t] for t in m.T) / sum(t for t in m.T) >= m.xgamma[i, j]
-            else:
-                return Constraint.Skip
-        # self.m.constraint_energy_xkappa_xgamma_lb = Constraint(self.m.S_, self.m.V1_, rule=constraint_energy_xkappa_xgamma_lb)
-
-        def constraint_energy_xkappa_xgamma_ub(m, i, j):  # TODO: Check if this constraint can be simplified
-            """Constraint to ensure that EV can only charge at station if visiting that station."""
-            if i != j:
-                return sum(m.xkappa[i, t] for t in m.T) / sum(t for t in m.T) <= m.xgamma[i, j]
-            else:
-                return Constraint.Skip
-        # self.m.constraint_energy_xkappa_xgamma_ub = Constraint(self.m.S_, self.m.V1_, rule=constraint_energy_xkappa_xgamma_ub)
+        # def constraint_energy_xkappa_xgamma_lb(m, i, j):  # TODO: Check if this constraint is needed ( NO )
+        #     """Constraint to ensure that EV can only charge at station if visiting that station."""
+        #     if i != j:
+        #         return sum(m.xkappa[i, t] for t in m.T) / sum(t for t in m.T) >= m.xgamma[i, j]
+        #     else:
+        #         return Constraint.Skip
+        # # self.m.constraint_energy_xkappa_xgamma_lb = Constraint(self.m.S_, self.m.V1_, rule=constraint_energy_xkappa_xgamma_lb)
+        #
+        # def constraint_energy_xkappa_xgamma_ub(m, i, j):  # TODO: Check if this constraint is needed ( NO )
+        #     """Constraint to ensure that EV can only charge at station if visiting that station."""
+        #     if i != j:
+        #         return sum(m.xkappa[i, t] for t in m.T) / sum(t for t in m.T) <= m.xgamma[i, j]
+        #     else:
+        #         return Constraint.Skip
+        # # self.m.constraint_energy_xkappa_xgamma_ub = Constraint(self.m.S_, self.m.V1_, rule=constraint_energy_xkappa_xgamma_ub)
 
         def constraint_energy_customer(m, i, j):  # TODO: Can we drop this constraint for the start_node?
             """Energy transition for each EV while at customer node i and traveling across edge (i, j)"""
@@ -186,15 +186,16 @@ class EVRPTW:
             return inequality(-m.PMAX, m.xp[i, t] * m.xkappa[i, t], m.PMAX)
         self.m.constraint_energy_ev_limit = Constraint(self.m.S_, self.m.T, rule=constraint_energy_ev_limit)
 
+        #  TODO: INFEASIBLE WHEN TURNING ON STATION LIMIT CONSTRAINT
         def constraint_energy_station_limit(m, i, t):  # TODO: Combine duplicates to be within limits at each time
             """Maximum charge and discharge limit for an EV at charging station i ∈ D0 0,−1 ∪ S0"""
-            return inequality(m.SMIN[i], m.xp[i, t] * m.xkappa[i, t], m.SMAX[i])
+            return inequality(-m.SMIN[i], m.xp[i, t] * m.xkappa[i, t], m.SMAX[i])
         self.m.constraint_energy_station_limit = Constraint(self.m.S_, self.m.T, rule=constraint_energy_station_limit)
 
         def constraint_energy_start_end_soe(m, i, j):
             """Start and end energy state must be equal for each EV"""
             return m.xa[i] == m.xa[j]
-        # self.m.constraint_energy_start_end_soe = Constraint(self.m.start_node, self.m.end_node, rule=constraint_energy_start_end_soe)
+        self.m.constraint_energy_start_end_soe = Constraint(self.m.start_node, self.m.end_node, rule=constraint_energy_start_end_soe)
 
         def constraint_energy_soe(m, i):
             """Minimum and Maximum SOE limit for each EV"""
@@ -257,7 +258,7 @@ class EVRPTW:
         #     """Amortized V2G peak shaving demand charge savings (or net demand charge cost) over all stations"""
         #     return sum(sum(m.cg[s] * (max(m.G[s, :]) - m.xd[i]) for i in m.Dmap[s]) for s in m.S)
 
-        def R_energy_arbitrage_revenue(m):
+        def R_energy_arbitrage_revenue(m):  # TODO: Implement a way that power only during time at node
             """Amortized G2V/V2G energy arbitrage (or net cost of charging) over all charging stations"""
             return sum(sum(sum(m.ce[s, t] * m.xp[i, t] * m.xkappa[i, t] for t in m.T) for i in m.Smap[s]) for s in m.S)
 
@@ -275,7 +276,7 @@ class EVRPTW:
 
         def obj_dist_fleet(m):
             """Objective: minimize the total traveled distance and the fleet size"""
-            return total_distance(m) #+ C_fleet_capital_cost(m)
+            return total_distance(m) + C_fleet_capital_cost(m) + R_energy_arbitrage_revenue(m)
 
         # Create objective function
         self.m.obj = Objective(rule=obj_dist_fleet, sense=minimize)
@@ -310,7 +311,7 @@ class EVRPTW:
                 'tA': self.data['V_']['tA'].to_dict(),
                 'tB': self.data['V_']['tB'].to_dict(),
                 'SMIN': self.data['S_']['SMIN'].to_dict(),
-                'SMAX': self.data['S_']['SMIN'].to_dict(),
+                'SMAX': self.data['S_']['SMAX'].to_dict(),
                 'ce': self.data['ce'].T.stack().to_dict(),
                 'cq': self.data['M']['cq'].to_dict(),
                 'Smap': self.s2s_,

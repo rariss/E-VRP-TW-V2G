@@ -243,3 +243,46 @@ def merge_variable_results(m: 'obj', var_list: str, include_vehicle=False) -> 'p
             x_right.rename(columns={'level_0': 'node', 'level_1': 't'}, inplace=True)
             x = pd.merge(x, x_right, how='inner', on=['node', 't'])
     return x
+
+
+def trace_routes_util(from_node, end_node, visited, current_route, routes, graph):
+    current_route.append(from_node)
+
+    # if from_node == end_node:
+    #     routes.append(tuple(current_route))
+
+    if end_node in from_node:
+        routes.append(tuple(current_route))
+
+    else:
+
+        for n in graph[from_node]:
+            if n not in visited:
+                trace_routes_util(n, end_node, visited, current_route, routes, graph)
+
+    current_route.pop()
+
+    return routes
+
+
+def trace_routes(m: 'obj', tol=1e-4):
+    x_val = getattr(m.instance, 'xgamma').extract_values()
+    active_arcs = [n for n in list(x_val.items()) if n[1] > tol]
+    active_arcs_list = list(list(zip(*active_arcs))[0])
+
+    active_arcs_dict = {}  # dict of active routes as a tree representing routes
+    for a, b in active_arcs_list:
+        active_arcs_dict.setdefault(a, []).append(b)
+
+    start_node = m.instance.start_node.value_list[0]
+    end_node = m.instance.end_node.value_list[0]
+
+    visited = set()
+
+    current_route = []
+    routes = []
+
+    routes = trace_routes_util(start_node, end_node, visited, current_route, routes,
+                               active_arcs_dict)
+
+    return routes
