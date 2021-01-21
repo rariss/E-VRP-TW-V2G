@@ -63,8 +63,8 @@ class EVRPTW:
         self.m.tB = Param(self.m.V01_, doc='Time window end time at node i')
         self.m.SMAX = Param(self.m.S_, doc='Maximum station inverter limit')
         self.m.SMIN = Param(self.m.S_, doc='Minimum station inverter limit')
-        # self.m.G = Param(self.m.S, self.m.T, doc='Station electric demand profile')
-        # self.m.cg = Param(self.m.S, doc='Amortized operating cost for demand charges')
+        self.m.G = Param(self.m.S, self.m.T, doc='Station electric demand profile')
+        self.m.cg = Param(self.m.S, doc='Amortized operating cost for demand charges')
         self.m.ce = Param(self.m.S, self.m.T, doc='Amortized operating cost for energy charges')
         self.m.cq = Param(self.m.M, doc='Amortized revenue for deliveries')
         self.m.Smap = Param(self.m.S, domain=Any, doc='Mapping from original charging station to all its duplicates')
@@ -76,7 +76,7 @@ class EVRPTW:
         self.m.xw = Var(self.m.V01_, within=NonNegativeReals)  # Arrival time for each vehicle at each node
         self.m.xq = Var(self.m.V01_, within=NonNegativeReals)  # Payload of each vehicle before visiting each node
         self.m.xa = Var(self.m.V01_, within=NonNegativeReals, initialize=self.m.EMAX)  # Energy of each EV arriving at each node
-        # self.m.xd = Var(self.m.S, within=NonNegativeReals)  # Each station’s net peak electric demand
+        self.m.xd = Var(self.m.S, within=NonNegativeReals)  # Each station’s net peak electric demand
         self.m.xp = Var(self.m.S_, self.m.T, within=Reals)  # Charge or discharge rate of each EV
 
         # %% ROUTING CONSTRAINTS # TODO: consistency for ranged inequality expressions -
@@ -103,16 +103,6 @@ class EVRPTW:
         self.m.constraint_single_route = Constraint(self.m.V_, rule=constraint_single_route)
 
         # %% TIME CONSTRAINTS
-
-        # def constraint_time_depot(m, i, j):
-        #     """Service time for each vehicle filling payload or doing V2G/G2V at each intermediate depot"""
-        #     if i != j:
-        #         return m.xw[i] + (m.tS[i] + m.d[i, j] / m.v + m.tQ * (m.QMAX - m.xq[i]) +
-        #                           m.t_S * sum(m.xkappa[i, t] for t in m.T)) * m.xgamma[i, j] \
-        #                - m.MT * (1 - m.xgamma[i, j]) <= m.xw[j]
-        #     else:
-        #         return Constraint.Skip
-        # self.m.constraint_time_depot = Constraint(self.m.D_, self.m.V1_, rule=constraint_time_depot)
 
         def constraint_time_start_depot(m, i, j):  # TODO: Can we drop the constraint for the start depot if we drop fixed service time?
             """Service time for each vehicle at start depot"""
@@ -146,6 +136,16 @@ class EVRPTW:
             return inequality(m.tA[i], m.xw[i], m.tB[i])
         self.m.constraint_node_time_window = Constraint(self.m.V01_, rule=constraint_node_time_window)
 
+        def constraint_time_xkappa_lb(m, i, t):
+            """Maximum charge and discharge limit for each EV at charging stations"""
+            return (m.t_T - t) * m.xkappa[i, t] <= m.t_T - sum(m.xw[i] * m.xgamma[i, j] for j in m.V1_ if j != i)
+        self.m.constraint_time_xkappa_lb = Constraint(self.m.S_, self.m.T, rule=constraint_time_xkappa_lb)
+
+        def constraint_time_xkappa_ub(m, i, t):
+            """Maximum charge and discharge limit for each EV at charging stations"""
+            return m.xkappa[i, t] * (t + m.t_S - 1) <= sum((m.xw[j] - (m.d[i, j] / m.v)) * m.xgamma[i, j] for j in m.V1_ if j != i)
+        self.m.constraint_time_xkappa_ub = Constraint(self.m.S_, self.m.T, rule=constraint_time_xkappa_ub)
+
         # %% ENERGY CONSTRAINTS
 
         def constraint_energy_station(m, i, j):  # TODO: Check if number of xkappa variables can be reduced for same energy / depot periods
@@ -157,34 +157,6 @@ class EVRPTW:
                 return Constraint.Skip
         self.m.constraint_energy_station = Constraint(self.m.S_, self.m.V1_, rule=constraint_energy_station)
 
-        # def constraint_energy_xkappa_xgamma_lb(m, i, j):  # TODO: Check if this constraint is needed ( NO )
-        #     """Constraint to ensure that EV can only charge at station if visiting that station."""
-        #     if i != j:
-        #         return sum(m.xkappa[i, t] for t in m.T) / sum(t for t in m.T) >= m.xgamma[i, j]
-        #     else:
-        #         return Constraint.Skip
-        # # self.m.constraint_energy_xkappa_xgamma_lb = Constraint(self.m.S_, self.m.V1_, rule=constraint_energy_xkappa_xgamma_lb)
-        #
-        # def constraint_energy_xkappa_xgamma_ub(m, i, j):  # TODO: Check if this constraint is needed ( NO )
-        #     """Constraint to ensure that EV can only charge at station if visiting that station."""
-        #     if i != j:
-        #         return sum(m.xkappa[i, t] for t in m.T) / sum(t for t in m.T) <= m.xgamma[i, j]
-        #     else:
-        #         return Constraint.Skip
-        # # self.m.constraint_energy_xkappa_xgamma_ub = Constraint(self.m.S_, self.m.V1_, rule=constraint_energy_xkappa_xgamma_ub)
-
-        # TODO: TRYING TO FIX POWERV2G
-        def constraint_energy_ev_power_lb(m, i, t):
-            """Maximum charge and discharge limit for each EV at charging stations"""
-            return (m.t_T - t) * m.xkappa[i, t] <= m.t_T - sum(m.xw[i] * m.xgamma[i, j] for j in m.V1_ if j != i)
-        self.m.constraint_energy_ev_power_lb = Constraint(self.m.S_, self.m.T, rule=constraint_energy_ev_power_lb)
-
-        # TODO: TRYING TO FIX POWERV2G
-        def constraint_energy_ev_power_ub(m, i, t):
-            """Maximum charge and discharge limit for each EV at charging stations"""
-            return m.xkappa[i, t] * (t + m.t_S - 1) <= sum((m.xw[j] - (m.d[i, j] / m.v)) * m.xgamma[i, j] for j in m.V1_ if j != i)
-        self.m.constraint_energy_ev_power_ub = Constraint(self.m.S_, self.m.T, rule=constraint_energy_ev_power_ub)
-
         def constraint_energy_customer(m, i, j):  # TODO: Can we drop this constraint for the start_node?
             """Energy transition for each EV while at customer node i and traveling across edge (i, j)"""
             if i != j:
@@ -193,7 +165,7 @@ class EVRPTW:
                 return Constraint.Skip
         self.m.constraint_energy_customer = Constraint(self.m.M | self.m.start_node, self.m.V1_, rule=constraint_energy_customer)
 
-        def constraint_energy_ev_limit(m, i, t):  # TODO: Non-fixed bound or weight because xkappa (variable) on both ends of inequality
+        def constraint_energy_ev_limit(m, i, t):
             """Maximum charge and discharge limit for each EV at charging stations"""
             return inequality(-m.PMAX, m.xp[i, t] * m.xkappa[i, t], m.PMAX)
         self.m.constraint_energy_ev_limit = Constraint(self.m.S_, self.m.T, rule=constraint_energy_ev_limit)
@@ -214,7 +186,6 @@ class EVRPTW:
             return m.xa[i] == m.xa[j]
         self.m.constraint_energy_start_end_soe = Constraint(self.m.start_node, self.m.end_node, rule=constraint_energy_start_end_soe)
 
-
         def constraint_energy_soe(m, i):
             """Minimum and Maximum SOE limit for each EV"""
             return inequality(m.EMIN, m.xa[i], m.EMAX)
@@ -225,24 +196,13 @@ class EVRPTW:
             return inequality(m.EMIN, m.xa[i] + m.t_S * sum(m.xkappa[i, t] * m.xp[i, t] for t in m.T), m.EMAX)
         self.m.constraint_energy_soe_station = Constraint(self.m.S_, rule=constraint_energy_soe_station)
 
-        # TODO: Need a station S -> all duplicate stations i mapping
         # See this implementation example: https://stackoverflow.com/questions/53966482/how-to-map-different-indices-in-pyomo
-        # def constraint_energy_peak(m, s, t):
-        #     """Peak electric demand for each physical station s(i) ∈ S"""
-        #     return m.G[s, t] + sum(m.xkappa[i, t] * m.xp[i, t] for i in m.Smap[s]) <= m.xd[s]
-        # self.m.constraint_energy_peak = Constraint(self.m.S, self.m.T, rule=constraint_energy_peak)
+        def constraint_energy_peak(m, s, t):
+            """Peak electric demand for each physical station s(i) ∈ S"""
+            return m.G[s, t] + sum(m.xkappa[i, t] * m.xp[i, t] for i in m.Smap[s]) <= m.xd[s]
+        self.m.constraint_energy_peak = Constraint(self.m.S, self.m.T, rule=constraint_energy_peak)
 
         # %% PAYLOAD CONSTRAINTS
-
-        # TODO: Likely don't need this constraint since there are no strict bounds on depot payload
-        # def constraint_payload_depot(m, i, j):
-        #     """Vehicles must fully fill payload when visiting a depot (constraint likely not needed)"""
-        #     if i != j:
-        #         return m.xq[i] + (m.QMAX - m.xq[i]) * m.xgamma[i, j] - m.MQ * (1 - m.xgamma[i, j]) <= m.xq[j]
-        #     else:
-        #         Constraint.Skip
-        #     return
-        # self.m.constraint_payload_depot = Constraint(self.m.D_ | self.m.start_node, self.m.V1_, rule=constraint_payload_depot)
 
         def constraint_payload(m, i, j):
             """Vehicles must unload payload for full customer demand when visiting a customer"""
@@ -277,11 +237,11 @@ class EVRPTW:
             return m.cm * total_distance(m)
 
         # TODO: Implement GMAX properly by doing maximization in data preparation and passing through as parameters
-        # def R_peak_shaving_revenue(m):
-        #     """Amortized V2G peak shaving demand charge savings (or net demand charge cost) over all stations"""
-        #     return sum(sum(m.cg[s] * (max(m.G[s, :]) - m.xd[i]) for i in m.Dmap[s]) for s in m.S)
+        def R_peak_shaving_revenue(m):
+            """Amortized V2G peak shaving demand charge savings (or net demand charge cost) over all stations"""
+            return sum(m.cg[s] * (m.xd[s]) for s in m.S)  # max(m.G[s, :]) -
 
-        def R_energy_arbitrage_revenue(m):  # TODO: Implement a way that power only during time at node
+        def R_energy_arbitrage_revenue(m):
             """Amortized G2V/V2G energy arbitrage (or net cost of charging) over all charging stations"""
             return m.t_S * sum(sum(sum(m.ce[s, t] * m.xp[i, t] * m.xkappa[i, t] for t in m.T) for i in m.Smap[s]) for s in m.S)
 
@@ -307,7 +267,7 @@ class EVRPTW:
 
         def obj_dist_fleet(m):
             """Objective: minimize the total traveled distance and the fleet size"""
-            return total_distance(m) + cycle_cost(m) + squeeze_cycle_cost(m) + R_energy_arbitrage_revenue(m) + C_fleet_capital_cost(m)
+            return total_distance(m) + R_peak_shaving_revenue(m) + cycle_cost(m) + squeeze_cycle_cost(m) + R_energy_arbitrage_revenue(m) + C_fleet_capital_cost(m)
 
         # Create objective function
         self.m.obj = Objective(rule=obj_dist_fleet, sense=minimize)
@@ -359,7 +319,6 @@ class EVRPTW:
 
 #         'V01_type': self.data['V']['node_type'].to_dict(),
 #         'num_nodes': {None: len(self.data['V'])},
-        # self.m.d = Param(self.m.E, doc='Distance of edge (i;j) between nodes i;j (km)')
 
     def import_instance(self, instance_filepath: str):
         self.instance_name = instance_filepath.split('/')[-1].split('.')[0]
