@@ -200,7 +200,7 @@ class EVRPTW:
         def constraint_energy_peak(m, s, t):
             """Peak electric demand for each physical station s(i) ∈ S"""
             return m.G[s, t] + sum(m.xkappa[i, t] * m.xp[i, t] for i in m.Smap[s]) <= m.xd[s]
-        self.m.constraint_energy_peak = Constraint(self.m.S, self.m.T, rule=constraint_energy_peak)
+        # self.m.constraint_energy_peak = Constraint(self.m.S, self.m.T, rule=constraint_energy_peak)
 
         # %% PAYLOAD CONSTRAINTS
 
@@ -234,7 +234,7 @@ class EVRPTW:
 
         def obj(m):
             """Objective: minimize the total traveled distance and the fleet size"""
-            return self.total_distance(m) + self.C_fleet_capital_cost(m) + self.cycle_cost(m) + self.squeeze_cycle_cost(m) + self.R_energy_arbitrage_revenue(m) + self.R_peak_shaving_revenue(m)
+            return self.total_distance(m) + self.C_fleet_capital_cost(m) + self.cycle_cost(m) + self.squeeze_cycle_cost(m) + self.R_energy_arbitrage_revenue(m)# + self.R_peak_shaving_revenue(m)
 
         # Create objective function
         self.m.obj = Objective(rule=obj, sense=minimize)
