@@ -24,15 +24,15 @@ class EVRPTW:
         self.m.MQ = Param(doc='Large value for big M payload constraints')
         self.m.MT = Param(doc='Large value for big M service time constraints')
         self.m.ME = Param(doc='Large value for big M energy constraints')
-        self.m.cc = Param(doc='Amortized capital cost for purchasing a vehicle')
-        self.m.co = Param(doc='Amortized operating cost for delivery (wages)')
-        self.m.cm = Param(doc='Amortized operating cost for maintenance')
-        self.m.QMAX = Param(doc='Maximum payload limit for all vehicles')
-        self.m.EMAX = Param(doc='Maximum EV battery SOE limit for all EVs')
-        self.m.EMIN = Param(doc='Minimum EV battery SOE limit for all EVs')
-        self.m.PMAX = Param(doc='Maximum EV inverter limit for all EVs')
-        self.m.r = Param(doc='Electric consumption per unit distance for EV')
-        self.m.v = Param(doc='Average speed')
+        self.m.cc = Param(mutable=True, doc='Amortized capital cost for purchasing a vehicle')
+        self.m.co = Param(mutable=True, doc='Amortized operating cost for delivery (wages)')
+        self.m.cm = Param(mutable=True, doc='Amortized operating cost for maintenance')
+        self.m.QMAX = Param(mutable=True, doc='Maximum payload limit for all vehicles')
+        self.m.EMAX = Param(mutable=True, doc='Maximum EV battery SOE limit for all EVs')
+        self.m.EMIN = Param(mutable=True, doc='Minimum EV battery SOE limit for all EVs')
+        self.m.PMAX = Param(mutable=True, doc='Maximum EV inverter limit for all EVs')
+        self.m.r = Param(mutable=True, doc='Electric consumption per unit distance for EV')
+        self.m.v = Param(mutable=True, doc='Average speed')
         self.m.t_T = Param(doc='Time horizon')
         self.m.t_S = Param(doc='Time step size')
 
@@ -56,17 +56,17 @@ class EVRPTW:
 
         # Defining parameter sets
         self.m.d = Param(self.m.E, doc='Distance of edge (i;j) between nodes i;j (km)')
-        self.m.q = Param(self.m.M, doc='Delivery demand at each customer')
-        self.m.tS = Param(self.m.V01_, doc='Fixed service time for a vehicle at node i')
-        self.m.tQ = Param(self.m.V01_, doc='Payload service time for a vehicle at node i')
-        self.m.tA = Param(self.m.V01_, doc='Time window start time at node i')
-        self.m.tB = Param(self.m.V01_, doc='Time window end time at node i')
-        self.m.SMAX = Param(self.m.S_, doc='Maximum station inverter limit')
-        self.m.SMIN = Param(self.m.S_, doc='Minimum station inverter limit')
-        self.m.G = Param(self.m.S, self.m.T, doc='Station electric demand profile')
-        self.m.cg = Param(self.m.S, doc='Amortized operating cost for demand charges')
-        self.m.ce = Param(self.m.S, self.m.T, doc='Amortized operating cost for energy charges')
-        self.m.cq = Param(self.m.M, doc='Amortized revenue for deliveries')
+        self.m.q = Param(self.m.M, mutable=True, doc='Delivery demand at each customer')
+        self.m.tS = Param(self.m.V01_, mutable=True, doc='Fixed service time for a vehicle at node i')
+        self.m.tQ = Param(self.m.V01_, mutable=True, doc='Payload service time for a vehicle at node i')
+        self.m.tA = Param(self.m.V01_, mutable=True, doc='Time window start time at node i')
+        self.m.tB = Param(self.m.V01_, mutable=True, doc='Time window end time at node i')
+        self.m.SMAX = Param(self.m.S_, mutable=True, doc='Maximum station inverter limit')
+        self.m.SMIN = Param(self.m.S_, mutable=True, doc='Minimum station inverter limit')
+        self.m.G = Param(self.m.S, self.m.T, mutable=True, doc='Station electric demand profile')
+        self.m.cg = Param(self.m.S, mutable=True, doc='Amortized operating cost for demand charges')
+        self.m.ce = Param(self.m.S, self.m.T, mutable=True, doc='Amortized operating cost for energy charges')
+        self.m.cq = Param(self.m.M, mutable=True, doc='Amortized revenue for deliveries')
         self.m.Smap = Param(self.m.S, domain=Any, doc='Mapping from original charging station to all its duplicates')
 
         logging.info('Defining variables')
@@ -138,12 +138,12 @@ class EVRPTW:
 
         def constraint_time_xkappa_lb(m, i, t):
             """Maximum charge and discharge limit for each EV at charging stations"""
-            return (m.t_T - t) * m.xkappa[i, t] <= m.t_T - sum(m.xw[i] * m.xgamma[i, j] for j in m.V1_ if j != i)
+            return (m.t_T - t) * m.xkappa[i, t] <= m.t_T - sum(m.xw[i] * m.xgamma[i, j] for j in m.V1_ if j != i)  # - m.MT * (1 - m.xkappa[i, t])
         self.m.constraint_time_xkappa_lb = Constraint(self.m.S_, self.m.T, rule=constraint_time_xkappa_lb)
 
         def constraint_time_xkappa_ub(m, i, t):
             """Maximum charge and discharge limit for each EV at charging stations"""
-            return m.xkappa[i, t] * (t + m.t_S - 1) <= sum((m.xw[j] - (m.d[i, j] / m.v)) * m.xgamma[i, j] for j in m.V1_ if j != i)
+            return m.xkappa[i, t] * (t + m.t_S) <= sum((m.xw[j] - m.tS[i] - m.d[i, j] / m.v) * m.xgamma[i, j] for j in m.V1_ if j != i)  # - m.MT * (1 - m.xkappa[i, t])
         self.m.constraint_time_xkappa_ub = Constraint(self.m.S_, self.m.T, rule=constraint_time_xkappa_ub)
 
         # %% ENERGY CONSTRAINTS
@@ -176,25 +176,25 @@ class EVRPTW:
             return inequality(m.SMIN[i], m.xp[i, t] * m.xkappa[i, t], m.SMAX[i])
         self.m.constraint_energy_station_limit = Constraint(self.m.S_, self.m.T, rule=constraint_energy_station_limit)
 
-        # def constraint_energy_start_end_soe(m, i):
-        #     """Start and end energy state must be equal for each EV"""
-        #     return m.xa[i] == 0
-        # self.m.constraint_energy_start_end_soe = Constraint(self.m.start_node | self.m.end_node, rule=constraint_energy_start_end_soe)
-
-        def constraint_energy_start_end_soe(m, i, j):
+        def constraint_energy_start_end_soe(m, i):
             """Start and end energy state must be equal for each EV"""
-            return m.xa[i] == m.xa[j]
-        self.m.constraint_energy_start_end_soe = Constraint(self.m.start_node, self.m.end_node, rule=constraint_energy_start_end_soe)
+            return m.xa[i] == m.EMAX
+        self.m.constraint_energy_start_end_soe = Constraint(self.m.start_node, rule=constraint_energy_start_end_soe)  # | self.m.end_node
+
+        # def constraint_energy_start_end_soe(m, i, j):
+        #     """Start and end energy state must be equal for each EV"""
+        #     return m.xa[i] == m.xa[j]
+        # self.m.constraint_energy_start_end_soe = Constraint(self.m.start_node, self.m.end_node, rule=constraint_energy_start_end_soe)
 
         def constraint_energy_soe(m, i):
             """Minimum and Maximum SOE limit for each EV"""
             return inequality(m.EMIN, m.xa[i], m.EMAX)
         self.m.constraint_energy_soe = Constraint(self.m.V01_, rule=constraint_energy_soe)
 
-        def constraint_energy_soe_station(m, i):
+        def constraint_energy_soe_station(m, i, t):
             """Minimum and Maximum SOE limit for each EV"""
-            return inequality(m.EMIN, m.xa[i] + m.t_S * sum(m.xkappa[i, t] * m.xp[i, t] for t in m.T), m.EMAX)
-        self.m.constraint_energy_soe_station = Constraint(self.m.S_, rule=constraint_energy_soe_station)
+            return inequality(m.EMIN, m.xa[i] + m.t_S * sum(m.xkappa[i, b] * m.xp[i, b] for b in m.T if b <= t), m.EMAX)
+        self.m.constraint_energy_soe_station = Constraint(self.m.S_, self.m.T, rule=constraint_energy_soe_station)
 
         # See this implementation example: https://stackoverflow.com/questions/53966482/how-to-map-different-indices-in-pyomo
         def constraint_energy_peak(m, s, t):
@@ -212,66 +212,75 @@ class EVRPTW:
                 return Constraint.Skip
         self.m.constraint_payload = Constraint(self.m.M, self.m.V1_, rule=constraint_payload)
 
+        def constraint_payload_station(m, i, j):
+            """Vehicles must unload payload for full customer demand when visiting a customer"""
+            if i != j:
+                return m.xq[j] <= m.xq[i] + m.MQ * (1 - m.xgamma[i, j])
+            else:
+                return Constraint.Skip
+        self.m.constraint_payload_station = Constraint(self.m.S_, self.m.V1_, rule=constraint_payload_station)
+
         def constraint_payload_limit(m, i):
             """Payload limits for each vehicle"""
             if i == m.start_node:  # Each vehicle must start with a full payload
                 return m.xq[i] == m.QMAX
             else:
                 return m.xq[i] <= m.QMAX  # xq is NonNegative
-        self.m.constraint_payload_limit = Constraint(self.m.V01_ - self.m.S_, rule=constraint_payload_limit)
+        self.m.constraint_payload_limit = Constraint(self.m.V01_, rule=constraint_payload_limit)  #TODO: Check if exclude" - self.m.S_"
 
         # %% OBJECTIVE FUNCTION AND DEPENDENT FUNCTIONS
 
         logging.info('Defining objective')
 
-        def C_fleet_capital_cost(m):
-            """Cost of total number vehicles"""
-            return m.cc * sum(sum(m.xgamma[i, j] for j in m.V_ if j != i) for i in m.start_node)
-
-        def O_delivery_operating_cost(m):
-            """Amortized delivery operating cost for utilized vehicles (wages)"""
-            return m.co * total_time(m)
-
-        def O_maintenance_operating_cost(m):
-            """Amortized delivery maintenance cost for utilized vehicles"""
-            return m.cm * total_distance(m)
-
-        # TODO: Implement GMAX properly by doing maximization in data preparation and passing through as parameters
-        def R_peak_shaving_revenue(m):
-            """Amortized V2G peak shaving demand charge savings (or net demand charge cost) over all stations"""
-            return sum(m.cg[s] * (m.xd[s]) for s in m.S)  # max(m.G[s, :]) -
-
-        def R_energy_arbitrage_revenue(m):
-            """Amortized G2V/V2G energy arbitrage (or net cost of charging) over all charging stations"""
-            return m.t_S * sum(sum(sum(m.ce[s, t] * m.xp[i, t] * m.xkappa[i, t] for t in m.T) for i in m.Smap[s]) for s in m.S)
-
-        def R_delivery_revenue(m):
-            """Amortized delivery revenue for goods delivered to customer nodes by entire fleet"""
-            return sum(m.cq[i] * m.q[i] for i in m.M)
-
-        def total_distance(m):
-            """Total traveled distance"""
-            return sum(sum(m.d[i, j] * m.xgamma[i, j] for i in m.V0_ if i != j) for j in m.V1_)
-
-        def total_time(m):
-            """Total time traveled by all EVs"""
-            return total_distance(m) / m.v
-
-        def cycle_cost(m, c=1e-3):
-            """Adds a penalty for any battery actions."""
-            return c * m.t_S * sum(sum(m.xkappa[i, t] for t in m.T) for i in m.S_)
-
-        def squeeze_cycle_cost(m, c=1e-3):
-            """Adds a reward for consecutive battery actions."""
-            return -c * m.t_S * sum(sum(m.xkappa[i, t] * m.xkappa[i, t-m.t_S] for t in m.T if t>0) for i in m.S_)
-
-        def obj_dist_fleet(m):
+        def obj(m):
             """Objective: minimize the total traveled distance and the fleet size"""
-            return total_distance(m) + R_peak_shaving_revenue(m) + cycle_cost(m) + squeeze_cycle_cost(m) + R_energy_arbitrage_revenue(m) + C_fleet_capital_cost(m)
+            return self.total_distance(m) + self.C_fleet_capital_cost(m) + self.cycle_cost(m) + self.squeeze_cycle_cost(m) + self.R_energy_arbitrage_revenue(m) + self.R_peak_shaving_revenue(m)
 
         # Create objective function
-        self.m.obj = Objective(rule=obj_dist_fleet, sense=minimize)
+        self.m.obj = Objective(rule=obj, sense=minimize)
 
+    def C_fleet_capital_cost(self, m):
+        """Cost of total number vehicles"""
+        return m.cc * sum(sum(m.xgamma[i, j] for j in m.V_ if j != i) for i in m.start_node)
+
+    def O_delivery_operating_cost(self, m):
+        """Amortized delivery operating cost for utilized vehicles (wages)"""
+        return m.co * self.total_time(m)
+
+    def O_maintenance_operating_cost(self, m):
+        """Amortized delivery maintenance cost for utilized vehicles"""
+        return m.cm * self.total_distance(m)
+
+    # TODO: Implement GMAX properly by doing maximization in data preparation and passing through as parameters
+    def R_peak_shaving_revenue(self, m):
+        """Amortized V2G peak shaving demand charge savings (or net demand charge cost) over all stations"""
+        return sum(m.cg[s] * (m.xd[s]) for s in m.S)  # max(m.G[s, :]) -
+
+    def R_energy_arbitrage_revenue(self, m):
+        """Amortized G2V/V2G energy arbitrage (or net cost of charging) over all charging stations"""
+        return m.t_S * sum(sum(sum(m.ce[s, t] * m.xp[i, t] * m.xkappa[i, t] for t in m.T) for i in m.Smap[s]) for s in m.S)
+
+    def R_delivery_revenue(self, m):
+        """Amortized delivery revenue for goods delivered to customer nodes by entire fleet"""
+        return sum(m.cq[i] * m.q[i] for i in m.M)
+
+    def total_distance(self, m):
+        """Total traveled distance"""
+        return sum(sum(m.d[i, j] * m.xgamma[i, j] for i in m.V0_ if i != j) for j in m.V1_)
+
+    def total_time(self, m):
+        """Total time traveled by all EVs"""
+        return self.total_distance(m) / m.v
+
+    def cycle_cost(self, m, c=3e-3):
+        """Adds a penalty for any battery actions."""
+        return c * m.t_S * sum(sum(sum(m.xkappa[i, t] * m.xgamma[i, j] for t in m.T) for j in m.V1_ if i != j) for i in m.S_)
+
+    def squeeze_cycle_cost(self, m, c=1e-3):
+        """Adds a reward for consecutive battery actions."""
+        return -c * m.t_S * sum(sum(m.xkappa[i, t] * m.xkappa[i, t - m.t_S] for t in m.T if t > 0) for i in m.S_)
+
+    # TODO: FIX t_S unit size so no decimals are needed
     def create_data_dictionary(self):  # TODO: Move to utils
         self.p = {
             None: {
@@ -365,26 +374,23 @@ class EVRPTW:
         # Generate index mappings
         self.i2v, self.v2i = generate_index_mapping(self.data['V'].index)
 
-        # Create data dictionary for concrete model instance
+        # Create data dictionary for concrete model instance (parameters)
+        logging.info('Creating parameters')
         self.create_data_dictionary()
 
     def solve(self, instance_filepath: str):
         # Specify solver
-        opt = SolverFactory('gurobi')
+        opt = SolverFactory('gurobi', io_format='python')
 
         # Import data
         self.import_instance(instance_filepath)
-
-        # Create parameters
-        logging.info('Creating parameters')
-        self.create_data_dictionary()
 
         # Create an instance of the AbstractModel passing in parameters
         logging.info('Creating instance')
         self.instance = self.m.create_instance(self.p)
 
         # Solver options
-        solv_options = {'TimeLimit': 6e1}
+        solv_options = {'TimeLimit': 60*5}  # 'Symmetry': 2
 
         # Solve instance
         logging.info('Solving instance...')

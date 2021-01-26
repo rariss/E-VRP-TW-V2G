@@ -274,8 +274,8 @@ def trace_routes(m: 'obj', tol=1e-4):
     for a, b in active_arcs_list:
         active_arcs_dict.setdefault(a, []).append(b)
 
-    start_node = m.instance.start_node.value_list[0]
-    end_node = m.instance.end_node.value_list[0]
+    start_node = m.instance.start_node.ordered_data()[0]
+    end_node = m.instance.end_node.ordered_data()[0]
 
     visited = set()
 

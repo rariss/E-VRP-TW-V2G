@@ -5,7 +5,7 @@ D1,d,d,40,50,0,0,3390,0,,,
 ,,,,,,,,,,,
 S,,,,,,,,,,,
 node_id,node_type,node_description,d_x,d_y,tA,tB,tS,cg,SMIN,SMAX,instances
-S0,s,s,40,50,0,3390,0,0,0,0.288184438,2
+S0,s,s,40,50,0,3390,0,10,-0.288184438,0.288184438,2
 S3,s,s,57,82,0,3390,0,0,0,0.288184438,1
 S15,s,s,39,26,0,3390,0,0,0,0.288184438,1
 ,,,,,,,,,,,
@@ -25,7 +25,7 @@ C15,m,m,20,80,40,331,651,90,0,0,
 Parameters,,,,,,,,,,,
 parameter,description,value,,,,,,,,,
 t_T,optimization time horizon,3390,,,,,,,,,
-t_S,time step size,1,,,,,,,,,
+t_S,time step size,30,,,,,,,,,
 ,,,,,,,,,,,
 W,,,,,,,,,,,
 vehicle_type_id,N,r,v,cc,co,cm,QMAX,EMIN,EMAX,PMAX,
