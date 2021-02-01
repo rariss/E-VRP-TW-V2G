@@ -234,7 +234,7 @@ def create_duplicates(df: 'pd.DataFrame') -> 'pd.DataFrame':
     
     div = len(df)
 
-    df = df.append([df]*4)
+    df = df.append([df]*1)
     df = df.reset_index()
     
     df_new = pd.DataFrame(columns=df.columns)

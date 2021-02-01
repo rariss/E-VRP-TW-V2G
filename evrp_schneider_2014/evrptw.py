@@ -30,6 +30,7 @@ class EVRPTW:
         self.m.EMAX = Param(doc='Maximum EV battery SOE limit for all EVs')
         self.m.rE = Param(doc='Electric consumption per unit distance for EV')
         self.m.rC = Param(doc='Charging rate for EV')
+        self.m.v = Param(doc='Average speed')
 
         # Defining sets
         self.m.V01_ = Set(dimen=1, doc='All nodes extended')
@@ -39,10 +40,10 @@ class EVRPTW:
         self.m.V1_ = Set(initialize=self.m.V01_ - self.m.start_node, doc='All nodes extended except ending depot node')
         self.m.V_ = Set(initialize=self.m.V01_ - self.m.start_node - self.m.end_node,
                         doc='All nodes extended except depot nodes')
-        self.m.F = Set(dimen=1, doc='All charging station nodes')
+        self.m.F_ = Set(dimen=1, doc='All charging station nodes')
         self.m.V = Set(dimen=1, doc='All customer nodes')
-        self.m.V0 = Set(initialize=self.m.V0_ - self.m.F, doc='All customer nodes including the starting node')
-        self.m.F0 = Set(initialize=self.m.V0_ - self.m.V, doc='All charging station nodes including the starting node')
+        self.m.V0 = Set(initialize=self.m.V0_ - self.m.F_, doc='All customer nodes including the starting node')
+        self.m.F0_ = Set(initialize=self.m.V0_ - self.m.V, doc='All charging station nodes including the starting node')
 
         # Defining parameter sets
         self.m.d = Param(self.m.V01_, self.m.V01_, doc='Distance of edge (i;j) between nodes i;j (km)')
@@ -56,7 +57,7 @@ class EVRPTW:
         self.m.xgamma = Var(self.m.V01_, self.m.V01_, within=Boolean)  # Route decision of each edge for each EV
         self.m.xq = Var(self.m.V01_, within=NonNegativeReals)  # Payload of each vehicle before visiting each node
         self.m.xw = Var(self.m.V01_, within=NonNegativeReals)  # Arrival time for each vehicle at each node
-        self.m.xa = Var(self.m.V01_, within=NonNegativeReals)  # Energy of each EV arriving at each node
+        self.m.xa = Var(self.m.V01_, within=NonNegativeReals, initialize=self.m.EMAX)  # Energy of each EV arriving at each node
 
         # %% ROUTING CONSTRAINTS # TODO: consistency for ranged inequality expressions -
         #  WARNING:pyomo.core:DEPRECATED: Chained inequalities are deprecated.
@@ -73,11 +74,11 @@ class EVRPTW:
             return sum(m.xgamma[i, j] for j in m.V1_ if i != j) <= 1
 
         # Create single visit constraint
-        self.m.constraint_visit_stations = Constraint(self.m.F, rule=constraint_visit_stations)
+        self.m.constraint_visit_stations = Constraint(self.m.F_, rule=constraint_visit_stations)
 
         def constraint_single_route(m, j):
-            route_in = sum(m.xgamma[i, j] for i in m.V0_)
-            route_out = sum(m.xgamma[j, i] for i in m.V1_)
+            route_in = sum(m.xgamma[i, j] for i in m.V0_ if i != j)
+            route_out = sum(m.xgamma[j, i] for i in m.V1_ if i != j)
 
             return route_out - route_in == 0
 
@@ -87,21 +88,29 @@ class EVRPTW:
         # %% TIME CONSTRAINTS
 
         def constraint_time_customer(m, i, j):
-            # return m.xw[i] + (m.tS[i] + (m.d[i, j])) * m.xgamma[i, j] - m.Mt * (
-            #         1 - m.xgamma[i, j]) <= m.xw[j]
-            return inequality(None, m.xw[i] + (m.tS[i] + (m.d[i, j])) * m.xgamma[i, j] - m.Mt * (
-                    1 - m.xgamma[i, j]), m.xw[j])
+            if i != j:
+                # return m.xw[i] + (m.tS[i] + (m.d[i, j])) * m.xgamma[i, j] - m.Mt * (
+                #         1 - m.xgamma[i, j]) <= m.xw[j]
+                return inequality(None, m.xw[i] + (m.tS[i] + (m.d[i, j] / m.v)) * m.xgamma[i, j] - m.Mt * (
+                        1 - m.xgamma[i, j]), m.xw[j])
+            else:
+                return Constraint.Skip
 
         self.m.constraint_time_customer = Constraint(self.m.V0, self.m.V1_, rule=constraint_time_customer)
 
         def constraint_time_station(m, i, j):
-            # return m.xw[i] + m.d[i, j] * m.xgamma[i, j] + m.rE * (m.QMAX - m.xa[j]) - (m.Mt + m.rE * m.QMAX) * (
-            #         1 - m.xgamma[i, j]) <= m.xw[j]
-            return inequality(None, m.xw[i] + m.d[i, j] * m.xgamma[i, j] + (m.rC * (m.QMAX - m.xa[j])) - (
-                        m.Mt + (m.rC * m.QMAX)) * (
-                                      1 - m.xgamma[i, j]), m.xw[j])
+            if i != j:
+                # return m.xw[i] + m.d[i, j] * m.xgamma[i, j] + m.rE * (m.QMAX - m.xa[j]) - (m.Mt + m.rE * m.QMAX) * (
+                #         1 - m.xgamma[i, j]) <= m.xw[j]
+                return inequality(None, m.xw[i] + (m.d[i, j] / m.v) * m.xgamma[i, j] + (m.rC * (m.EMAX - m.xa[i])) - (
+                            m.Mt + (m.rC * m.EMAX)) * (
+                                          1 - m.xgamma[i, j]), m.xw[j])
+                # return inequality(None, m.xw[i] + (m.d[i, j] / m.v) * m.xgamma[i, j] + (m.rC * (m.QMAX - m.xa[i])) -
+                #         m.Mt * (1 - m.xgamma[i, j]), m.xw[j])
+            else:
+                return Constraint.Skip
 
-        self.m.constraint_time_station = Constraint(self.m.F, self.m.V1_, rule=constraint_time_station)
+        self.m.constraint_time_station = Constraint(self.m.F_, self.m.V1_, rule=constraint_time_station)
 
         def constraint_node_time_window(m, i):
             # return m.tA[i] <= m.xw[i] <= m.tB[i]
@@ -112,8 +121,11 @@ class EVRPTW:
         # %% PAYLOAD CONSTRAINTS
 
         def constraint_payload(m, i, j):
-            # return 0 <= m.xq[j] <= m.xq[i] - (m.q[i] * m.xgamma[i, j]) + m.Mq * (1 - m.xgamma[i, j]) # TODO: lower bound = 0 : ValueError: No value for uninitialized NumericValue object xq[C28]
-            return inequality(None, m.xq[j], m.xq[i] - (m.q[i] * m.xgamma[i, j]) + m.Mq * (1 - m.xgamma[i, j]))
+            if i != j:
+                # return 0 <= m.xq[j] <= m.xq[i] - (m.q[i] * m.xgamma[i, j]) + m.Mq * (1 - m.xgamma[i, j]) # TODO: lower bound = 0 : ValueError: No value for uninitialized NumericValue object xq[C28]
+                return inequality(None, m.xq[j], m.xq[i] - (m.q[i] * m.xgamma[i, j]) + m.Mq * (1 - m.xgamma[i, j]))
+            else:
+                return Constraint.Skip
 
         self.m.constraint_payload = Constraint(self.m.V0_, self.m.V1_, rule=constraint_payload)
 
@@ -126,17 +138,24 @@ class EVRPTW:
         # %% ENERGY CONSTRAINTS
 
         def constraint_energy_customer(m, i, j):  # TODO: lower bound = 0
-            # return m.xa[j] <= m.xa[i] - (m.rE * m.d[i, j]) * m.xgamma[i, j] + m.Me * (1 - m.xgamma[i, j])
-            return inequality(None, m.xa[j],
-                              m.xa[i] - (m.rE * m.d[i, j]) * m.xgamma[i, j] + m.Me * (1 - m.xgamma[i, j]))
+            if i != j:
+                # return m.xa[j] <= m.xa[i] - (m.rE * m.d[i, j]) * m.xgamma[i, j] + m.Me * (1 - m.xgamma[i, j])
+                return inequality(None, m.xa[j],
+                                  m.xa[i] - m.rE * m.d[i, j] * m.xgamma[i, j] + m.Me * (1 - m.xgamma[i, j]))
+            else:
+                return Constraint.Skip
 
         self.m.constraint_energy_customer = Constraint(self.m.V, self.m.V1_, rule=constraint_energy_customer)
 
         def constraint_energy_station(m, i, j):  # TODO: lower bound = 0
-            return m.xa[j] <= m.EMAX - (m.rE * m.d[i, j]) * m.xgamma[i, j]
-            # return inequality(None, m.xa[j], m.EMAX - (m.rE * m.d[i, j]) * m.xgamma[i, j])
+            if i != j:
+                return m.xa[j] <= m.EMAX - m.rE * m.d[i, j] * m.xgamma[i, j]
+                # return inequality(None, m.xa[j], m.EMAX - (m.rE * m.d[i, j]) * m.xgamma[i, j])
+            else:
+                return Constraint.Skip
 
-        self.m.constraint_energy_station = Constraint(self.m.F0, self.m.V1_, rule=constraint_energy_station)
+        self.m.constraint_energy_station = Constraint(self.m.F0_, self.m.V1_, rule=constraint_energy_station) #TODO: changed to F from F0
+
 
         # %% OBJECTIVE FUNCTION AND DEPENDENT FUNCTIONS
 
