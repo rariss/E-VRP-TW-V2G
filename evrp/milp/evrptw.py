@@ -132,18 +132,23 @@ class EVRPTW:
         self.m.constraint_time_customer = Constraint(self.m.M, self.m.V1_, rule=constraint_time_customer)
 
         def constraint_node_time_window(m, i):
-            """Arrival time must be after time window starts for each vehicle"""
+            """Arrival time must be within time window for each node"""
             return inequality(m.tA[i], m.xw[i], m.tB[i])
         self.m.constraint_node_time_window = Constraint(self.m.V01_, rule=constraint_node_time_window)
 
+        def constraint_terminal_node_time(m, i):  # TODO: Could remove if m.tB[i] = m.t_T - m.tS[i]
+            """Arrival time must be within time window for each node"""
+            return m.xw[i] + m.tS[i] <= m.t_T
+        self.m.constraint_terminal_node_time = Constraint(self.m.end_node, rule=constraint_terminal_node_time)
+
         def constraint_time_xkappa_lb(m, i, t):
-            """Maximum charge and discharge limit for each EV at charging stations"""
+            """V2G decisions must be made after arrival at the node"""
             return (m.t_T - t) * m.xkappa[i, t] <= m.t_T - sum(m.xw[i] * m.xgamma[i, j] for j in m.V1_ if j != i)  # - m.MT * (1 - m.xkappa[i, t])
         self.m.constraint_time_xkappa_lb = Constraint(self.m.S_, self.m.T, rule=constraint_time_xkappa_lb)
 
         def constraint_time_xkappa_ub(m, i, t):
-            """Maximum charge and discharge limit for each EV at charging stations"""
-            return m.xkappa[i, t] * (t + m.t_S) <= sum((m.xw[j] - m.tS[i] - m.d[i, j] / m.v) * m.xgamma[i, j] for j in m.V1_ if j != i)  # - m.MT * (1 - m.xkappa[i, t])
+            """V2G decisions must be made before departure from the node"""
+            return (t + m.t_S) * m.xkappa[i, t] <= sum((m.xw[j] - m.tS[i] - m.d[i, j] / m.v) * m.xgamma[i, j] for j in m.V1_ if j != i)  # - m.MT * (1 - m.xkappa[i, t])
         self.m.constraint_time_xkappa_ub = Constraint(self.m.S_, self.m.T, rule=constraint_time_xkappa_ub)
 
         # %% ENERGY CONSTRAINTS
@@ -166,13 +171,12 @@ class EVRPTW:
         self.m.constraint_energy_customer = Constraint(self.m.M | self.m.start_node, self.m.V1_, rule=constraint_energy_customer)
 
         def constraint_energy_ev_limit(m, i, t):
-            """Maximum charge and discharge limit for each EV at charging stations"""
+            """Charge limits for each EV at charging stations"""
             return inequality(-m.PMAX, m.xp[i, t] * m.xkappa[i, t], m.PMAX)
         self.m.constraint_energy_ev_limit = Constraint(self.m.S_, self.m.T, rule=constraint_energy_ev_limit)
 
-        #  TODO: INFEASIBLE WHEN TURNING ON STATION LIMIT CONSTRAINT
         def constraint_energy_station_limit(m, i, t):  # TODO: Combine duplicates to be within limits at each time
-            """Maximum charge and discharge limit for an EV at charging station i ∈ D0 0,−1 ∪ S0"""
+            """Charge limits for an EV at charging station i"""
             return inequality(m.SMIN[i], m.xp[i, t] * m.xkappa[i, t], m.SMAX[i])
         self.m.constraint_energy_station_limit = Constraint(self.m.S_, self.m.T, rule=constraint_energy_station_limit)
 
@@ -213,7 +217,7 @@ class EVRPTW:
         self.m.constraint_payload = Constraint(self.m.M, self.m.V1_, rule=constraint_payload)
 
         def constraint_payload_station(m, i, j):
-            """Vehicles must unload payload for full customer demand when visiting a customer"""
+            """EV payload must not decrease when visiting a charging station"""
             if i != j:
                 return m.xq[j] <= m.xq[i] + m.MQ * (1 - m.xgamma[i, j])
             else:
@@ -226,7 +230,7 @@ class EVRPTW:
                 return m.xq[i] == m.QMAX
             else:
                 return m.xq[i] <= m.QMAX  # xq is NonNegative
-        self.m.constraint_payload_limit = Constraint(self.m.V01_, rule=constraint_payload_limit)  #TODO: Check if exclude" - self.m.S_"
+        self.m.constraint_payload_limit = Constraint(self.m.V01_, rule=constraint_payload_limit)
 
         # %% OBJECTIVE FUNCTION AND DEPENDENT FUNCTIONS
 
@@ -241,7 +245,7 @@ class EVRPTW:
 
     def C_fleet_capital_cost(self, m):
         """Cost of total number vehicles"""
-        return m.cc * sum(sum(m.xgamma[i, j] for j in m.V_ if j != i) for i in m.start_node)
+        return m.cc * sum(sum(m.xgamma[i, j] for j in m.V1_ if j != i) for i in m.start_node)
 
     def O_delivery_operating_cost(self, m):
         """Amortized delivery operating cost for utilized vehicles (wages)"""
