@@ -10,15 +10,23 @@ class EVRPTW:
     Authors: Rami Ariss and Leandre Berwa
     """
 
-    def __init__(self):
-        # Instantiate pyomo Abstract Model
+    def __init__(self, problem_type: str):
+        """
+        :param problem_type: Objective options include: {Schneider} OR {OpEx, CapEx, Cycle, EA, DCM}
+         Constraint options include: {Start=End, FullStart=End, NoXkappaBounds}
+        """
+        self.problem_type = problem_type
 
+        # Instantiate pyomo Abstract Model
         self.m = AbstractModel()
+
         logging.info('Building abstract model')
         self.build_model()
 
     def build_model(self):
         logging.info('Defining parameters and sets')
+
+        problem_type = self.problem_type.lower().split()
 
         # Defining fixed parameters
         self.m.MQ = Param(doc='Large value for big M payload constraints')
@@ -27,6 +35,8 @@ class EVRPTW:
         self.m.cc = Param(mutable=True, doc='Amortized capital cost for purchasing a vehicle')
         self.m.co = Param(mutable=True, doc='Amortized operating cost for delivery (wages)')
         self.m.cm = Param(mutable=True, doc='Amortized operating cost for maintenance')
+        self.m.cy = Param(mutable=True, doc='Penalty cycle cost')
+        self.m.cz = Param(mutable=True, doc='Reward squeeze cycle cost')
         self.m.QMAX = Param(mutable=True, doc='Maximum payload limit for all vehicles')
         self.m.EMAX = Param(mutable=True, doc='Maximum EV battery SOE limit for all EVs')
         self.m.EMIN = Param(mutable=True, doc='Minimum EV battery SOE limit for all EVs')
@@ -64,6 +74,7 @@ class EVRPTW:
         self.m.SMAX = Param(self.m.S_, mutable=True, doc='Maximum station inverter limit')
         self.m.SMIN = Param(self.m.S_, mutable=True, doc='Minimum station inverter limit')
         self.m.G = Param(self.m.S, self.m.T, mutable=True, doc='Station electric demand profile')
+        self.m.GMAX = Param(self.m.S, mutable=True, doc='Maximum station electric demand')
         self.m.cg = Param(self.m.S, mutable=True, doc='Amortized operating cost for demand charges')
         self.m.ce = Param(self.m.S, self.m.T, mutable=True, doc='Amortized operating cost for energy charges')
         self.m.cq = Param(self.m.M, mutable=True, doc='Amortized revenue for deliveries')
@@ -76,7 +87,7 @@ class EVRPTW:
         self.m.xw = Var(self.m.V01_, within=NonNegativeReals)  # Arrival time for each vehicle at each node
         self.m.xq = Var(self.m.V01_, within=NonNegativeReals)  # Payload of each vehicle before visiting each node
         self.m.xa = Var(self.m.V01_, within=NonNegativeReals, initialize=self.m.EMAX)  # Energy of each EV arriving at each node
-        self.m.xd = Var(self.m.S, within=NonNegativeReals)  # Each station’s net peak electric demand
+        self.m.xd = Var(self.m.S, within=NonNegativeReals, initialize=0)  # Each station’s net peak electric demand
         self.m.xp = Var(self.m.S_, self.m.T, within=Reals)  # Charge or discharge rate of each EV
 
         # %% ROUTING CONSTRAINTS # TODO: consistency for ranged inequality expressions -
@@ -141,18 +152,18 @@ class EVRPTW:
             return m.xw[i] + m.tS[i] <= m.t_T
         self.m.constraint_terminal_node_time = Constraint(self.m.end_node, rule=constraint_terminal_node_time)
 
-        def constraint_time_xkappa_lb(m, i, t):
-            """V2G decisions must be made after arrival at the node"""
-            return (m.t_T - t) * m.xkappa[i, t] <= m.t_T - sum(m.xw[i] * m.xgamma[i, j] for j in m.V1_ if j != i)  # - m.MT * (1 - m.xkappa[i, t])
-        self.m.constraint_time_xkappa_lb = Constraint(self.m.S_, self.m.T, rule=constraint_time_xkappa_lb)
+        if 'noxkappabounds' not in problem_type:
+            def constraint_time_xkappa_lb(m, i, t):
+                """V2G decisions must be made after arrival at the node"""
+                return (m.t_T - t) * m.xkappa[i, t] <= m.t_T - sum(m.xw[i] * m.xgamma[i, j] for j in m.V1_ if j != i)  # - m.MT * (1 - m.xkappa[i, t])
+            self.m.constraint_time_xkappa_lb = Constraint(self.m.S_, self.m.T, rule=constraint_time_xkappa_lb)
 
-        def constraint_time_xkappa_ub(m, i, t):
-            """V2G decisions must be made before departure from the node"""
-            return (t + m.t_S) * m.xkappa[i, t] <= sum((m.xw[j] - m.tS[i] - m.d[i, j] / m.v) * m.xgamma[i, j] for j in m.V1_ if j != i)  # - m.MT * (1 - m.xkappa[i, t])
-        self.m.constraint_time_xkappa_ub = Constraint(self.m.S_, self.m.T, rule=constraint_time_xkappa_ub)
+            def constraint_time_xkappa_ub(m, i, t):
+                """V2G decisions must be made before departure from the node"""
+                return (t + m.t_S) * m.xkappa[i, t] <= sum((m.xw[j] - m.tS[i] - m.d[i, j] / m.v) * m.xgamma[i, j] for j in m.V1_ if j != i)  # - m.MT * (1 - m.xkappa[i, t])
+            self.m.constraint_time_xkappa_ub = Constraint(self.m.S_, self.m.T, rule=constraint_time_xkappa_ub)
 
-        # %% ENERGY CONSTRAINTS
-
+        # ENERGY CONSTRAINTS
         def constraint_energy_station(m, i, j):  # TODO: Check if number of xkappa variables can be reduced for same energy / depot periods
             """Energy transition for each EV while at an intermediate charging station node i and traveling across edge (i, j)"""
             if i != j:
@@ -180,15 +191,21 @@ class EVRPTW:
             return inequality(m.SMIN[i], m.xp[i, t] * m.xkappa[i, t], m.SMAX[i])
         self.m.constraint_energy_station_limit = Constraint(self.m.S_, self.m.T, rule=constraint_energy_station_limit)
 
-        def constraint_energy_start_end_soe(m, i):
-            """Start and end energy state must be equal for each EV"""
-            return m.xa[i] == m.EMAX
-        self.m.constraint_energy_start_end_soe = Constraint(self.m.start_node, rule=constraint_energy_start_end_soe)  # | self.m.end_node
-
-        # def constraint_energy_start_end_soe(m, i, j):
-        #     """Start and end energy state must be equal for each EV"""
-        #     return m.xa[i] == m.xa[j]
-        # self.m.constraint_energy_start_end_soe = Constraint(self.m.start_node, self.m.end_node, rule=constraint_energy_start_end_soe)
+        if 'start=end' in problem_type:
+            def constraint_energy_start_end_soe(m, i, j):
+                """Start and end energy state must be equal for each EV"""
+                return m.xa[i] == m.xa[j]
+            self.m.constraint_energy_start_end_soe = Constraint(self.m.start_node, self.m.end_node, rule=constraint_energy_start_end_soe)
+        elif 'fullstart=end' in problem_type:
+            def constraint_energy_start_end_soe(m, i):
+                """Start and end energy state must be equal for each EV"""
+                return m.xa[i] == m.EMAX
+            self.m.constraint_energy_start_end_soe = Constraint(self.m.start_node | self.m.end_node, rule=constraint_energy_start_end_soe)
+        else:
+            def constraint_energy_start_end_soe(m, i):
+                """Start and end energy state must be equal for each EV"""
+                return m.xa[i] == m.EMAX
+            self.m.constraint_energy_start_end_soe = Constraint(self.m.start_node, rule=constraint_energy_start_end_soe)
 
         def constraint_energy_soe(m, i):
             """Minimum and Maximum SOE limit for each EV"""
@@ -203,11 +220,13 @@ class EVRPTW:
         # See this implementation example: https://stackoverflow.com/questions/53966482/how-to-map-different-indices-in-pyomo
         def constraint_energy_peak(m, s, t):
             """Peak electric demand for each physical station s(i) ∈ S"""
-            return m.G[s, t] + sum(m.xkappa[i, t] * m.xp[i, t] for i in m.Smap[s]) <= m.xd[s]
-        # self.m.constraint_energy_peak = Constraint(self.m.S, self.m.T, rule=constraint_energy_peak)
+            if 'dcm' in problem_type:
+                return m.G[s, t] + sum(m.xkappa[i, t] * m.xp[i, t] for i in m.Smap[s]) <= m.xd[s]
+            else:
+                Constraint.Skip
+        self.m.constraint_energy_peak = Constraint(self.m.S, self.m.T, rule=constraint_energy_peak)
 
-        # %% PAYLOAD CONSTRAINTS
-
+        # PAYLOAD CONSTRAINTS
         def constraint_payload(m, i, j):
             """Vehicles must unload payload for full customer demand when visiting a customer"""
             if i != j:
@@ -232,16 +251,38 @@ class EVRPTW:
                 return m.xq[i] <= m.QMAX  # xq is NonNegative
         self.m.constraint_payload_limit = Constraint(self.m.V01_, rule=constraint_payload_limit)
 
-        # %% OBJECTIVE FUNCTION AND DEPENDENT FUNCTIONS
+        # OBJECTIVE FUNCTION AND DEPENDENT FUNCTIONS
+        self.m.obj = Objective(rule=self.obj, sense=minimize)
 
-        logging.info('Defining objective')
+    # OBJECTIVE FUNCTION AND DEPENDENT FUNCTIONS
+    def obj(self, m):
+        """Objective: maximize net profits"""
+        logging.info('Problem type: {}'.format(self.problem_type))
+        problem_type = self.problem_type.lower().split()
 
-        def obj(m):
-            """Objective: minimize the total traveled distance and the fleet size"""
-            return self.total_distance(m) + self.C_fleet_capital_cost(m) + self.cycle_cost(m) + self.squeeze_cycle_cost(m) + self.R_energy_arbitrage_revenue(m)# + self.R_peak_shaving_revenue(m)
+        # Construct objective function
+        if 'schneider' in problem_type:
+            obj_result = self.total_distance(m) + self.C_fleet_capital_cost(m)
+        else:
+            # Initialize
+            obj_result = 0
 
-        # Create objective function
-        self.m.obj = Objective(rule=obj, sense=minimize)
+            if 'distance' in problem_type:
+                obj_result += self.total_distance(m)
+            if 'opex' in problem_type:
+                obj_result += self.O_maintenance_operating_cost(m) + self.O_delivery_operating_cost(m)
+            if 'capex' in problem_type:
+                obj_result += self.C_fleet_capital_cost(m)
+            if 'cycle' in problem_type:
+                obj_result += self.cycle_cost(m) + self.squeeze_cycle_cost(m)
+            if 'ea' in problem_type:
+                obj_result -= self.R_energy_arbitrage_revenue(m)
+            if 'dcm' in problem_type:
+                obj_result -= self.R_peak_shaving_revenue(m)
+            if 'delivery' in problem_type:
+                obj_result -= self.R_delivery_revenue(m)
+
+        return obj_result
 
     def C_fleet_capital_cost(self, m):
         """Cost of total number vehicles"""
@@ -255,14 +296,13 @@ class EVRPTW:
         """Amortized delivery maintenance cost for utilized vehicles"""
         return m.cm * self.total_distance(m)
 
-    # TODO: Implement GMAX properly by doing maximization in data preparation and passing through as parameters
     def R_peak_shaving_revenue(self, m):
         """Amortized V2G peak shaving demand charge savings (or net demand charge cost) over all stations"""
-        return sum(m.cg[s] * (m.xd[s]) for s in m.S)  # max(m.G[s, :]) -
+        return sum(m.cg[s] * (m.GMAX[s] - m.xd[s]) for s in m.S)
 
     def R_energy_arbitrage_revenue(self, m):
         """Amortized G2V/V2G energy arbitrage (or net cost of charging) over all charging stations"""
-        return m.t_S * sum(sum(sum(m.ce[s, t] * m.xp[i, t] * m.xkappa[i, t] for t in m.T) for i in m.Smap[s]) for s in m.S)
+        return -m.t_S * sum(sum(sum(m.ce[s, t] * m.xp[i, t] * m.xkappa[i, t] for t in m.T) for i in m.Smap[s]) for s in m.S)
 
     def R_delivery_revenue(self, m):
         """Amortized delivery revenue for goods delivered to customer nodes by entire fleet"""
@@ -276,16 +316,16 @@ class EVRPTW:
         """Total time traveled by all EVs"""
         return self.total_distance(m) / m.v
 
-    def cycle_cost(self, m, c=3e-3):
+    def cycle_cost(self, m):
         """Adds a penalty for any battery actions."""
-        return c * m.t_S * sum(sum(sum(m.xkappa[i, t] * m.xgamma[i, j] for t in m.T) for j in m.V1_ if i != j) for i in m.S_)
+        return m.cy * m.t_S * sum(sum(sum(m.xkappa[i, t] * m.xgamma[i, j] for t in m.T) for j in m.V1_ if i != j) for i in m.S_)
 
-    def squeeze_cycle_cost(self, m, c=1e-3):
+    def squeeze_cycle_cost(self, m):
         """Adds a reward for consecutive battery actions."""
-        return -c * m.t_S * sum(sum(m.xkappa[i, t] * m.xkappa[i, t - m.t_S] for t in m.T if t > 0) for i in m.S_)
+        return -m.cz * m.t_S * sum(sum(m.xkappa[i, t] * m.xkappa[i, t - m.t_S] for t in m.T if t > 0) for i in m.S_)
 
     # TODO: FIX t_S unit size so no decimals are needed
-    def create_data_dictionary(self):  # TODO: Move to utils
+    def create_data_dictionary(self):
         self.p = {
             None: {
                 'MQ': {None: float(self.data['W'].loc[:, 'QMAX'].max())},  # Parameters
@@ -294,6 +334,8 @@ class EVRPTW:
                 'cc': {None: self.data['W'].loc[:, 'cc'].mean()},
                 'co': {None: self.data['W'].loc[:, 'co'].mean()},
                 'cm': {None: self.data['W'].loc[:, 'cm'].mean()},
+                'cy': {None: self.data['W'].loc[:, 'cy'].mean()},
+                'cz': {None: self.data['W'].loc[:, 'cy'].mean()},
                 'QMAX': {None: float(self.data['W'].loc[:, 'QMAX'].mean())},
                 'EMIN': {None: float(self.data['W'].loc[:, 'EMIN'].mean())},
                 'EMAX': {None: float(self.data['W'].loc[:, 'EMAX'].mean())},
@@ -328,6 +370,7 @@ class EVRPTW:
         if 'G' in self.data['T'].columns.get_level_values(0).drop_duplicates():
             self.p[None].update({
                 'G':  self.data['G'].T.stack().to_dict(),
+                'GMAX': self.data['G'].max().to_dict(),
                 'cg': self.data['S']['cg'].to_dict()})
 
 #         'V01_type': self.data['V']['node_type'].to_dict(),
@@ -382,21 +425,39 @@ class EVRPTW:
         logging.info('Creating parameters')
         self.create_data_dictionary()
 
-    def solve(self, instance_filepath: str):
-        # Specify solver
-        opt = SolverFactory('gurobi', io_format='python')
-
-        # Import data
-        self.import_instance(instance_filepath)
-
+    def make_instance(self):
         # Create an instance of the AbstractModel passing in parameters
         logging.info('Creating instance')
         self.instance = self.m.create_instance(self.p)
 
+    def make_solver(self, solve_options={'TimeLimit': 60 * 5}):
+        # Specify solver
+        self.opt = SolverFactory('gurobi', io_format='python')
+
         # Solver options
-        solv_options = {'TimeLimit': 60*5}  # 'Symmetry': 2
+        self.solve_options = solve_options  # 'Symmetry': 2
+
+    def full_solve(self, instance_filepath: str):
+        # Import data
+        self.import_instance(instance_filepath)
+
+        # Create an instance of the AbstractModel passing in parameters
+        self.make_instance()
+
+        # Create solver
+        self.make_solver()
 
         # Solve instance
         logging.info('Solving instance...')
-        self.results = opt.solve(self.instance, tee=True, options=solv_options)
+        self.results = self.opt.solve(self.instance, tee=True, options=self.solve_options)
+        logging.info('Done')
+
+    def solve(self, instance_filepath: str):
+        if not (hasattr(self, 'opt') & hasattr(self, 'solve_options')):
+            logging.info('Making solver...')
+            self.make_solver()
+
+        # Solve instance
+        logging.info('Solving instance...')
+        self.results = self.opt.solve(self.instance, tee=True, options=self.solve_options)
         logging.info('Done')
