@@ -2,6 +2,7 @@
 # from utils.utilities import create_plotting_edges
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
+from plotly.offline import plot # for Spyder
 import logging
 
 from utils.utilities import create_flat_distance_matrix, create_coordinate_dict  # TODO: NEW
@@ -125,3 +126,4 @@ def plot_interactive_graph(v: 'pd.DataFrame', **kwargs) -> 'fig':
     )
 
     fig.show()
+    plot(fig) # for Spyder

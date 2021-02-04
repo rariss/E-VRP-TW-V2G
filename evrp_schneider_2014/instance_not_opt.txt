@@ -1,0 +1,414 @@
+Model unknown
+
+  Variables:
+    xgamma : Size=100, Index=xgamma_index
+        Key            : Lower : Value : Upper : Fixed : Stale : Domain
+        ('C28', 'C28') :     0 :  None :     1 : False :  True : Boolean
+        ('C28', 'C75') :     0 :   0.0 :     1 : False : False : Boolean
+        ('C28', 'C78') :     0 :   0.0 :     1 : False : False : Boolean
+        ('C28', 'C91') :     0 :   0.0 :     1 : False : False : Boolean
+        ('C28', 'C95') :     0 :   0.0 :     1 : False : False : Boolean
+         ('C28', 'D0') :     0 :  None :     1 : False :  True : Boolean
+         ('C28', 'D1') :     0 :   1.0 :     1 : False : False : Boolean
+         ('C28', 'S0') :     0 :   0.0 :     1 : False : False : Boolean
+         ('C28', 'S1') :     0 :   0.0 :     1 : False : False : Boolean
+        ('C28', 'S13') :     0 :   0.0 :     1 : False : False : Boolean
+        ('C75', 'C28') :     0 :   0.0 :     1 : False : False : Boolean
+        ('C75', 'C75') :     0 :  None :     1 : False :  True : Boolean
+        ('C75', 'C78') :     0 :   0.0 :     1 : False : False : Boolean
+        ('C75', 'C91') :     0 :   0.0 :     1 : False : False : Boolean
+        ('C75', 'C95') :     0 :   0.0 :     1 : False : False : Boolean
+         ('C75', 'D0') :     0 :  None :     1 : False :  True : Boolean
+         ('C75', 'D1') :     0 :   1.0 :     1 : False : False : Boolean
+         ('C75', 'S0') :     0 :  -0.0 :     1 : False : False : Boolean
+         ('C75', 'S1') :     0 :   0.0 :     1 : False : False : Boolean
+        ('C75', 'S13') :     0 :   0.0 :     1 : False : False : Boolean
+        ('C78', 'C28') :     0 :   1.0 :     1 : False : False : Boolean
+        ('C78', 'C75') :     0 :   0.0 :     1 : False : False : Boolean
+        ('C78', 'C78') :     0 :  None :     1 : False :  True : Boolean
+        ('C78', 'C91') :     0 :   0.0 :     1 : False : False : Boolean
+        ('C78', 'C95') :     0 :   0.0 :     1 : False : False : Boolean
+         ('C78', 'D0') :     0 :  None :     1 : False :  True : Boolean
+         ('C78', 'D1') :     0 :   0.0 :     1 : False : False : Boolean
+         ('C78', 'S0') :     0 :   0.0 :     1 : False : False : Boolean
+         ('C78', 'S1') :     0 :   0.0 :     1 : False : False : Boolean
+        ('C78', 'S13') :     0 :   0.0 :     1 : False : False : Boolean
+        ('C91', 'C28') :     0 :  -0.0 :     1 : False : False : Boolean
+        ('C91', 'C75') :     0 :   0.0 :     1 : False : False : Boolean
+        ('C91', 'C78') :     0 :   0.0 :     1 : False : False : Boolean
+        ('C91', 'C91') :     0 :  None :     1 : False :  True : Boolean
+        ('C91', 'C95') :     0 :   1.0 :     1 : False : False : Boolean
+         ('C91', 'D0') :     0 :  None :     1 : False :  True : Boolean
+         ('C91', 'D1') :     0 :   0.0 :     1 : False : False : Boolean
+         ('C91', 'S0') :     0 :  -0.0 :     1 : False : False : Boolean
+         ('C91', 'S1') :     0 :   0.0 :     1 : False : False : Boolean
+        ('C91', 'S13') :     0 :   0.0 :     1 : False : False : Boolean
+        ('C95', 'C28') :     0 :   0.0 :     1 : False : False : Boolean
+        ('C95', 'C75') :     0 :   0.0 :     1 : False : False : Boolean
+        ('C95', 'C78') :     0 :   0.0 :     1 : False : False : Boolean
+        ('C95', 'C91') :     0 :   0.0 :     1 : False : False : Boolean
+        ('C95', 'C95') :     0 :  None :     1 : False :  True : Boolean
+         ('C95', 'D0') :     0 :  None :     1 : False :  True : Boolean
+         ('C95', 'D1') :     0 :   1.0 :     1 : False : False : Boolean
+         ('C95', 'S0') :     0 :   0.0 :     1 : False : False : Boolean
+         ('C95', 'S1') :     0 :   0.0 :     1 : False : False : Boolean
+        ('C95', 'S13') :     0 :   0.0 :     1 : False : False : Boolean
+         ('D0', 'C28') :     0 :   0.0 :     1 : False : False : Boolean
+         ('D0', 'C75') :     0 :   1.0 :     1 : False : False : Boolean
+         ('D0', 'C78') :     0 :   0.0 :     1 : False : False : Boolean
+         ('D0', 'C91') :     0 :   1.0 :     1 : False : False : Boolean
+         ('D0', 'C95') :     0 :  -0.0 :     1 : False : False : Boolean
+          ('D0', 'D0') :     0 :  None :     1 : False :  True : Boolean
+          ('D0', 'D1') :     0 :   0.0 :     1 : False : False : Boolean
+          ('D0', 'S0') :     0 :  -0.0 :     1 : False : False : Boolean
+          ('D0', 'S1') :     0 :   1.0 :     1 : False : False : Boolean
+         ('D0', 'S13') :     0 :  -0.0 :     1 : False : False : Boolean
+         ('D1', 'C28') :     0 :  None :     1 : False :  True : Boolean
+         ('D1', 'C75') :     0 :  None :     1 : False :  True : Boolean
+         ('D1', 'C78') :     0 :  None :     1 : False :  True : Boolean
+         ('D1', 'C91') :     0 :  None :     1 : False :  True : Boolean
+         ('D1', 'C95') :     0 :  None :     1 : False :  True : Boolean
+          ('D1', 'D0') :     0 :  None :     1 : False :  True : Boolean
+          ('D1', 'D1') :     0 :  None :     1 : False :  True : Boolean
+          ('D1', 'S0') :     0 :  None :     1 : False :  True : Boolean
+          ('D1', 'S1') :     0 :  None :     1 : False :  True : Boolean
+         ('D1', 'S13') :     0 :  None :     1 : False :  True : Boolean
+         ('S0', 'C28') :     0 :  -0.0 :     1 : False : False : Boolean
+         ('S0', 'C75') :     0 :   0.0 :     1 : False : False : Boolean
+         ('S0', 'C78') :     0 :   0.0 :     1 : False : False : Boolean
+         ('S0', 'C91') :     0 :   0.0 :     1 : False : False : Boolean
+         ('S0', 'C95') :     0 :  -0.0 :     1 : False : False : Boolean
+          ('S0', 'D0') :     0 :  None :     1 : False :  True : Boolean
+          ('S0', 'D1') :     0 :  -0.0 :     1 : False : False : Boolean
+          ('S0', 'S0') :     0 :  None :     1 : False :  True : Boolean
+          ('S0', 'S1') :     0 :   0.0 :     1 : False : False : Boolean
+         ('S0', 'S13') :     0 :  -0.0 :     1 : False : False : Boolean
+         ('S1', 'C28') :     0 :   0.0 :     1 : False : False : Boolean
+         ('S1', 'C75') :     0 :   0.0 :     1 : False : False : Boolean
+         ('S1', 'C78') :     0 :   1.0 :     1 : False : False : Boolean
+         ('S1', 'C91') :     0 :   0.0 :     1 : False : False : Boolean
+         ('S1', 'C95') :     0 :   0.0 :     1 : False : False : Boolean
+          ('S1', 'D0') :     0 :  None :     1 : False :  True : Boolean
+          ('S1', 'D1') :     0 :   0.0 :     1 : False : False : Boolean
+          ('S1', 'S0') :     0 :   0.0 :     1 : False : False : Boolean
+          ('S1', 'S1') :     0 :  None :     1 : False :  True : Boolean
+         ('S1', 'S13') :     0 :   0.0 :     1 : False : False : Boolean
+        ('S13', 'C28') :     0 :  -0.0 :     1 : False : False : Boolean
+        ('S13', 'C75') :     0 :   0.0 :     1 : False : False : Boolean
+        ('S13', 'C78') :     0 :   0.0 :     1 : False : False : Boolean
+        ('S13', 'C91') :     0 :  -0.0 :     1 : False : False : Boolean
+        ('S13', 'C95') :     0 :  -0.0 :     1 : False : False : Boolean
+         ('S13', 'D0') :     0 :  None :     1 : False :  True : Boolean
+         ('S13', 'D1') :     0 :  -0.0 :     1 : False : False : Boolean
+         ('S13', 'S0') :     0 :  -0.0 :     1 : False : False : Boolean
+         ('S13', 'S1') :     0 :   0.0 :     1 : False : False : Boolean
+        ('S13', 'S13') :     0 :  None :     1 : False :  True : Boolean
+    xq : Size=10, Index=V01_
+        Key : Lower : Value : Upper : Fixed : Stale : Domain
+        C28 :     0 :  16.0 :  None : False : False : NonNegativeReals
+        C75 :     0 : 200.0 :  None : False : False : NonNegativeReals
+        C78 :     0 : 200.0 :  None : False : False : NonNegativeReals
+        C91 :     0 :  21.0 :  None : False : False : NonNegativeReals
+        C95 :     0 :  20.0 :  None : False : False : NonNegativeReals
+         D0 :     0 : 200.0 :  None : False : False : NonNegativeReals
+         D1 :     0 :   0.0 :  None : False : False : NonNegativeReals
+         S0 :     0 :   0.0 :  None : False : False : NonNegativeReals
+         S1 :     0 : 200.0 :  None : False : False : NonNegativeReals
+        S13 :     0 :   0.0 :  None : False : False : NonNegativeReals
+    xw : Size=10, Index=V01_
+        Key : Lower : Value              : Upper : Fixed : Stale : Domain
+        C28 :     0 :              213.0 :  None : False : False : NonNegativeReals
+        C75 :     0 :               49.0 :  None : False : False : NonNegativeReals
+        C78 :     0 :              158.0 :  None : False : False : NonNegativeReals
+        C91 :     0 :              107.0 :  None : False : False : NonNegativeReals
+        C95 :     0 :              160.0 :  None : False : False : NonNegativeReals
+         D0 :     0 :                0.0 :  None : False : False : NonNegativeReals
+         D1 :     0 :              230.0 :  None : False : False : NonNegativeReals
+         S0 :     0 :                0.0 :  None : False : False : NonNegativeReals
+         S1 :     0 : 29.068883707497264 :  None : False : False : NonNegativeReals
+        S13 :     0 :                0.0 :  None : False : False : NonNegativeReals
+    xa : Size=10, Index=V01_
+        Key : Lower : Value              : Upper : Fixed : Stale : Domain
+        C28 :     0 : 6.3245553203367635 :  None : False : False : NonNegativeReals
+        C75 :     0 :  32.84511202110039 :  None : False : False : NonNegativeReals
+        C78 :     0 : 45.332941459221644 :  None : False : False : NonNegativeReals
+        C91 :     0 : 35.017503050268616 :  None : False : False : NonNegativeReals
+        C95 :     0 : 14.866068747318486 :  None : False : False : NonNegativeReals
+         D0 :     0 :              60.63 :  None : False :  True : NonNegativeReals
+         D1 :     0 :                0.0 :  None : False : False : NonNegativeReals
+         S0 :     0 :  5.060224042200751 :  None : False : False : NonNegativeReals
+         S1 :     0 : 31.561116292502735 :  None : False : False : NonNegativeReals
+        S13 :     0 :  60.63000000000005 :  None : False : False : NonNegativeReals
+
+  Objectives:
+    obj : Size=1, Index=None, Active=True
+        Key  : Active : Value
+        None :   True : 182.91917911096044
+
+  Constraints:
+    constraint_visit_customers : Size=5
+        Key : Lower : Body : Upper
+        C28 :   1.0 :  1.0 :   1.0
+        C75 :   1.0 :  1.0 :   1.0
+        C78 :   1.0 :  1.0 :   1.0
+        C91 :   1.0 :  1.0 :   1.0
+        C95 :   1.0 :  1.0 :   1.0
+    constraint_visit_stations : Size=3
+        Key : Lower : Body : Upper
+         S0 :  None :  0.0 :   1.0
+         S1 :  None :  1.0 :   1.0
+        S13 :  None :  0.0 :   1.0
+    constraint_single_route : Size=8
+        Key : Lower : Body : Upper
+        C28 :   0.0 :  0.0 :   0.0
+        C75 :   0.0 :  0.0 :   0.0
+        C78 :   0.0 :  0.0 :   0.0
+        C91 :   0.0 :  0.0 :   0.0
+        C95 :   0.0 :  0.0 :   0.0
+         S0 :   0.0 :  0.0 :   0.0
+         S1 :   0.0 :  0.0 :   0.0
+        S13 :   0.0 :  0.0 :   0.0
+    constraint_time_customer : Size=49
+        Key            : Lower : Body                  : Upper
+        ('C28', 'C75') :  None :                 -66.0 :   0.0
+        ('C28', 'C78') :  None :                -175.0 :   0.0
+        ('C28', 'C91') :  None :                -124.0 :   0.0
+        ('C28', 'C95') :  None :                -177.0 :   0.0
+         ('C28', 'D1') :  None :   -0.6754446796632294 :   0.0
+         ('C28', 'S0') :  None :                 -17.0 :   0.0
+         ('C28', 'S1') :  None :   -46.068883707497264 :   0.0
+        ('C28', 'S13') :  None :                 -17.0 :   0.0
+        ('C75', 'C28') :  None :                -394.0 :   0.0
+        ('C75', 'C78') :  None :                -339.0 :   0.0
+        ('C75', 'C91') :  None :                -288.0 :   0.0
+        ('C75', 'C95') :  None :                -341.0 :   0.0
+         ('C75', 'D1') :  None :    -143.2151120211004 :   0.0
+         ('C75', 'S0') :  None :                -181.0 :   0.0
+         ('C75', 'S1') :  None :   -210.06888370749726 :   0.0
+        ('C75', 'S13') :  None :                -181.0 :   0.0
+        ('C78', 'C28') :  None :                 -20.0 :   0.0
+        ('C78', 'C75') :  None :                -121.0 :   0.0
+        ('C78', 'C91') :  None :                -179.0 :   0.0
+        ('C78', 'C95') :  None :                -232.0 :   0.0
+         ('C78', 'D1') :  None :                -302.0 :   0.0
+         ('C78', 'S0') :  None :                 -72.0 :   0.0
+         ('C78', 'S1') :  None :   -101.06888370749726 :   0.0
+        ('C78', 'S13') :  None :                 -72.0 :   0.0
+        ('C91', 'C28') :  None :                -336.0 :   0.0
+        ('C91', 'C75') :  None :                -172.0 :   0.0
+        ('C91', 'C78') :  None :                -281.0 :   0.0
+        ('C91', 'C95') :  None :   -31.819660112501055 :   0.0
+         ('C91', 'D1') :  None :                -353.0 :   0.0
+         ('C91', 'S0') :  None :                -123.0 :   0.0
+         ('C91', 'S1') :  None :   -152.06888370749726 :   0.0
+        ('C91', 'S13') :  None :                -123.0 :   0.0
+        ('C95', 'C28') :  None :                -283.0 :   0.0
+        ('C95', 'C75') :  None :                -119.0 :   0.0
+        ('C95', 'C78') :  None :                -228.0 :   0.0
+        ('C95', 'C91') :  None :                -177.0 :   0.0
+         ('C95', 'D1') :  None :    -45.13393125268149 :   0.0
+         ('C95', 'S0') :  None :                 -70.0 :   0.0
+         ('C95', 'S1') :  None :    -99.06888370749726 :   0.0
+        ('C95', 'S13') :  None :                 -70.0 :   0.0
+         ('D0', 'C28') :  None :                -443.0 :   0.0
+         ('D0', 'C75') :  None :   -21.215112021100392 :   0.0
+         ('D0', 'C78') :  None :                -388.0 :   0.0
+         ('D0', 'C91') :  None :     -81.3875030502686 :   0.0
+         ('D0', 'C95') :  None :                -390.0 :   0.0
+          ('D0', 'D1') :  None :                -460.0 :   0.0
+          ('D0', 'S0') :  None :                -230.0 :   0.0
+          ('D0', 'S1') :  None : 3.552713678800501e-15 :   0.0
+         ('D0', 'S13') :  None :                -230.0 :   0.0
+    constraint_time_station : Size=24
+        Key            : Lower : Body                : Upper
+         ('S0', 'C28') :  None : -445.47950978067837 :   0.0
+         ('S0', 'C75') :  None : -281.47950978067837 :   0.0
+         ('S0', 'C78') :  None : -390.47950978067837 :   0.0
+         ('S0', 'C91') :  None : -339.47950978067837 :   0.0
+         ('S0', 'C95') :  None : -392.47950978067837 :   0.0
+          ('S0', 'D1') :  None : -462.47950978067837 :   0.0
+          ('S0', 'S1') :  None : -261.54839348817563 :   0.0
+         ('S0', 'S13') :  None : -232.47950978067837 :   0.0
+         ('S1', 'C28') :  None :  -429.3960632758291 :   0.0
+         ('S1', 'C75') :  None :  -265.3960632758291 :   0.0
+         ('S1', 'C78') :  None : -31.099004735050727 :   0.0
+         ('S1', 'C91') :  None :  -323.3960632758291 :   0.0
+         ('S1', 'C95') :  None :  -376.3960632758291 :   0.0
+          ('S1', 'D1') :  None :  -446.3960632758291 :   0.0
+          ('S1', 'S0') :  None : -216.39606327582908 :   0.0
+         ('S1', 'S13') :  None : -216.39606327582908 :   0.0
+        ('S13', 'C28') :  None :           -472.7087 :   0.0
+        ('S13', 'C75') :  None :           -308.7087 :   0.0
+        ('S13', 'C78') :  None :           -417.7087 :   0.0
+        ('S13', 'C91') :  None :           -366.7087 :   0.0
+        ('S13', 'C95') :  None :           -419.7087 :   0.0
+         ('S13', 'D1') :  None :           -489.7087 :   0.0
+         ('S13', 'S0') :  None :           -259.7087 :   0.0
+         ('S13', 'S1') :  None :  -288.7775837074973 :   0.0
+    constraint_node_time_window : Size=10
+        Key : Lower : Body               : Upper
+        C28 : 183.0 :              213.0 : 213.0
+        C75 :  49.0 :               49.0 :  79.0
+        C78 : 158.0 :              158.0 : 188.0
+        C91 :  77.0 :              107.0 : 107.0
+        C95 : 130.0 :              160.0 : 160.0
+         D0 :   0.0 :                0.0 : 230.0
+         D1 :   0.0 :              230.0 : 230.0
+         S0 :   0.0 :                0.0 : 230.0
+         S1 :   0.0 : 29.068883707497264 : 230.0
+        S13 :   0.0 :                0.0 : 230.0
+    constraint_payload : Size=73
+        Key            : Lower : Body   : Upper
+        ('C28', 'C75') :  None :  -16.0 :   0.0
+        ('C28', 'C78') :  None :  -16.0 :   0.0
+        ('C28', 'C91') :  None : -195.0 :   0.0
+        ('C28', 'C95') :  None : -196.0 :   0.0
+         ('C28', 'D1') :  None :    0.0 :   0.0
+         ('C28', 'S0') :  None : -216.0 :   0.0
+         ('C28', 'S1') :  None :  -16.0 :   0.0
+        ('C28', 'S13') :  None : -216.0 :   0.0
+        ('C75', 'C28') :  None : -384.0 :   0.0
+        ('C75', 'C78') :  None : -200.0 :   0.0
+        ('C75', 'C91') :  None : -379.0 :   0.0
+        ('C75', 'C95') :  None : -380.0 :   0.0
+         ('C75', 'D1') :  None : -182.0 :   0.0
+         ('C75', 'S0') :  None : -400.0 :   0.0
+         ('C75', 'S1') :  None : -200.0 :   0.0
+        ('C75', 'S13') :  None : -400.0 :   0.0
+        ('C78', 'C28') :  None : -181.0 :   0.0
+        ('C78', 'C75') :  None : -200.0 :   0.0
+        ('C78', 'C91') :  None : -379.0 :   0.0
+        ('C78', 'C95') :  None : -380.0 :   0.0
+         ('C78', 'D1') :  None : -400.0 :   0.0
+         ('C78', 'S0') :  None : -400.0 :   0.0
+         ('C78', 'S1') :  None : -200.0 :   0.0
+        ('C78', 'S13') :  None : -400.0 :   0.0
+        ('C91', 'C28') :  None : -205.0 :   0.0
+        ('C91', 'C75') :  None :  -21.0 :   0.0
+        ('C91', 'C78') :  None :  -21.0 :   0.0
+        ('C91', 'C95') :  None :    0.0 :   0.0
+         ('C91', 'D1') :  None : -221.0 :   0.0
+         ('C91', 'S0') :  None : -221.0 :   0.0
+         ('C91', 'S1') :  None :  -21.0 :   0.0
+        ('C91', 'S13') :  None : -221.0 :   0.0
+        ('C95', 'C28') :  None : -204.0 :   0.0
+        ('C95', 'C75') :  None :  -20.0 :   0.0
+        ('C95', 'C78') :  None :  -20.0 :   0.0
+        ('C95', 'C91') :  None : -199.0 :   0.0
+         ('C95', 'D1') :  None :    0.0 :   0.0
+         ('C95', 'S0') :  None : -220.0 :   0.0
+         ('C95', 'S1') :  None :  -20.0 :   0.0
+        ('C95', 'S13') :  None : -220.0 :   0.0
+         ('D0', 'C28') :  None : -384.0 :   0.0
+         ('D0', 'C75') :  None :    0.0 :   0.0
+         ('D0', 'C78') :  None : -200.0 :   0.0
+         ('D0', 'C91') :  None : -179.0 :   0.0
+         ('D0', 'C95') :  None : -380.0 :   0.0
+          ('D0', 'D1') :  None : -400.0 :   0.0
+          ('D0', 'S0') :  None : -400.0 :   0.0
+          ('D0', 'S1') :  None :    0.0 :   0.0
+         ('D0', 'S13') :  None : -400.0 :   0.0
+         ('S0', 'C28') :  None : -184.0 :   0.0
+         ('S0', 'C75') :  None :    0.0 :   0.0
+         ('S0', 'C78') :  None :    0.0 :   0.0
+         ('S0', 'C91') :  None : -179.0 :   0.0
+         ('S0', 'C95') :  None : -180.0 :   0.0
+          ('S0', 'D1') :  None : -200.0 :   0.0
+          ('S0', 'S1') :  None :    0.0 :   0.0
+         ('S0', 'S13') :  None : -200.0 :   0.0
+         ('S1', 'C28') :  None : -384.0 :   0.0
+         ('S1', 'C75') :  None : -200.0 :   0.0
+         ('S1', 'C78') :  None :    0.0 :   0.0
+         ('S1', 'C91') :  None : -379.0 :   0.0
+         ('S1', 'C95') :  None : -380.0 :   0.0
+          ('S1', 'D1') :  None : -400.0 :   0.0
+          ('S1', 'S0') :  None : -400.0 :   0.0
+         ('S1', 'S13') :  None : -400.0 :   0.0
+        ('S13', 'C28') :  None : -184.0 :   0.0
+        ('S13', 'C75') :  None :    0.0 :   0.0
+        ('S13', 'C78') :  None :    0.0 :   0.0
+        ('S13', 'C91') :  None : -179.0 :   0.0
+        ('S13', 'C95') :  None : -180.0 :   0.0
+         ('S13', 'D1') :  None : -200.0 :   0.0
+         ('S13', 'S0') :  None : -200.0 :   0.0
+         ('S13', 'S1') :  None :    0.0 :   0.0
+    constraint_payload_limit : Size=1
+        Key : Lower : Body  : Upper
+         D0 :   0.0 : 200.0 : 200.0
+    constraint_energy_customer : Size=40
+        Key            : Lower : Body                   : Upper
+        ('C28', 'C75') :  None :    -34.109443299236375 :   0.0
+        ('C28', 'C78') :  None :    -21.621613861115122 :   0.0
+        ('C28', 'C91') :  None :     -31.93705227006815 :   0.0
+        ('C28', 'C95') :  None :     -52.08848657301828 :   0.0
+         ('C28', 'D1') :  None : -4.440892098500626e-15 :   0.0
+         ('C28', 'S0') :  None :    -61.894331278136015 :   0.0
+         ('C28', 'S1') :  None :    -35.393439027834035 :   0.0
+        ('C28', 'S13') :  None :     -6.324555320336714 :   0.0
+        ('C75', 'C28') :  None :     -87.15055670076362 :   0.0
+        ('C75', 'C78') :  None :     -48.14217056187874 :   0.0
+        ('C75', 'C91') :  None :     -58.45760897083177 :   0.0
+        ('C75', 'C95') :  None :     -78.60904327378191 :   0.0
+         ('C75', 'D1') :  None :     -5.060224042200783 :   0.0
+         ('C75', 'S0') :  None :     -88.41488797889963 :   0.0
+         ('C75', 'S1') :  None :    -61.913995728597655 :   0.0
+        ('C75', 'S13') :  None :    -32.845112021100334 :   0.0
+        ('C78', 'C28') :  None :     -14.00838613888488 :   0.0
+        ('C78', 'C75') :  None :     -73.11782943812125 :   0.0
+        ('C78', 'C91') :  None :     -70.94543840895302 :   0.0
+        ('C78', 'C95') :  None :     -91.09687271190316 :   0.0
+         ('C78', 'D1') :  None :    -105.96294145922164 :   0.0
+         ('C78', 'S0') :  None :    -100.90271741702088 :   0.0
+         ('C78', 'S1') :  None :     -74.40182516671891 :   0.0
+        ('C78', 'S13') :  None :     -45.33294145922159 :   0.0
+        ('C91', 'C28') :  None :     -89.32294772993185 :   0.0
+        ('C91', 'C75') :  None :    -62.802391029168234 :   0.0
+        ('C91', 'C78') :  None :     -50.31456159104698 :   0.0
+        ('C91', 'C95') :  None :      -8.97109441545118 :   0.0
+         ('C91', 'D1') :  None :     -95.64750305026863 :   0.0
+         ('C91', 'S0') :  None :     -90.58727900806787 :   0.0
+         ('C91', 'S1') :  None :      -64.0863867577659 :   0.0
+        ('C91', 'S13') :  None :     -35.01750305026857 :   0.0
+        ('C95', 'C28') :  None :     -69.17151342698173 :   0.0
+        ('C95', 'C75') :  None :      -42.6509567262181 :   0.0
+        ('C95', 'C78') :  None :    -30.163127288096845 :   0.0
+        ('C95', 'C91') :  None :     -40.47856569704987 :   0.0
+         ('C95', 'D1') :  None : 1.9539925233402755e-14 :   0.0
+         ('C95', 'S0') :  None :     -70.43584470511774 :   0.0
+         ('C95', 'S1') :  None :     -43.93495245481576 :   0.0
+        ('C95', 'S13') :  None :    -14.866068747318437 :   0.0
+    constraint_energy_station : Size=33
+        Key            : Lower : Body                  : Upper
+         ('D0', 'C28') :  None :    -54.30544467966324 :   0.0
+         ('D0', 'C75') :  None :                   0.0 :   0.0
+         ('D0', 'C78') :  None :   -15.297058540778359 :   0.0
+         ('D0', 'C91') :  None : 7.105427357601002e-15 :   0.0
+         ('D0', 'C95') :  None :   -45.763931252681516 :   0.0
+          ('D0', 'D1') :  None :                   0.0 : 60.63
+          ('D0', 'S0') :  None :     5.060224042200751 : 60.63
+          ('D0', 'S1') :  None :                   0.0 :   0.0
+         ('D0', 'S13') :  None : 4.973799150320701e-14 :   0.0
+         ('S0', 'C28') :  None :    -54.30544467966324 :   0.0
+         ('S0', 'C75') :  None :    -27.78488797889961 :   0.0
+         ('S0', 'C78') :  None :   -15.297058540778359 :   0.0
+         ('S0', 'C91') :  None :   -25.612496949731387 :   0.0
+         ('S0', 'C95') :  None :   -45.763931252681516 :   0.0
+          ('S0', 'D1') :  None :                   0.0 : 60.63
+          ('S0', 'S1') :  None :   -29.068883707497267 :   0.0
+         ('S0', 'S13') :  None : 4.973799150320701e-14 :   0.0
+         ('S1', 'C28') :  None :    -54.30544467966324 :   0.0
+         ('S1', 'C75') :  None :    -27.78488797889961 :   0.0
+         ('S1', 'C78') :  None :                   0.0 :   0.0
+         ('S1', 'C91') :  None :   -25.612496949731387 :   0.0
+         ('S1', 'C95') :  None :   -45.763931252681516 :   0.0
+          ('S1', 'D1') :  None :                -60.63 :   0.0
+          ('S1', 'S0') :  None :    -55.56977595779925 :   0.0
+         ('S1', 'S13') :  None : 4.973799150320701e-14 :   0.0
+        ('S13', 'C28') :  None :    -54.30544467966324 :   0.0
+        ('S13', 'C75') :  None :    -27.78488797889961 :   0.0
+        ('S13', 'C78') :  None :   -15.297058540778359 :   0.0
+        ('S13', 'C91') :  None :   -25.612496949731387 :   0.0
+        ('S13', 'C95') :  None :   -45.763931252681516 :   0.0
+         ('S13', 'D1') :  None :                -60.63 :   0.0
+         ('S13', 'S0') :  None :    -55.56977595779925 :   0.0
+         ('S13', 'S1') :  None :   -29.068883707497267 :   0.0

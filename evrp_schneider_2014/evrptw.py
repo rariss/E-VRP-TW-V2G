@@ -100,7 +100,7 @@ class EVRPTW:
 
         def constraint_time_station(m, i, j):
             if i != j:
-                # return m.xw[i] + m.d[i, j] * m.xgamma[i, j] + m.rE * (m.QMAX - m.xa[j]) - (m.Mt + m.rE * m.QMAX) * (
+                # return m.xw[i] + m.d[i, j] * m.xgamma[i, j] + m.rE * (m.EMAX - m.xa[j]) - (m.Mt + m.rE * m.EMAX) * (
                 #         1 - m.xgamma[i, j]) <= m.xw[j]
                 return inequality(None, m.xw[i] + (m.d[i, j] / m.v) * m.xgamma[i, j] + (m.rC * (m.EMAX - m.xa[i])) - (
                             m.Mt + (m.rC * m.EMAX)) * (
