@@ -100,22 +100,25 @@ with open('test.pkl', mode='rb') as file:
    instance_pickle = cloudpickle.load(file)
 
 
-#%% testing fixing instance variables
+#%% testing updating instance variables
 
-m_run.instance = m_run.m.create_instance(p)
+def update_instance(var_list, new_concrete_instance, instance_subopt):
+    
+    for var in var_list:
+        var_instance = getattr(new_concrete_instance, var)
+        
+        for (key, val) in getattr(instance_subopt, var).get_values().items():
+            var_instance[key] = val
+        
+        setattr(new_concrete_instance, var, var_instance)
+        
+    return new_concrete_instance
 
 var_list = ['xgamma', 'xw', 'xq', 'xa']
+m_run.instance = m_run.m.create_instance(p)
+m_run.instance = update_instance(var_list, m_run.instance, instance_subopt)
 
-for var in var_list:
-    
-    for (key, val) in getattr(instance_subopt, var).get_values().items():
-        
-        var_instance = getattr(m_run.instance, 'xw')
-        var_instannce[key] = val
-        m_run.instance.xw[key] = val
-    
-m_run.instance.xgamma.pprint()
-    
+# m_run.instance.xw.pprint()
 # m_run.instance.obj = instance_subopt.obj()
 
 opt.solve(m_run.instance, tee=True)
