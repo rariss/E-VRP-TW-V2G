@@ -134,7 +134,7 @@ def create_plotting_edges(v: 'pd.DataFrame', d: 'pd.DataFrame') -> 'np.array':
     edges = np.concatenate([np.vstack((coordinates[a], coordinates[b], [None, None])) for a, b in d_flat[['from', 'to']].values])
     return edges
 
-
+#  TODO: Clean-up or remove
 def instance_to_df(instance, **kwargs):
     logFile = open('results/' + now.strftime('%y%m%d-%H%M%S') + '_gurobi_' + instance.instance_name + '.txt', 'a+')
 
@@ -235,13 +235,13 @@ def merge_variable_results(m: 'obj', var_list: str, include_vehicle=False) -> 'p
         x_right.reset_index(inplace=True)
         if include_vehicle:
             x_right.rename(columns={'level_0': 'vehicle', 'level_1': 'to'}, inplace=True)
-            x = pd.merge(x, x_right, how='inner', on=['vehicle', 'to'])
+            x = pd.merge(x, x_right, how='outer', on=['vehicle', 'to'])
         elif v0 == 'xgamma':
             x_right.rename(columns={'index': 'to'}, inplace=True)
-            x = pd.merge(x, x_right, how='inner', on=['to'])
+            x = pd.merge(x, x_right, how='outer', on=['to'])
         elif v0 == 'xkappa':
             x_right.rename(columns={'level_0': 'node', 'level_1': 't'}, inplace=True)
-            x = pd.merge(x, x_right, how='inner', on=['node', 't'])
+            x = pd.merge(x, x_right, how='outer', on=['node', 't'])
     return x
 
 
@@ -286,3 +286,29 @@ def trace_routes(m: 'obj', tol=1e-4):
                                active_arcs_dict)
 
     return routes
+
+def results_to_dfs(m: 'obj', tol=1e-4):
+    # Merge power decisions
+    xp_var_list = ['xkappa', 'xp']
+    xp = merge_variable_results(m, xp_var_list)
+    xp = xp[xp['state'] > tol].sort_values(['t'], ascending=True)
+
+    # Merge other variables
+    var_list = ['xgamma', 'xw', 'xq', 'xa']
+    x = merge_variable_results(m, var_list)
+
+    # Generate route traces (list of tuples)
+    traces = trace_routes(m)
+
+    # Generate route df (appended NaN row for D0 states)
+    routes = x[x['state'] > tol].append(x[np.isnan(x['state'])]).sort_values(['xw']).set_index(['from', 'to'])
+
+    # Create (D0, D0) row for starting states
+    routes.reset_index(inplace=True)
+    idx = routes['from'].isna()
+    routes.loc[idx, 'from'] = routes.loc[idx, 'to']
+    routes.set_index(['from', 'to'], inplace=True)
+
+    return x, xp, traces, routes
+
+

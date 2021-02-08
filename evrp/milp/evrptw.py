@@ -223,7 +223,7 @@ class EVRPTW:
             if 'dcm' in problem_type:
                 return m.G[s, t] + sum(m.xkappa[i, t] * m.xp[i, t] for i in m.Smap[s]) <= m.xd[s]
             else:
-                Constraint.Skip
+                return Constraint.Skip
         self.m.constraint_energy_peak = Constraint(self.m.S, self.m.T, rule=constraint_energy_peak)
 
         # PAYLOAD CONSTRAINTS
@@ -243,13 +243,13 @@ class EVRPTW:
                 return Constraint.Skip
         self.m.constraint_payload_station = Constraint(self.m.S_, self.m.V1_, rule=constraint_payload_station)
 
-        def constraint_payload_limit(m, i):
+        def constraint_payload_limit(m, i, j):
             """Payload limits for each vehicle"""
-            if i == m.start_node:  # Each vehicle must start with a full payload
+            if i == j:  # Each vehicle must start with a full payload
                 return m.xq[i] == m.QMAX
             else:
                 return m.xq[i] <= m.QMAX  # xq is NonNegative
-        self.m.constraint_payload_limit = Constraint(self.m.V01_, rule=constraint_payload_limit)
+        self.m.constraint_payload_limit = Constraint(self.m.V01_, self.m.start_node, rule=constraint_payload_limit)
 
         # OBJECTIVE FUNCTION AND DEPENDENT FUNCTIONS
         self.m.obj = Objective(rule=self.obj, sense=minimize)
@@ -453,7 +453,7 @@ class EVRPTW:
         logging.info('Done')
 
     def solve(self, instance_filepath: str):
-        if not (hasattr(self, 'opt') & hasattr(self, 'solve_options')):
+        if not (hasattr(self, 'opt') | hasattr(self, 'solve_options')):
             logging.info('Making solver...')
             self.make_solver()
 
@@ -461,3 +461,34 @@ class EVRPTW:
         logging.info('Solving instance...')
         self.results = self.opt.solve(self.instance, tee=True, options=self.solve_options)
         logging.info('Done')
+
+    def warmstart_solve(self):
+        # Solve instance
+        logging.info('Solving instance with warmstart...')
+        self.results = self.opt.solve(self.instance, tee=True, warmstart=True, options=self.solve_options)
+        logging.info('Done')
+
+    def archive_instance_result(self):
+        # Initialize
+        if not hasattr(self, 'instance_archive'):
+            self.instance_archive = []
+        if not hasattr(self, 'results_archive'):
+            self.results_archive = []
+
+        # Archive current instance and results
+        self.instance_archive.append(self.instance.clone())
+        self.results_archive.append(self.results.copy())
+
+    def delete_instance_result(self):
+        del self.instance, self.results
+
+    def delete_instance_result_archive(self):
+        del self.instance_archive, self.results_archive
+
+    def fix_variables(self, var_list: 'list of str'):
+        for v in var_list:
+            getattr(self.instance, v).fix()
+
+    def free_variables(self, var_list: 'list of str'):
+        for v in var_list:
+            getattr(self.instance, v).free()
