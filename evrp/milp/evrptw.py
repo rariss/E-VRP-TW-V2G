@@ -12,7 +12,7 @@ class EVRPTW:
 
     def __init__(self, problem_type: str):
         """
-        :param problem_type: Objective options include: {Schneider} OR {OpEx, CapEx, Cycle, EA, DCM}
+        :param problem_type: Objective options include: {Schneider} OR {OpEx, CapEx, Cycle, EA, DCM, Delivery}
          Constraint options include: {Start=End, FullStart=End, NoXkappaBounds}
         """
         self.problem_type = problem_type
@@ -90,9 +90,8 @@ class EVRPTW:
         self.m.xd = Var(self.m.S, within=NonNegativeReals, initialize=0)  # Each station’s net peak electric demand
         self.m.xp = Var(self.m.S_, self.m.T, within=Reals)  # Charge or discharge rate of each EV
 
-        # %% ROUTING CONSTRAINTS # TODO: consistency for ranged inequality expressions -
+        # %% ROUTING CONSTRAINTS
         #  TODO: upper bound on maximum number of vehicles in fleet based off starting routes?
-        #  WARNING:pyomo.core:DEPRECATED: Chained inequalities are deprecated.
 
         logging.info('Defining constraints')
 
@@ -114,7 +113,6 @@ class EVRPTW:
         self.m.constraint_single_route = Constraint(self.m.V_, rule=constraint_single_route)
 
         # %% TIME CONSTRAINTS
-
         def constraint_time_start_depot(m, i, j):  # TODO: Can we drop the constraint for the start depot if we drop fixed service time?
             """Service time for each vehicle at start depot"""
             if i != j:
@@ -243,13 +241,13 @@ class EVRPTW:
                 return Constraint.Skip
         self.m.constraint_payload_station = Constraint(self.m.S_, self.m.V1_, rule=constraint_payload_station)
 
-        def constraint_payload_limit(m, i, j):
+        def constraint_payload_limit(m, i):
             """Payload limits for each vehicle"""
-            if i == j:  # Each vehicle must start with a full payload
+            if i in m.start_node:  # Each vehicle must start with a full payload
                 return m.xq[i] == m.QMAX
             else:
                 return m.xq[i] <= m.QMAX  # xq is NonNegative
-        self.m.constraint_payload_limit = Constraint(self.m.V01_, self.m.start_node, rule=constraint_payload_limit)
+        self.m.constraint_payload_limit = Constraint(self.m.V01_, rule=constraint_payload_limit)
 
         # OBJECTIVE FUNCTION AND DEPENDENT FUNCTIONS
         self.m.obj = Objective(rule=self.obj, sense=minimize)
@@ -425,10 +423,13 @@ class EVRPTW:
         logging.info('Creating parameters')
         self.create_data_dictionary()
 
-    def make_instance(self):
-        # Create an instance of the AbstractModel passing in parameters
+    def make_instance(self, add_to_instance_name=''):
+        # Create a ConcreteModel instance of the AbstractModel passing in parameters
         logging.info('Creating instance')
         self.instance = self.m.create_instance(self.p)
+        if len(add_to_instance_name) > 0:
+            add_to_instance_name = ' ' + add_to_instance_name
+        self.instance.name = '{} {}{}'.format(self.instance_name, self.problem_type, add_to_instance_name)
 
     def make_solver(self, solve_options={'TimeLimit': 60 * 5}):
         # Specify solver
@@ -452,7 +453,7 @@ class EVRPTW:
         self.results = self.opt.solve(self.instance, tee=True, options=self.solve_options)
         logging.info('Done')
 
-    def solve(self, instance_filepath: str):
+    def solve(self):
         if not (hasattr(self, 'opt') | hasattr(self, 'solve_options')):
             logging.info('Making solver...')
             self.make_solver()
@@ -463,21 +464,26 @@ class EVRPTW:
         logging.info('Done')
 
     def warmstart_solve(self):
+        if not (hasattr(self, 'opt') | hasattr(self, 'solve_options')):
+            logging.info('Making solver...')
+            self.make_solver()
+
         # Solve instance
         logging.info('Solving instance with warmstart...')
         self.results = self.opt.solve(self.instance, tee=True, warmstart=True, options=self.solve_options)
         logging.info('Done')
 
-    def archive_instance_result(self):
+    def archive_instance_result(self, add_to_key_name=''):
         # Initialize
         if not hasattr(self, 'instance_archive'):
-            self.instance_archive = []
+            self.instance_archive = {}
         if not hasattr(self, 'results_archive'):
-            self.results_archive = []
+            self.results_archive = {}
 
         # Archive current instance and results
-        self.instance_archive.append(self.instance.clone())
-        self.results_archive.append(self.results.copy())
+        key = '{}{}'.format(self.instance.name, add_to_key_name)
+        self.instance_archive[key] = self.instance.clone()
+        self.results_archive[key] = self.results.copy()
 
     def delete_instance_result(self):
         del self.instance, self.results

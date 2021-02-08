@@ -2,8 +2,10 @@ import pandas as pd
 import numpy as np
 from scipy.spatial import distance
 import datetime
+import json
+from pyomo.environ import *
+from numpyencoder import NumpyEncoder as NpEncoder
 import logging
-import pprint
 
 now = datetime.datetime.now()
 
@@ -312,3 +314,60 @@ def results_to_dfs(m: 'obj', tol=1e-4):
     return x, xp, traces, routes
 
 
+def create_json_out(instance, results=None, output_file=None):
+    """Passing in results through args will output model time and gap."""
+    # Initialize json dict output
+    data_out = {}
+    data_out['name'] = instance.name
+
+    # Read out variable results
+    for v in instance.component_objects(Var):
+        data_out[v.name] = {}
+        for index in v:
+            try:
+                data_out[v.name][str(index)] = value(v[index])
+            except:
+                data_out[v.name][str(index)] = None
+
+    # Read out objective result
+    data_out['obj'] = instance.obj.expr()
+
+    if results is not None:
+        gap = results['Problem'][0]
+        gap = (gap['Upper bound'] - gap['Lower bound']) / gap['Upper bound'] * 100
+        data_out['gap'] = gap  # outputs gap as percent
+        data_out['solve_time'] = results['Solver'][0]['Time']  # seconds
+
+    # Generate json from dict
+    json_outputs = json.dumps(data_out, cls=NpEncoder, sort_keys=True, indent=4,
+                              separators=(',', ': '))
+
+    # Output json
+    if output_file is None:
+        output_file = 'output'
+
+    with open('{}.json'.format(output_file), 'w') as outfile:
+        json.dump(data_out, outfile, cls=NpEncoder, sort_keys=True, indent=4,
+                  separators=(',', ': '))
+    return json_outputs
+
+
+def read_instance_json_str(instance_json_str):
+    instance_json = json.loads(instance_json_str)
+    for key, val in instance_json.items():
+        if key in ['xgamma', 'xkappa', 'xp']:
+            instance_json[key] = {eval(k): v for k, v in instance_json[key].items()}
+    return instance_json
+
+
+def update_instance_json(var_list, new_concrete_instance, instance_json):
+    # Read in a json string to a dict object
+    if type(instance_json) is str:
+        instance_json = read_instance_json_str(instance_json)
+
+    for var in var_list:
+        var_instance = getattr(new_concrete_instance, var)
+        for key, val in instance_json[var].items():
+            var_instance[key] = val
+        setattr(new_concrete_instance, var, var_instance)
+    return new_concrete_instance
