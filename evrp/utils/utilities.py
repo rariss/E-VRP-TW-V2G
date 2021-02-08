@@ -339,17 +339,34 @@ def create_json_out(instance, results=None, output_file=None):
         data_out['solve_time'] = results['Solver'][0]['Time']  # seconds
 
     # Generate json from dict
-    json_outputs = json.dumps(data_out, cls=NpEncoder, sort_keys=True, indent=4,
-                              separators=(',', ': '))
+    json_outputs = json.dumps(data_out, cls=NpEncoder, sort_keys=True, indent=4, separators=(',', ': '))
 
     # Output json
     if output_file is None:
         output_file = 'output'
 
     with open('{}.json'.format(output_file), 'w') as outfile:
-        json.dump(data_out, outfile, cls=NpEncoder, sort_keys=True, indent=4,
-                  separators=(',', ': '))
+        json.dump(data_out, outfile, cls=NpEncoder, sort_keys=True, indent=4, separators=(',', ': '))
     return json_outputs
+
+
+def create_json_inputs(inputs, output_file=None):
+    """Outputs the input parameters dictionary to a json"""
+    params = inputs.copy()
+    # convert tuple keys to strings
+    for k, v in params[None].items():
+        if k in ['d', 'ce', 'G']:
+            params[None][k] = {str(key): val for key, val in params[None][k].items()}
+
+    json_inputs = json.dumps(params, cls=NpEncoder, sort_keys=True, indent=4, separators=(',', ': '))
+
+    # Output json
+    if output_file is None:
+        output_file = 'inputs'
+
+    with open('{}.json'.format(output_file), 'w') as outfile:
+        json.dump(json_inputs, outfile, cls=NpEncoder, sort_keys=True, indent=4, separators=(',', ': '))
+    return json_inputs
 
 
 def read_instance_json_str(instance_json_str):
