@@ -388,3 +388,89 @@ def update_instance_json(var_list, new_concrete_instance, instance_json):
             var_instance[key] = val
         setattr(new_concrete_instance, var, var_instance)
     return new_concrete_instance
+
+
+def convert_txt_instances_to_csv(instance, folder='config/test_instances/evrptw_instances/', output_folder='config/test_instances/'):
+    """Converts a Schneider txt test instance into a csv format for EVRPTWV2G starting point."""
+    # Default parameters
+    defaults = {'N': [1], 'cc': [1000], 'co': [1], 'cm': [0], 'cy': [3e-3], 'cz': [1e-3], 'EMIN': [0],
+                'cg': 0, 'SMIN': 0, 'instances': 1, 'tQ': 0, 'cq': 1, 't_S': 1, 'G': 10, 'ce': 0.1
+    }  # Must use lists if table generated from dict. Use single value if updating a dataframe value
+
+    fpath = folder + instance + '.txt'
+
+    data = pd.read_csv(fpath, sep='\s+', skip_blank_lines=False)
+    i_split = data.isnull().all(axis=1).argmax()  # blank row
+
+    graph = data.iloc[:i_split].copy()
+
+    col_map = {'StringID': 'node_id', 'Type': 'node_type', 'x': 'd_x', 'y': 'd_y', 'demand': 'q',
+               'ReadyTime': 'tA', 'DueDate': 'tB', 'ServiceTime': 'tS'}
+
+    graph.rename(columns=col_map, inplace=True)
+
+    other = pd.read_csv(fpath, sep='/', skip_blank_lines=False, skiprows=i_split + 1)
+
+    other_dict = {}
+    for (k, v, nan) in other.index:
+        other_dict[k[0]] = v
+
+    # Make vehicle table
+    W = pd.DataFrame(data={'vehicle_type_id': ['EV'], 'N': defaults['N'],
+                           'r': [other_dict['r']],
+                           'v': [other_dict['v']],
+                           'cc': defaults['cc'], 'co': defaults['co'], 'cm': defaults['cm'], 'cy': defaults['cy'], 'cz': defaults['cz'],
+                           'QMAX': [other_dict['C']],
+                           'EMIN': defaults['EMIN'],
+                           'EMAX': [other_dict['Q']],
+                           'PMAX': [1 / other_dict['g']]})
+
+    # Make depot table
+    D = graph[graph['node_type'] == 'd'].copy()
+    D = pd.DataFrame(np.repeat(D.values, 2, axis=0), columns=D.columns)
+    D.loc[1]['node_id'] = 'D1'
+    D['node_description'] = ['start', 'end']
+    cols = D.columns.tolist()
+    D = D[cols[:2] + [cols[-1]] + cols[2:4] + cols[5:-1]]
+
+    # Make station table
+    S = graph[graph['node_type'] == 'f'].copy()
+    S['node_type'] = 's'
+    S['node_description'] = S['node_type']
+    cols = S.columns.tolist()
+    S = S[cols[:2] + [cols[-1]] + cols[2:4] + cols[5:-1]]
+    S['cg'] = defaults['cg']
+    S['SMIN'] = defaults['SMIN']
+    S['SMAX'] = W['PMAX'].max()
+    S['instances'] = defaults['instances']
+
+    # Make customer table
+    M = graph[graph['node_type'] == 'c'].copy()
+    M['node_type'] = 'm'
+    M['node_description'] = M['node_type']
+    cols = M.columns.tolist()
+    M = M[cols[:2] + [cols[-1]] + cols[2:4] + cols[5:-1] + [cols[4]]]
+    M['tQ'] = defaults['tQ']
+    M['cq'] = defaults['cq']
+
+    # Make parameters table
+    P = pd.DataFrame(data={'parameter': ['t_T', 't_S'],
+                           'description': ['optimization time horizon', 'time step size'],
+                           'value': [graph['tB'].max(), defaults['t_S']]
+                           })
+
+    # Make time table
+    T_dict = {'t': {'': 0}}
+    val = {'G': defaults['G'], 'ce': defaults['ce']}
+    for k, v in val.items():
+        T_dict[k] = {s: v for s in S['node_id']}
+    T = pd.DataFrame.from_dict(T_dict, orient='index')
+    T = pd.DataFrame(T.stack()).T
+
+    # Write and output file
+    dict_of_dfs = {'D': D, 'S': S, 'M': M, 'Parameters': P, 'W': W, 'T': T}
+    with open(output_folder + instance + '_.csv', 'w+') as f:
+        for k, df in dict_of_dfs.items():
+            f.write(k + '\n')
+            df.to_csv(f, index=False)
+            f.write('\n')
