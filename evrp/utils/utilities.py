@@ -394,7 +394,7 @@ def convert_txt_instances_to_csv(instance, folder='config/test_instances/evrptw_
     """Converts a Schneider txt test instance into a csv format for EVRPTWV2G starting point."""
     # Default parameters
     defaults = {'N': [1], 'cc': [1000], 'co': [1], 'cm': [0], 'cy': [3e-3], 'cz': [1e-3], 'EMIN': [0],
-                'cg': 0, 'SMIN': 0, 'instances': 1, 'tQ': 0, 'cq': 1, 't_S': 1, 'G': 10, 'ce': 0.1
+                'cg': 0, 'SMIN': 0, 'instances': 1, 'tQ': 0, 'cq': 1, 't_S': 1, 'G': 1, 'ce': 0.1
     }  # Must use lists if table generated from dict. Use single value if updating a dataframe value
 
     fpath = folder + instance + '.txt'

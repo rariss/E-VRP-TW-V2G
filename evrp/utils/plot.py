@@ -165,12 +165,12 @@ def plot_evrptwv2g(m: 'obj'):
 
     # Customers
     for n in tA.keys():
-        if 'C' in n:
+        if ('C' in n) | ('M' in n):
             axs_tw.broken_barh([(tA[n], tB[n] - tA[n])], (i, tw_height), facecolors=node_colors_rgba_tuple['M'])
             tw_labels[n] = i
             i += 1
 
-    axs_tw.set_yticks(np.arange(tw_height/2, i + 1.5*tw_height, tw_height))
+    axs_tw.set_yticks(np.arange(tw_height/2, i + .5*tw_height, tw_height))
     axs_tw.set_yticklabels(tw_labels.keys(), fontsize=np.ceil(2*SMALL_SIZE/3))
     axs_tw.grid(True, which='both', axis='x', alpha=5, linestyle=':')
     axs_tw.set_title('Arrival Times', fontdict=fdict)

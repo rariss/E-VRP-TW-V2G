@@ -32,7 +32,7 @@ C40,m,m,35,30,143,199,90,10,0,1,,
 Parameters,,,,,,,,,,,,
 parameter,description,value,,,,,,,,,,
 t_T,optimization time horizon,1236,,,,,,,,,,
-t_S,time step size,1,,,,,,,,,,
+t_S,time step size,103,,,,,,,,,,
 ,,,,,,,,,,,,
 W,,,,,,,,,,,,
 vehicle_type_id,N,r,v,cc,co,cm,cy,cz,QMAX,EMIN,EMAX,PMAX

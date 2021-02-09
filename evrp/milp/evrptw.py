@@ -13,7 +13,7 @@ class EVRPTW:
     def __init__(self, problem_type: str):
         """
         :param problem_type: Objective options include: {Schneider} OR {OpEx, CapEx, Cycle, EA, DCM, Delivery}
-         Constraint options include: {Start=End, FullStart=End, NoXkappaBounds}
+         Constraint options include: {Start=End, FullStart=End, NoXkappaBounds, NoMinVehicles, NoSymmetry, NoXd}
         """
         self.problem_type = problem_type
 
@@ -111,6 +111,24 @@ class EVRPTW:
             route_in = sum(m.xgamma[j, i] for j in m.V0_ if i != j)
             return route_out - route_in == 0
         self.m.constraint_single_route = Constraint(self.m.V_, rule=constraint_single_route)
+
+        if 'nominvehicles' not in problem_type:
+            def constraint_min_vehicles(m, i):
+                """Requires at least one vehicle assignment"""
+                return sum(m.xgamma[i, j] for j in m.V1_ if i != j) >= 1
+            self.m.constraint_min_vehicles = Constraint(self.m.start_node, rule=constraint_min_vehicles)
+
+        if 'nosymmetry' not in problem_type:
+            def constraint_station_symmetry(m, i):
+                """Orders the stations with more than one instance"""
+                duplicate_number = eval(i.split('_')[-1])
+                if duplicate_number >= 1:  # check if it is a duplicate node
+                    previous_duplicate = i.split('_')[0] + '_' + str(duplicate_number-1)
+                    return sum(m.xgamma[i, j] for j in m.V1_ if i != j) <= \
+                           sum(m.xgamma[previous_duplicate, j] for j in m.V1_ if previous_duplicate != j)
+                else:
+                    return Constraint.Skip
+            self.m.constraint_station_symmetry = Constraint(self.m.S_, rule=constraint_station_symmetry)
 
         # %% TIME CONSTRAINTS
         def constraint_time_start_depot(m, i, j):  # TODO: Can we drop the constraint for the start depot if we drop fixed service time?
@@ -218,7 +236,7 @@ class EVRPTW:
         # See this implementation example: https://stackoverflow.com/questions/53966482/how-to-map-different-indices-in-pyomo
         def constraint_energy_peak(m, s, t):
             """Peak electric demand for each physical station s(i) ∈ S"""
-            if 'dcm' in problem_type:
+            if 'noxd' not in problem_type:
                 return m.G[s, t] + sum(m.xkappa[i, t] * m.xp[i, t] for i in m.Smap[s]) <= m.xd[s]
             else:
                 return Constraint.Skip
@@ -431,7 +449,8 @@ class EVRPTW:
             add_to_instance_name = ' ' + add_to_instance_name
         self.instance.name = '{} {}{}'.format(self.instance_name, self.problem_type, add_to_instance_name)
 
-    def make_solver(self, solve_options={'TimeLimit': 60 * 5}):
+    # For Gurobi solver options, see: https://www.gurobi.com/documentation/9.1/refman/parameters.html
+    def make_solver(self, solve_options={'TimeLimit': 60 * 5, 'MIPFocus': 3, 'Cuts': 3}):
         # Specify solver
         self.opt = SolverFactory('gurobi', io_format='python')
 
@@ -498,3 +517,27 @@ class EVRPTW:
     def free_variables(self, var_list: 'list of str'):
         for v in var_list:
             getattr(self.instance, v).free()
+
+    def remake_objective(self, instance, new_problem_type: str):
+        """Creates a new objective function given a new problem type."""
+        self.problem_type = new_problem_type
+        instance.name = new_problem_type
+
+        instance.del_component('obj')
+        instance.add_component('obj', Objective(rule=self.obj, sense=minimize))
+
+    def remake_model(self, new_problem_type: str, fpath: str, add_to_instance_name=''):
+        """Remakes a fresh AbstractModel and a new instance. Must do this if constraint options are changed."""
+        self.problem_type = new_problem_type
+
+        self.m = AbstractModel()
+        self.build_model()
+
+        self.import_instance(fpath)
+
+        self.make_instance(add_to_instance_name)
+
+    def set_xgamma(self, archived_instance_name: str):
+        """Set's the current instance's xgamma values to the xgamma of an archived instance."""
+        self.instance.xgamma.set_values(
+            {k: round(v) for k, v in self.instance_archive[archived_instance_name].xgamma.extract_values().items()})
