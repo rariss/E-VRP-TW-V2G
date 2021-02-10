@@ -57,7 +57,7 @@ duplicates = False
 #%% testing initializing instances, solve function
 
 # Specify solver
-opt = SolverFactory('gurobi')
+opt = SolverFactory('baron')
 
 # Import data
 instance_filepath = fpath
@@ -75,7 +75,8 @@ logging.info('Creating instance')
 m_run.instance = m_run.m.create_instance(p)
 
 # Solver options
-solv_options = {'timelimit': 5} # fix a time limit to create suboptimal solution
+# solv_options = {'timelimit': 5} # fix a time limit to create suboptimal solution
+solv_options = {'MaxTime': 60*60*2} # for baron while my gurobi license has expired
     
 # Solve instance
 logging.info('Solving instance...')
@@ -84,10 +85,10 @@ results = opt.solve(m_run.instance, tee=True, options=solv_options)
 logging.info('Done')
 
 # Clone the suboptimal solution
-instance_subopt =  m_run.instance.clone()
+# instance_subopt =  m_run.instance.clone()
 
 # Solve the suboptimal solution to optimality
-opt.solve(instance_subopt, tee=True)
+# opt.solve(instance_subopt, tee=True)
 
 #%% testing pickling instances
 
@@ -142,3 +143,90 @@ print(x[x['state']>0].sort_values(['route', 'xw']))
 # instance_not_opt.display()
 # f.close()
 
+#%% creating json output
+
+import json
+import numpy as np
+
+# JSON can't handle np.arrays so convert to list
+class NpEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif isinstance(obj, tuple):
+            return obj.tolist()
+        elif isinstance(obj, set):
+            return list(obj)
+        else:
+            return super(NpEncoder, self).default(obj)
+
+data_out = {}
+for v in m_run.instance.component_objects(Var):
+    data_out[v.name] = {}
+    for index in v:
+        try:        
+            data_out[v.name][str(index)] = value(v[index])
+        except:
+            data_out[v.name][str(index)] = None
+
+json_outputs = json.dumps(data_out, cls=NpEncoder, sort_keys=True, indent=4, separators=(',', ': '))
+
+with open('output.json', 'w') as outfile:
+    json.dump(data_out, outfile, cls=NpEncoder, sort_keys=True, indent=4, separators=(',', ': '))
+
+# print(json_outputs)
+
+#%% loading json output and solving
+
+with  open('output.json', 'r') as inputfile:
+    instance_subopt2 = json.load(inputfile)
+
+def update_instance_json(var_list, new_concrete_instance, instance_subopt):
+    
+    for var in var_list:
+        
+        var_instance = getattr(new_concrete_instance, var)
+        
+        for (key, val) in instance_subopt2[var].items():
+            
+            if var is 'xgamma':
+                var_instance[eval(key)] = val 
+            else:
+                var_instance[key] = val
+        
+        setattr(new_concrete_instance, var, var_instance)
+        
+    return new_concrete_instance
+
+
+var_list = ['xgamma', 'xw', 'xq', 'xa']
+m_run.instance = m_run.m.create_instance(p)
+m_run.instance = update_instance_json(var_list, m_run.instance, instance_subopt2)
+
+
+#%% debugging json list error, not needed by kept for reference
+
+from json import dumps, loads, JSONEncoder, JSONDecoder
+import pickle
+
+class PythonObjectEncoder(JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, (list, dict, str, int, float, bool, type(None))):
+            return JSONEncoder.default(self, obj)
+        return {'_python_object': pickle.dumps(obj)}
+    
+def as_python_object(dct):
+    if '_python_object' in dct:
+        return pickle.loads(str(dct['_python_object']))
+    return dct
+
+data = [1,2,3, set(['knights', 'who', 'say', 'ni']), {'key':'value'}, Decimal('3.14')]
+
+j = dumps(data, cls=PythonObjectEncoder)
+
+loads(j, object_hook=as_python_object)
+[1, 2, 3, set(['knights', 'say', 'who', 'ni']), {u'key': u'value'}, Decimal('3.14')]

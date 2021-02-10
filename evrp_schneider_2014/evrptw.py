@@ -57,7 +57,7 @@ class EVRPTW:
         self.m.xgamma = Var(self.m.V01_, self.m.V01_, within=Boolean)  # Route decision of each edge for each EV
         self.m.xq = Var(self.m.V01_, within=NonNegativeReals)  # Payload of each vehicle before visiting each node
         self.m.xw = Var(self.m.V01_, within=NonNegativeReals)  # Arrival time for each vehicle at each node
-        self.m.xa = Var(self.m.V01_, within=NonNegativeReals, initialize=self.m.EMAX)  # Energy of each EV arriving at each node
+        self.m.xa = Var(self.m.V01_, within=NonNegativeReals)  # Energy of each EV arriving at each node
 
         # %% ROUTING CONSTRAINTS # TODO: consistency for ranged inequality expressions -
         #  WARNING:pyomo.core:DEPRECATED: Chained inequalities are deprecated.
