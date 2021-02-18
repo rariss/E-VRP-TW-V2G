@@ -131,6 +131,12 @@ class EVRPTW:
             self.m.constraint_station_symmetry = Constraint(self.m.S_, rule=constraint_station_symmetry)
 
         # %% TIME CONSTRAINTS
+        def constraint_xgamma_xkappa(m, i, t):
+            """Ensures charging can only happen when a vehicle is physically present at a node.
+            IF $\sum_j{x_{ij}^\gamma}=0$, THEN $x^\kappa_{it}=0\ \forall t$, ELSE $x^\kappa_{it}=0\ \forall t<x^\omega_i$."""
+            return m.xkappa[i, t] <= sum(m.xgamma[i, j] for j in m.V1_ if i != j)
+        self.m.constraint_xgamma_xkappa = Constraint(self.m.S_, self.m.T, rule=constraint_xgamma_xkappa)
+
         def constraint_time_start_depot(m, i, j):  # TODO: Can we drop the constraint for the start depot if we drop fixed service time?
             """Service time for each vehicle at start depot"""
             if i != j:
@@ -143,8 +149,8 @@ class EVRPTW:
         def constraint_time_station(m, i, j):
             """Service time for each EV doing V2G/G2V at each charging station"""
             if i != j:
-                return m.xw[i] + (m.tS[i] + m.d[i, j] / m.v + m.t_S * sum(m.xkappa[i, t] for t in m.T)) \
-                       * m.xgamma[i, j] - m.MT * (1 - m.xgamma[i, j]) <= m.xw[j]
+                return m.xw[i] + (m.tS[i] + m.d[i, j] / m.v) * m.xgamma[i, j] + m.t_S * sum(m.xkappa[i, t] for t in m.T) \
+                       - m.MT * (1 - m.xgamma[i, j]) <= m.xw[j]
             else:
                 return Constraint.Skip
         self.m.constraint_time_station = Constraint(self.m.S_, self.m.V1_, rule=constraint_time_station)
@@ -171,19 +177,22 @@ class EVRPTW:
         if 'noxkappabounds' not in problem_type:
             def constraint_time_xkappa_lb(m, i, t):
                 """V2G decisions must be made after arrival at the node"""
-                return (m.t_T - t) * m.xkappa[i, t] <= m.t_T - sum(m.xw[i] * m.xgamma[i, j] for j in m.V1_ if j != i)  # - m.MT * (1 - m.xkappa[i, t])
+                return (m.t_T - t) * m.xkappa[i, t] - m.MT * (1 - m.xkappa[i, t]) <= m.t_T - m.xw[i]
             self.m.constraint_time_xkappa_lb = Constraint(self.m.S_, self.m.T, rule=constraint_time_xkappa_lb)
 
-            def constraint_time_xkappa_ub(m, i, t):
+            def constraint_time_xkappa_ub(m, i, j, t):
                 """V2G decisions must be made before departure from the node"""
-                return (t + m.t_S) * m.xkappa[i, t] <= sum((m.xw[j] - m.tS[i] - m.d[i, j] / m.v) * m.xgamma[i, j] for j in m.V1_ if j != i)  # - m.MT * (1 - m.xkappa[i, t])
-            self.m.constraint_time_xkappa_ub = Constraint(self.m.S_, self.m.T, rule=constraint_time_xkappa_ub)
+                if i != j:
+                    return (m.tS[i] + m.d[i, j] / m.v) * m.xgamma[i, j] + (t + m.t_S) * m.xkappa[i, t] - m.MT * (1 - m.xgamma[i, j]) <= m.xw[j]
+                else:
+                    return Constraint.Skip
+            self.m.constraint_time_xkappa_ub = Constraint(self.m.S_, self.m.V1_, self.m.T, rule=constraint_time_xkappa_ub)
 
         # ENERGY CONSTRAINTS
         def constraint_energy_station(m, i, j):  # TODO: Check if number of xkappa variables can be reduced for same energy / depot periods
             """Energy transition for each EV while at an intermediate charging station node i and traveling across edge (i, j)"""
             if i != j:
-                return m.xa[j] <= m.xa[i] + m.t_S * sum(m.xkappa[i, t] * m.xp[i, t] for t in m.T) - \
+                return m.xa[j] <= m.xa[i] + m.t_S * sum(m.xp[i, t] for t in m.T) - \
                        (m.r * m.d[i, j]) * m.xgamma[i, j] + m.ME * (1 - m.xgamma[i, j])
             else:
                 return Constraint.Skip
@@ -197,15 +206,25 @@ class EVRPTW:
                 return Constraint.Skip
         self.m.constraint_energy_customer = Constraint(self.m.M | self.m.start_node, self.m.V1_, rule=constraint_energy_customer)
 
-        def constraint_energy_ev_limit(m, i, t):
+        def constraint_energy_ev_limit_lb(m, i, t):
             """Charge limits for each EV at charging stations"""
-            return inequality(-m.PMAX, m.xp[i, t] * m.xkappa[i, t], m.PMAX)
-        self.m.constraint_energy_ev_limit = Constraint(self.m.S_, self.m.T, rule=constraint_energy_ev_limit)
+            return -m.PMAX * m.xkappa[i, t] <= m.xp[i, t]
+        self.m.constraint_energy_ev_limit_lb = Constraint(self.m.S_, self.m.T, rule=constraint_energy_ev_limit_lb)
 
-        def constraint_energy_station_limit(m, i, t):  # TODO: Combine duplicates to be within limits at each time
+        def constraint_energy_ev_limit_ub(m, i, t):
+            """Charge limits for each EV at charging stations"""
+            return m.xp[i, t] <= m.PMAX * m.xkappa[i, t]
+        self.m.constraint_energy_ev_limit_ub = Constraint(self.m.S_, self.m.T, rule=constraint_energy_ev_limit_ub)
+
+        def constraint_energy_station_limit_lb(m, i, t):  # TODO: Combine duplicates to be within limits at each time
             """Charge limits for an EV at charging station i"""
-            return inequality(m.SMIN[i], m.xp[i, t] * m.xkappa[i, t], m.SMAX[i])
-        self.m.constraint_energy_station_limit = Constraint(self.m.S_, self.m.T, rule=constraint_energy_station_limit)
+            return m.SMIN[i] * m.xkappa[i, t] <= m.xp[i, t]
+        self.m.constraint_energy_station_limit_lb = Constraint(self.m.S_, self.m.T, rule=constraint_energy_station_limit_lb)
+
+        def constraint_energy_station_limit_ub(m, i, t):  # TODO: Combine duplicates to be within limits at each time
+            """Charge limits for an EV at charging station i"""
+            return m.xp[i, t] <= m.SMAX[i] * m.xkappa[i, t]
+        self.m.constraint_energy_station_limit_ub = Constraint(self.m.S_, self.m.T, rule=constraint_energy_station_limit_ub)
 
         if 'start=end' in problem_type:
             def constraint_energy_start_end_soe(m, i, j):
@@ -230,14 +249,14 @@ class EVRPTW:
 
         def constraint_energy_soe_station(m, i, t):
             """Minimum and Maximum SOE limit for each EV"""
-            return inequality(m.EMIN, m.xa[i] + m.t_S * sum(m.xkappa[i, b] * m.xp[i, b] for b in m.T if b <= t), m.EMAX)
+            return inequality(m.EMIN, m.xa[i] + m.t_S * sum(m.xp[i, b] for b in m.T if b <= t), m.EMAX)
         self.m.constraint_energy_soe_station = Constraint(self.m.S_, self.m.T, rule=constraint_energy_soe_station)
 
         # See this implementation example: https://stackoverflow.com/questions/53966482/how-to-map-different-indices-in-pyomo
         def constraint_energy_peak(m, s, t):
             """Peak electric demand for each physical station s(i) ∈ S"""
             if 'noxd' not in problem_type:
-                return m.G[s, t] + sum(m.xkappa[i, t] * m.xp[i, t] for i in m.Smap[s]) <= m.xd[s]
+                return m.G[s, t] + sum(m.xp[i, t] for i in m.Smap[s]) <= m.xd[s]
             else:
                 return Constraint.Skip
         self.m.constraint_energy_peak = Constraint(self.m.S, self.m.T, rule=constraint_energy_peak)
@@ -290,7 +309,7 @@ class EVRPTW:
             if 'capex' in problem_type:
                 obj_result += self.C_fleet_capital_cost(m)
             if 'cycle' in problem_type:
-                obj_result += self.cycle_cost(m) + self.squeeze_cycle_cost(m)
+                obj_result += self.cycle_cost(m)
             if 'ea' in problem_type:
                 obj_result -= self.R_energy_arbitrage_revenue(m)
             if 'dcm' in problem_type:
@@ -318,7 +337,7 @@ class EVRPTW:
 
     def R_energy_arbitrage_revenue(self, m):
         """Amortized G2V/V2G energy arbitrage (or net cost of charging) over all charging stations"""
-        return -m.t_S * sum(sum(sum(m.ce[s, t] * m.xp[i, t] * m.xkappa[i, t] for t in m.T) for i in m.Smap[s]) for s in m.S)
+        return -m.t_S * sum(sum(sum(m.ce[s, t] * m.xp[i, t] for t in m.T) for i in m.Smap[s]) for s in m.S)
 
     def R_delivery_revenue(self, m):
         """Amortized delivery revenue for goods delivered to customer nodes by entire fleet"""
@@ -334,11 +353,8 @@ class EVRPTW:
 
     def cycle_cost(self, m):
         """Adds a penalty for any battery actions."""
-        return m.cy * m.t_S * sum(sum(sum(m.xkappa[i, t] * m.xgamma[i, j] for t in m.T) for j in m.V1_ if i != j) for i in m.S_)
-
-    def squeeze_cycle_cost(self, m):
-        """Adds a reward for consecutive battery actions."""
-        return -m.cz * m.t_S * sum(sum(m.xkappa[i, t] * m.xkappa[i, t - m.t_S] for t in m.T if t > 0) for i in m.S_)
+        # return m.cy * m.t_S * sum(sum(sum(m.xkappa[i, t] * m.xgamma[i, j] for t in m.T) for j in m.V1_ if i != j) for i in m.S_)
+        return m.cy * m.t_S * sum(sum(m.xkappa[i, t] for t in m.T) for i in m.S_)
 
     # TODO: FIX t_S unit size so no decimals are needed
     def create_data_dictionary(self):
@@ -450,7 +466,7 @@ class EVRPTW:
         self.instance.name = '{} {}{}'.format(self.instance_name, self.problem_type, add_to_instance_name)
 
     # For Gurobi solver options, see: https://www.gurobi.com/documentation/9.1/refman/parameters.html
-    def make_solver(self, solve_options={'TimeLimit': 60 * 5, 'MIPFocus': 3, 'Cuts': 3}):
+    def make_solver(self, solve_options={'TimeLimit': 60 * 5}):  #, 'MIPFocus': 3, 'Cuts': 3
         # Specify solver
         self.opt = SolverFactory('gurobi', io_format='python')
 

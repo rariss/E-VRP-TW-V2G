@@ -112,7 +112,7 @@ def plot_evrptwv2g(m: 'obj'):
                      m.R_delivery_revenue(m.instance)(),
                      m.R_energy_arbitrage_revenue(m.instance)(),
                      m.R_peak_shaving_revenue(m.instance)(),
-                     m.cycle_cost(m.instance)() + m.squeeze_cycle_cost(m.instance)()]
+                     m.cycle_cost(m.instance)()]
 
     # Generate plot title
     title = ''
