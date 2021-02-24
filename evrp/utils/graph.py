@@ -1,8 +1,10 @@
+import logging
+
+import networkx as nx
+import pandas as pd
+
 from evrp.config.GLOBAL_CONFIG import node_colors_hex
 from evrp.utils.utilities import create_flat_distance_matrix, create_coordinate_dict
-import pandas as pd
-import networkx as nx
-import logging
 
 
 def draw_plain_graph(v: 'pd.DataFrame', d: 'pd.DataFrame') -> 'fig':

@@ -1,13 +1,15 @@
-from evrp.config.GLOBAL_CONFIG import node_colors_rgba, node_colors_rgba_tuple
-from evrp.utils.utilities import create_plotting_edges, results_to_dfs
-from plotly.subplots import make_subplots
-import plotly.graph_objects as go
+import logging
+
 import matplotlib.pyplot as plt
-from matplotlib.ticker import MultipleLocator
-from matplotlib.gridspec import GridSpec
 import numpy as np
 import pandas as pd
-import logging
+import plotly.graph_objects as go
+from matplotlib.gridspec import GridSpec
+from matplotlib.ticker import MultipleLocator
+from plotly.subplots import make_subplots
+
+from evrp.config.GLOBAL_CONFIG import node_colors_rgba, node_colors_rgba_tuple
+from evrp.utils.utilities import create_plotting_edges, results_to_dfs
 
 
 def plot_evrptwv2g(m: 'obj'):

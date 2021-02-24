@@ -1,11 +1,12 @@
-import pandas as pd
-import numpy as np
-from scipy.spatial import distance
 import datetime
 import json
-from pyomo.environ import *
-from numpyencoder import NumpyEncoder as NpEncoder
 import logging
+
+import numpy as np
+import pandas as pd
+from numpyencoder import NumpyEncoder as NpEncoder
+from pyomo.environ import *
+from scipy.spatial import distance
 
 now = datetime.datetime.now()
 

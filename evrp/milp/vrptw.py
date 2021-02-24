@@ -1,8 +1,9 @@
-from evrp.utils.utilities import parse_csv_tables, calculate_distance_matrix, generate_index_mapping
-import pandas as pd
-import numpy as np
 import logging
-from pyomo.environ import * # Import last so no pyomo-provided math functions get overwritten
+
+import pandas as pd
+from pyomo.environ import *  # Import last so no pyomo-provided math functions get overwritten
+
+from evrp.utils.utilities import parse_csv_tables, calculate_distance_matrix, generate_index_mapping
 
 
 class VRPTW:
