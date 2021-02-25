@@ -323,6 +323,13 @@ def plot_evrptwv2g(m: 'obj'):
 
     fig.tight_layout()
 
+    if 'save' in kwargs.keys():
+        if kwargs['save']:
+            timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+            save_path = 'output/{}_{}_{}.png'.format(timestamp, m.instance_name, m.problem_type)
+            # fig.show()
+            fig.savefig(save_path, bbox_inches='tight')
+
     return x, xp, traces, routes
 
 def plot_interactive_graph(v: 'pd.DataFrame', **kwargs) -> 'fig':
