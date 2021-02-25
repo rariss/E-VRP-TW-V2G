@@ -3,7 +3,7 @@ import logging
 import pandas as pd
 from pyomo.environ import *
 
-from evrp.utils.utilities import parse_csv_tables, calculate_distance_matrix, generate_index_mapping
+from utils.utilities import parse_csv_tables, calculate_distance_matrix, generate_index_mapping
 
 
 class EVRPTW:
@@ -468,7 +468,7 @@ class EVRPTW:
         self.instance.name = '{} {}{}'.format(self.instance_name, self.problem_type, add_to_instance_name)
 
     # For Gurobi solver options, see: https://www.gurobi.com/documentation/9.1/refman/parameters.html
-    def make_solver(self, solve_options={'TimeLimit': 60 * 5}):  #, 'MIPFocus': 3, 'Cuts': 3
+    def make_solver(self, solve_options={'TimeLimit': 60 * 60}):  #, 'MIPFocus': 3, 'Cuts': 3
         # Specify solver
         self.opt = SolverFactory('gurobi', io_format='python')
 

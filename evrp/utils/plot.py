@@ -7,12 +7,13 @@ import plotly.graph_objects as go
 from matplotlib.gridspec import GridSpec
 from matplotlib.ticker import MultipleLocator
 from plotly.subplots import make_subplots
+from datetime import datetime
 
-from evrp.config.GLOBAL_CONFIG import node_colors_rgba, node_colors_rgba_tuple
-from evrp.utils.utilities import create_plotting_edges, results_to_dfs
+from config.GLOBAL_CONFIG import node_colors_rgba, node_colors_rgba_tuple
+from utils.utilities import create_plotting_edges, results_to_dfs
 
 
-def plot_evrptwv2g(m: 'obj'):
+def plot_evrptwv2g(m: 'obj', **kwargs):
     # MODEL RESULTS AND PARAMETERS
     # Merge model results for plots
     x, xp, traces, routes = results_to_dfs(m)
