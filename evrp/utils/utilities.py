@@ -139,7 +139,7 @@ def create_plotting_edges(v: 'pd.DataFrame', d: 'pd.DataFrame') -> 'np.array':
 
 #  TODO: Clean-up or remove
 def instance_to_df(instance, **kwargs):
-    logFile = open('results/' + now.strftime('%y%m%d-%H%M%S') + '_gurobi_' + instance.instance_name + '.txt', 'a+')
+    logFile = open('output/' + now.strftime('%y%m%d-%H%M%S') + '_gurobi_' + instance.instance_name + '.txt', 'a+')
 
     logging.info('===============Summary===============')
     logging.info('Total distance traveled:     {}'.format(round(instance.m.obj, 2)))
