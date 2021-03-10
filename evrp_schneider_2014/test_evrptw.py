@@ -57,7 +57,7 @@ duplicates = False
 #%% testing initializing instances, solve function
 
 # Specify solver
-opt = SolverFactory('baron')
+opt = SolverFactory('gurobi')
 
 # Import data
 instance_filepath = fpath
