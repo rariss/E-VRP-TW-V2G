@@ -7,6 +7,9 @@ import pandas as pd
 from numpyencoder import NumpyEncoder as NpEncoder
 from pyomo.environ import *
 from scipy.spatial import distance
+import googlemaps
+
+from evrp.config.LOCAL_CONFIG import GOOGLE_API_KEY
 
 now = datetime.datetime.now()
 
@@ -55,8 +58,8 @@ def parse_csv_tables(filepath: str,
 
     return tables
 
-
-def calculate_distance_matrix(df: 'pd.DataFrame', metric: str = 'euclidean') -> 'pd.DataFrame':
+# TODO: Add in distances pulled from Google Maps; Add in euclidian distance given lat and longitudes
+def calculate_distance_matrix(df: 'pd.DataFrame', metric: str = 'euclidean', dist_type = 'scipy') -> 'pd.DataFrame':
     """
     Calculates a square distance matrix given a set of vertices with (x,y) coordinates.
 
@@ -67,9 +70,49 @@ def calculate_distance_matrix(df: 'pd.DataFrame', metric: str = 'euclidean') -> 
     :return: Square matrix of distances between every vertex.
     :rtype: pd.DataFrame
     """
-    # Sets columns and index to original vertex index
-    return pd.DataFrame(distance.cdist(df.values, df.values, metric), index=df.index, columns=df.index)
+    # TODO: Better way to handle whether to use scipy or googlemaps (e.g. passthrough?)
+    # Determine whether to use google maps (i.e. negative x, y assumes longitude)
+    if any(df < 0):
+        logging.info('Using Google Maps Distance API to generate distance matrix')
+        dist_type = 'googlemaps'
 
+    # Calculate a traditional
+    if dist_type == 'scipy':
+        # Sets columns and index to original vertex index
+        return pd.DataFrame(distance.cdist(df.values, df.values, metric), index=df.index, columns=df.index)
+    elif dist_type == 'googlemaps':
+        # Import google maps client to use their distance matrix api
+        gmaps = googlemaps.Client(key=GOOGLE_API_KEY)
+
+        # TODO: Distance matrix has a limit of 100 server-side requests. For more than 10 unique locations, need to split by row and concatenate
+        # Create a mapping from unique locations to codes
+        codes, latlons = pd.factorize([(lat, lon) for lat, lon in df.values])
+
+        # Query google for the distance matrix
+        dist = gmaps.distance_matrix(origins=latlons, destinations=latlons, mode='driving')
+        dist_df = pd.DataFrame(dist)
+
+        # Normalize the elements of the distance matrix into a flat dataframe
+        dist_matrix_df = pd.json_normalize(data=dist, record_path=['rows', 'elements'])
+
+        # Reindex to google's origin and destination addresses
+        dist_matrix_df.index = pd.MultiIndex.from_product(
+            [dist_df['origin_addresses'], dist_df['destination_addresses']])
+
+        # Turn into a square distance matrix
+        m2km = 1 / 1000
+        dist_square_df = pd.DataFrame(
+            data=dist_matrix_df['distance.value'].values.reshape(len(dist_df['origin_addresses']), -1),
+            index=dist_df['origin_addresses'], columns=dist_df['destination_addresses']) * m2km
+
+        # Use codes to produce distance matrix results into the original matrix order from unique values
+        output_df = dist_square_df.iloc[codes].T.iloc[codes]
+
+        # Rename to original node index
+        output_df.index = df.index
+        output_df.columns = df.index
+
+        return output_df
 
 def generate_index_mapping(v: 'ndarray') -> [dict, dict]:
     """
