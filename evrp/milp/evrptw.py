@@ -426,6 +426,7 @@ class EVRPTW:
         self.data['start_node'] = self.data['D'].index[0]
         self.data['end_node'] = self.data['D'].index[1]
 
+        # TODO: Need to define two different timestep variables (1) for dividing up timeseries data and (2) for converting into hour units
         # Create timeseries data
         logging.info('Creating timeseries data')
         self.t_T = self.data['Parameters'].loc['t_T', 'value'].astype(int)
