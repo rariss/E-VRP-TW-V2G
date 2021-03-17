@@ -9,7 +9,7 @@ from pyomo.environ import *
 from scipy.spatial import distance
 import googlemaps
 
-from evrp.config.LOCAL_CONFIG import GOOGLE_API_KEY
+from config.LOCAL_CONFIG import GOOGLE_API_KEY
 
 now = datetime.datetime.now()
 
