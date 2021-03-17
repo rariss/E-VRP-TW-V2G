@@ -38,7 +38,6 @@ class EVRPTW:
         self.m.co = Param(mutable=True, doc='Amortized operating cost for delivery (wages)')
         self.m.cm = Param(mutable=True, doc='Amortized operating cost for maintenance')
         self.m.cy = Param(mutable=True, doc='Penalty cycle cost')
-        self.m.cz = Param(mutable=True, doc='Reward squeeze cycle cost')
         self.m.QMAX = Param(mutable=True, doc='Maximum payload limit for all vehicles')
         self.m.EMAX = Param(mutable=True, doc='Maximum EV battery SOE limit for all EVs')
         self.m.EMIN = Param(mutable=True, doc='Minimum EV battery SOE limit for all EVs')
@@ -369,7 +368,6 @@ class EVRPTW:
                 'co': {None: self.data['W'].loc[:, 'co'].mean()},
                 'cm': {None: self.data['W'].loc[:, 'cm'].mean()},
                 'cy': {None: self.data['W'].loc[:, 'cy'].mean()},
-                'cz': {None: self.data['W'].loc[:, 'cy'].mean()},
                 'QMAX': {None: float(self.data['W'].loc[:, 'QMAX'].mean())},
                 'EMIN': {None: float(self.data['W'].loc[:, 'EMIN'].mean())},
                 'EMAX': {None: float(self.data['W'].loc[:, 'EMAX'].mean())},
@@ -430,8 +428,8 @@ class EVRPTW:
 
         # Create timeseries data
         logging.info('Creating timeseries data')
-        self.t_T = self.data['Parameters'].loc['t_T', 'value']
-        self.t_S = self.data['Parameters'].loc['t_S', 'value']
+        self.t_T = self.data['Parameters'].loc['t_T', 'value'].astype(int)
+        self.t_S = self.data['Parameters'].loc['t_S', 'value'].astype(int)
 
         for col in self.data['T'].columns.get_level_values(0).drop_duplicates():  # Produces energy price (ce) and demand (G) timeseries
             self.data[col] = self.data['T'][col].reindex(range(0, self.t_T, self.t_S), method='ffill')
@@ -444,9 +442,18 @@ class EVRPTW:
         # Create extended graph
         self.data['V_'] = pd.concat([self.data[k] for k in ['D', 'S_', 'M']])
 
+        # TODO: Better way to handle whether to use scipy or googlemaps (e.g. passthrough?)
+        # Determine whether to use google maps (i.e. negative x, y assumes longitude)
+        if pd.DataFrame(self.data['V_'][['d_x', 'd_y']] < 0).any(axis=None):
+            logging.info('Using Google Maps Distance API to generate distance matrix')
+            self.dist_type = 'googlemaps'
+        else:
+            self.dist_type = 'scipy'
+            logging.info('Using Scipy euclidian distances to generate distance matrix')
+
         # Calculate distance matrix
         logging.info('Calculating distance matrix')
-        self.data['d'] = calculate_distance_matrix(self.data['V_'][['d_x', 'd_y']])
+        self.data['d'] = calculate_distance_matrix(self.data['V_'][['d_x', 'd_y']], dist_type=self.dist_type)
 
         # Create duplicates mappings
         self.s2s_ = {s: [s_ for s_ in self.data['S_'].index if s+'_' in s_] for s in self.data['S'].index}  # S -> S_
@@ -468,7 +475,7 @@ class EVRPTW:
         self.instance.name = '{} {}{}'.format(self.instance_name, self.problem_type, add_to_instance_name)
 
     # For Gurobi solver options, see: https://www.gurobi.com/documentation/9.1/refman/parameters.html
-    def make_solver(self, solve_options={'TimeLimit': 60 * 60}):  #, 'MIPFocus': 3, 'Cuts': 3
+    def make_solver(self, solve_options={'TimeLimit': 60 * 5}):  #, 'MIPFocus': 3, 'Cuts': 3
         # Specify solver
         self.opt = SolverFactory('gurobi', io_format='python')
 
