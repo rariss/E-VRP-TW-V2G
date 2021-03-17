@@ -132,7 +132,10 @@ def plot_evrptwv2g(m: 'obj', **kwargs):
 
         # Annotate the nodes
         for j, txt in enumerate(m.data[n].index):
-            scale = 2
+            if m.dist_type == 'googlemaps':
+                scale = .4
+            else:
+                scale = 2
             if n == 'D':
                 offset = [-scale, -scale]
             elif n == 'S':
@@ -190,7 +193,7 @@ def plot_evrptwv2g(m: 'obj', **kwargs):
             arrow_dy = m.data['V_'].loc[t[ki + 1], 'd_y'] - arrow_y
 
             axs_graph.arrow(arrow_x, arrow_y, arrow_dx, arrow_dy, alpha=a, linewidth=2,
-                       length_includes_head=True, head_width=1, head_length=1, overhang=0,
+                       length_includes_head=True, head_width=scale/2, head_length=scale/2, overhang=0,
                        color=colors[ti])
 
         axs_graph.set_aspect('equal', adjustable='datalim')
@@ -247,6 +250,7 @@ def plot_evrptwv2g(m: 'obj', **kwargs):
         axs_soe.spines['left'].set_visible(False)
         axs_soe.set_title('Arrival SOE', fontdict=fdict)
 
+    # TODO: If no stations are visited, need to exclude this...
     # Plot power
     s = stations[0]
     bott = pd.DataFrame(index=time)

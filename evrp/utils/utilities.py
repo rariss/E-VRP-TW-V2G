@@ -49,7 +49,7 @@ def parse_csv_tables(filepath: str,
         if k in ['T']:
             tables[k] = table.T.set_index(pd.MultiIndex.from_arrays(table.iloc[0:2].values)).T.drop(
                 table.index[0:2])
-            tables[k].index = tables[k].index.astype(int)
+            tables[k].index = pd.to_numeric(tables[k].index, errors='coerce').astype(int)
         else:
             tables[k] = table.rename(columns=table.iloc[0]).drop(table.index[0])
 
@@ -70,12 +70,6 @@ def calculate_distance_matrix(df: 'pd.DataFrame', metric: str = 'euclidean', dis
     :return: Square matrix of distances between every vertex.
     :rtype: pd.DataFrame
     """
-    # TODO: Better way to handle whether to use scipy or googlemaps (e.g. passthrough?)
-    # Determine whether to use google maps (i.e. negative x, y assumes longitude)
-    if any(df < 0):
-        logging.info('Using Google Maps Distance API to generate distance matrix')
-        dist_type = 'googlemaps'
-
     # Calculate a traditional
     if dist_type == 'scipy':
         # Sets columns and index to original vertex index
@@ -86,7 +80,7 @@ def calculate_distance_matrix(df: 'pd.DataFrame', metric: str = 'euclidean', dis
 
         # TODO: Distance matrix has a limit of 100 server-side requests. For more than 10 unique locations, need to split by row and concatenate
         # Create a mapping from unique locations to codes
-        codes, latlons = pd.factorize([(lat, lon) for lat, lon in df.values])
+        codes, latlons = pd.factorize([(y, x) for x, y in df.values])
 
         # Query google for the distance matrix
         dist = gmaps.distance_matrix(origins=latlons, destinations=latlons, mode='driving')
@@ -437,7 +431,7 @@ def update_instance_json(var_list, new_concrete_instance, instance_json):
 def convert_txt_instances_to_csv(instance, folder='config/test_instances/evrptw_instances/', output_folder='config/test_instances/'):
     """Converts a Schneider txt test instance into a csv format for EVRPTWV2G starting point."""
     # Default parameters
-    defaults = {'N': [1], 'cc': [1000], 'co': [1], 'cm': [0], 'cy': [3e-3], 'cz': [1e-3], 'EMIN': [0],
+    defaults = {'N': [1], 'cc': [1000], 'co': [1], 'cm': [0], 'cy': [3e-3], 'EMIN': [0],
                 'cg': 0, 'SMIN': 0, 'instances': 1, 'tQ': 0, 'cq': 1, 't_S': 1, 'G': 1, 'ce': 0.1
     }  # Must use lists if table generated from dict. Use single value if updating a dataframe value
 
@@ -463,7 +457,7 @@ def convert_txt_instances_to_csv(instance, folder='config/test_instances/evrptw_
     W = pd.DataFrame(data={'vehicle_type_id': ['EV'], 'N': defaults['N'],
                            'r': [other_dict['r']],
                            'v': [other_dict['v']],
-                           'cc': defaults['cc'], 'co': defaults['co'], 'cm': defaults['cm'], 'cy': defaults['cy'], 'cz': defaults['cz'],
+                           'cc': defaults['cc'], 'co': defaults['co'], 'cm': defaults['cm'], 'cy': defaults['cy'],
                            'QMAX': [other_dict['C']],
                            'EMIN': defaults['EMIN'],
                            'EMAX': [other_dict['Q']],
@@ -510,11 +504,14 @@ def convert_txt_instances_to_csv(instance, folder='config/test_instances/evrptw_
         T_dict[k] = {s: v for s in S['node_id']}
     T = pd.DataFrame.from_dict(T_dict, orient='index')
     T = pd.DataFrame(T.stack()).T
+    T = T.append(T, ignore_index=True)
+    T.loc[1, 't'] = int(graph['tB'].max())
 
     # Write and output file
     dict_of_dfs = {'D': D, 'S': S, 'M': M, 'Parameters': P, 'W': W, 'T': T}
+    csv_rows = max(len(d.columns) for k, d in dict_of_dfs.items())
     with open(output_folder + instance + '_.csv', 'w+') as f:
         for k, df in dict_of_dfs.items():
-            f.write(k + '\n')
-            df.to_csv(f, index=False)
-            f.write('\n')
+            f.write(k + ','*csv_rows +'\n')
+            df.to_csv(f, index=False, sep=',')
+            f.write(','*csv_rows+'\n')
