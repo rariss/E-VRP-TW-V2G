@@ -1,0 +1,33 @@
+D,,,,,,,,,,
+node_id,node_type,node_description,d_x,d_y,q,tA,tB,tS,tQ,cq
+D0,d,d,40,50,0,0,240,0,0,0
+D1,d,d,40,50,0,0,240,0,0,0
+,,,,,,,,,,
+S,,,,,,,,,,
+node_id,node_type,node_description,d_x,d_y,q,tA,tB,tS,tQ,cq
+S0,s,s,40,50,0,0,240,0,0,0
+S3,s,s,57,82,0,0,240,0,0,0
+S5,s,s,31,84,0,0,240,0,0,0
+S19,s,s,77,30,0,0,240,0,0,0
+,,,,,,,,,,
+M,,,,,,,,,,
+node_id,node_type,node_description,d_x,d_y,q,tA,tB,tS,tQ,cq
+C83,m,m,37,31,14,74,192,10,0,0
+C45,m,m,20,82,10,38,192,10,0,0
+C35,m,m,67,85,20,61,185,10,0,0
+C28,m,m,92,30,10,74,174,10,0,0
+C79,m,m,6,68,30,39,151,10,0,0
+C65,m,m,35,40,16,12,109,10,0,0
+C93,m,m,61,52,3,22,101,10,0,0
+C85,m,m,63,23,2,36,194,10,0,0
+C80,m,m,47,47,13,8,150,10,0,0
+C86,m,m,21,24,28,125,197,10,0,0
+,,,,,,,,,,
+Parameters,,,,,,,,,,
+parameter,description,value,,,,,,,,
+t_T,optimization time horizon,240,,,,,,,,
+t_S,time step size,1,,,,,,,,
+,,,,,,,,,,
+W,,,,,,,,,,
+vehicle_type_id,vehicle_type,NW,rW,v,cc,c_F,QMAX,EMAX,rE,rC
+z1,C,5,1,1,0,0,200,77.75,1,0.39
