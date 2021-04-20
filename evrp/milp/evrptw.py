@@ -15,7 +15,7 @@ class EVRPTW:
     def __init__(self, problem_type: str):
         """
         :param problem_type: Objective options include: {Schneider} OR {OpEx, CapEx, Cycle, EA, DCM, Delivery}
-         Constraint options include: {Start=End, FullStart=End, NoXkappaBounds, NoMinVehicles, NoSymmetry, NoXd, SplitXp, StationaryEVs}
+         Constraint options include: {Start=End, FullStart=End, NoXkappaBounds, NoMinVehicles, MaxVehicles, NoSymmetry, NoXd, SplitXp, StationaryEVs}
         """
         self.problem_type = problem_type
         self.problem_types = self.problem_type.lower().split()
@@ -41,6 +41,7 @@ class EVRPTW:
         self.m.EMAX = Param(mutable=True, doc='Maximum EV battery SOE limit for all EVs')
         self.m.EMIN = Param(mutable=True, doc='Minimum EV battery SOE limit for all EVs')
         self.m.PMAX = Param(mutable=True, doc='Maximum EV inverter limit for all EVs')
+        self.m.N = Param(mutable=True, doc='Maximum number of EVs possible in fleet')
         self.m.r = Param(mutable=True, doc='Electric consumption per unit distance for EV')
         self.m.v = Param(mutable=True, doc='Average speed')
         self.m.t_T = Param(doc='Time horizon')
@@ -123,6 +124,12 @@ class EVRPTW:
                 """Requires at least one vehicle assignment"""
                 return sum(m.xgamma[i, j] for j in m.V1_ if i != j) >= 1
             self.m.constraint_min_vehicles = Constraint(self.m.start_node, rule=constraint_min_vehicles)
+
+        if 'maxvehicles' in self.problem_types:
+            def constraint_max_vehicles(m, i):
+                """Requires at most N vehicle assignments"""
+                return sum(m.xgamma[i, j] for j in m.V1_ if i != j) <= m.N
+            self.m.constraint_max_vehicles = Constraint(self.m.start_node, rule=constraint_max_vehicles)
 
         if 'nosymmetry' not in self.problem_types:
             def constraint_station_symmetry(m, i):
