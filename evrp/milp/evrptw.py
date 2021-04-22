@@ -772,12 +772,12 @@ class EVRPTW:
             add_to_instance_name = ' ' + add_to_instance_name
         self.instance.name = '{} {}{}'.format(self.instance_name, self.problem_type, add_to_instance_name)
 
-        if 'chull' in self.problem_types:
-            xfrm_key = 'chull'
+        if 'hull' in self.problem_types:
+            xfrm_key = 'hull'
         elif 'bigm' in self.problem_types:
             xfrm_key = 'bigm'
         else:
-            logging.error('Must specify either "chull" or "bigm" in problem_type to define gdp instance.')
+            logging.error('Must specify either "hull" or "bigm" in problem_type to define gdp instance.')
 
         # Apply convex hull or big-M transform
         xfrm = TransformationFactory('gdp.{}'.format(xfrm_key))
