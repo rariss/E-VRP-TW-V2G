@@ -88,9 +88,9 @@ class EVRPTW:
         # Defining variables
         self.m.xgamma = Var(self.m.E, within=Boolean, initialize=0)  # Route decision of each edge for each EV
         self.m.xkappa = Var(self.m.S_, self.m.T, within=Boolean, initialize=0)
-        self.m.xw = Var(self.m.V01_, within=NonNegativeReals, bounds=(0, self.m.t_T))  # Arrival time for each vehicle at each node
-        self.m.xq = Var(self.m.V01_, within=NonNegativeReals, bounds=(0, self.m.QMAX))  # Payload of each vehicle before visiting each node
-        self.m.xa = Var(self.m.V01_, within=NonNegativeReals, initialize=self.m.EMAX, bounds=(0, self.m.EMAX))  # Energy of each EV arriving at each node
+        self.m.xw = Var(self.m.V01_, within=NonNegativeReals, bounds=(0, self.m.MT))  # Arrival time for each vehicle at each node
+        self.m.xq = Var(self.m.V01_, within=NonNegativeReals, bounds=(0, self.m.MQ))  # Payload of each vehicle before visiting each node
+        self.m.xa = Var(self.m.V01_, within=NonNegativeReals, initialize=self.m.EMAX, bounds=(0, self.m.ME))  # Energy of each EV arriving at each node
         self.m.xd = Var(self.m.S, within=NonNegativeReals, initialize=0)  # Each station’s net peak electric demand
         self.m.xp = Var(self.m.S_, self.m.T, within=Reals, bounds=(-self.m.PMAX, self.m.PMAX))  # AC Discharge or charge rate of each EV
         if 'splitxp' in self.problem_types:
@@ -192,10 +192,12 @@ class EVRPTW:
                             expr=m.xc[i, t] - m.xg[i, t] <= m.SMAX[i])
 
                         # Minimum and Maximum SOE limit for each EV
-                        d.constraint_energy_soe_station = Constraint(
-                            expr=inequality(m.EMIN, m.xa[i] + m.t_S * sum(
-                                m.eff * m.xc[i, b] - m.xg[i, b] / m.eff for b in m.T if b <= t),
-                                            m.EMAX))
+                        d.constraint_energy_soe_station_lb = Constraint(
+                            expr=0 <= m.xa[i] + m.t_S * sum(
+                                m.eff * m.xc[i, b] - m.xg[i, b] / m.eff for b in m.T if b <= t) - m.EMIN)
+                        d.constraint_energy_soe_station_ub = Constraint(
+                            expr=m.xa[i] + m.t_S * sum(
+                                m.eff * m.xc[i, b] - m.xg[i, b] / m.eff for b in m.T if b <= t) - m.EMAX <= 0)
 
                     else:
                         # Energy transition for each EV while at an intermediate charging station node i and traveling across edge (i, j)
@@ -218,10 +220,10 @@ class EVRPTW:
                             expr=m.xp[i, t] <= m.SMAX[i])
 
                         # Minimum and Maximum SOE limit for each EV
-                        d.constraint_energy_soe_station = Constraint(
-                            expr=inequality(m.EMIN,
-                                            m.xa[i] + m.t_S * sum(m.xp[i, b] for b in m.T if b <= t),
-                                            m.EMAX))
+                        d.constraint_energy_soe_station_lb = Constraint(
+                            expr=0 <= m.xa[i] + m.t_S * sum(m.xp[i, b] for b in m.T if b <= t) - m.EMIN)
+                        d.constraint_energy_soe_station_ub = Constraint(
+                            expr=m.xa[i] + m.t_S * sum(m.xp[i, b] for b in m.T if b <= t) - m.EMAX <= 0)
 
                     # Payload Constraints
                     # EV payload must not decrease when visiting a charging station
