@@ -86,18 +86,18 @@ class EVRPTW:
         logging.info('Defining variables')
         # Defining variables
         self.m.xgamma = Var(self.m.E, within=Boolean, initialize=0)  # Route decision of each edge for each EV
-        self.m.xkappa = Var(self.m.S_, self.m.T, within=Boolean, initialize=0)
+        self.m.xkappa = Var(self.m.S_, self.m.V1_, self.m.T, within=Boolean, initialize=0)
         self.m.xw = Var(self.m.V01_, within=NonNegativeReals, bounds=(0,self.m.MT))  # Arrival time for each vehicle at each node
         self.m.xq = Var(self.m.V01_, within=NonNegativeReals, bounds=(0,self.m.QMAX))  # Payload of each vehicle before visiting each node
         self.m.xa = Var(self.m.V01_, within=NonNegativeReals, initialize=self.m.EMAX, bounds=(self.m.EMIN, self.m.EMAX))  # Energy of each EV arriving at each node #TODO: bounds were a constraint
         self.m.xd = Var(self.m.S, within=NonNegativeReals, initialize=0)  # Each station’s net peak electric demand
-        self.m.xp = Var(self.m.S_, self.m.T, within=Reals, bounds=(-self.m.PMAX,self.m.PMAX))  # Charge or discharge rate of each EV
+        self.m.xp = Var(self.m.S_, self.m.V1_, self.m.T, within=Reals, bounds=(-self.m.PMAX,self.m.PMAX))  # Charge or discharge rate of each EV
 
         # Defining boolean variables associated with the disjuncts
         self.m.ArcOnBool = BooleanVar(self.m.E)
         self.m.ArcOffBool = BooleanVar(self.m.E)
-        self.m.EVDischargeBool = BooleanVar(self.m.S_, self.m.T)
-        self.m.EVChargeBool = BooleanVar(self.m.S_, self.m.T)
+        self.m.EVChargeDischargeBool = BooleanVar(self.m.S_, self.m.V1_, self.m.T)
+        self.m.EVIdleBool = BooleanVar(self.m.S_, self.m.V1_, self.m.T)
 
         logging.info('Defining disjuncts and disjunction')
 
@@ -105,7 +105,6 @@ class EVRPTW:
 
         # ArcOn disjunct for traveled arcs (xgamma)
         def ArcOn(d, i, j):
-
             if i != j:
                 m = d.model()
 
@@ -121,8 +120,8 @@ class EVRPTW:
 
                 if i in m.S_:
                     '''Constraints that are unique to charging station nodes'''
-                    d.constraint_time_station = Constraint(expr=inequality(None, m.xw[i] + (m.tS[i] + m.d[i, j] / m.v) + m.t_S * sum(m.xkappa[i, t] for t in m.T), m.xw[j]), doc='Service time for each EV doing V2G/G2V at each charging station')
-                    d.constraint_energy_station = Constraint(expr=inequality(None, m.xa[j], m.xa[i] + m.t_S * sum(m.xp[i, t] for t in m.T) - (m.r * m.d[i, j])), doc='Energy transition for each EV while at an intermediate charging station node i and traveling across edge (i, j)')
+                    d.constraint_time_station = Constraint(expr=inequality(None, m.xw[i] + (m.tS[i] + m.d[i, j] / m.v) + m.t_S * sum(m.xkappa[i, j, t] for t in m.T), m.xw[j]), doc='Service time for each EV doing V2G/G2V at each charging station')
+                    d.constraint_energy_station = Constraint(expr=inequality(None, m.xa[j], m.xa[i] + m.t_S * sum(m.xp[i, j, t] for t in m.T) - (m.r * m.d[i, j])), doc='Energy transition for each EV while at an intermediate charging station node i and traveling across edge (i, j)')
                     d.constraint_payload_station = Constraint(expr=inequality(None, m.xq[j], m.xq[i]), doc='EV payload must not decrease when visiting a charging station')
                 #
                 if i in m.start_node: #TODO: merge with customer block?
@@ -139,7 +138,6 @@ class EVRPTW:
 
         # ArcOff disjunct for non-traveled arcs (xgamma)
         def ArcOff(d, i, j):
-
             if i != j:
                 m = d.model()
                 d.constraint_xgamma = Constraint(expr=m.xgamma[i,j] == 0, doc='Arc must be deactivated')
@@ -149,76 +147,92 @@ class EVRPTW:
             else:
                 return Disjunct.Skip
 
-
         self.m.ArcOff = Disjunct(self.m.V0_, self.m.V1_, rule=ArcOff)
 
         # Arc state disjunction (xgamma)
         def ArcState(m, i, j):
-            if i == j:
-                return Disjunction.Skip
+            if i != j:
+                return[m.ArcOn[i,j], m.ArcOff[i,j]]
             else:
-                return [m.ArcOn[i,j], m.ArcOff[i,j]]
+                return Disjunction.Skip
         self.m.ArcState = Disjunction(self.m.V0_, self.m.V1_, rule=ArcState)
 
         # EV discharge disjuncts
-        def EVDischarge(d, i, t):
-            m = d.model()
-            d.constraint_xkappa = Constraint(expr=m.xkappa[i,t] == 1, doc='EV must discharge')
-            # if 'noxkappabounds' not in problem_type:
-            #     d.constraint_time_xkappa_lb = Constraint(expr=inequality(None, (m.t_T - t), m.t_T - m.xw[i]), doc='V2G decisions must be made after arrival at the node')
-            d.constraint_energy_ev_limit = Constraint(expr=inequality(-m.PMAX, m.xp[i,t], m.PMAX), doc='Charge limits for each EV at charging stations')
-            d.constraint_energy_station_limit = Constraint(expr=inequality(m.SMIN[i], m.xp[i,t], m.SMAX[i]), doc='Charge limits for an EV at charging station i')
-            # d.constraint_energy_soe_station = Constraint(expr=inequality(m.EMIN, m.xa[i] + m.t_S * sum(m.xp[i, b] for b in m.T if b <= t), m.EMAX), doc='Minimum and Maximum SOE limit for each EV') #TODO: why t_S breaks xfrm:unsupported operand type(s) for -: 'float' and 'NoneType' but passing the number directly works!??
-                                                                                                                                                                                                        # Also makes the runtime way longer: move to global constraints for now
-        self.m.EVDischarge = Disjunct(self.m.S_, self.m.T, rule=EVDischarge)
+        def EVChargeDischarge(d, i, j, t):
+            if i != j:
+                m = d.model()
+                d.constraint_xkappa = Constraint(expr=m.xkappa[i,j,t] == 1, doc='EV is charging or discharging')
+                if 'noxkappabounds' not in problem_type:
+                    d.constraint_time_xkappa_lb = Constraint(expr=inequality(0, m.t_T - t, m.t_T - m.xw[i]), doc='V2G decisions must be made after arrival at the node')
+                    # d.constraint_time_xkappa_lb = Constraint(expr=inequality(0, m.xw[i], t), doc='V2G decisions must be made after arrival at the node')
+                    d.constraint_time_xkappa_ub = Constraint(expr=inequality(None, (m.tS[i] + m.d[i, j] / m.v) + (t + m.t_S), m.xw[j]), doc='V2G decisions must be made before departure from the node')
+                d.constraint_energy_ev_limit = Constraint(expr=inequality(-m.PMAX, m.xp[i,j,t], m.PMAX), doc='Charge limits for each EV at charging stations')
+                d.constraint_energy_station_limit = Constraint(expr=inequality(m.SMIN[i], m.xp[i,j,t], m.SMAX[i]), doc='Charge limits for an EV at charging station i')
+                # d.constraint_energy_soe_station = Constraint(expr=inequality(m.EMIN, m.xa[i] + m.t_S * sum(m.xp[i, b] for b in m.T if b <= t), m.EMAX), doc='Minimum and Maximum SOE limit for each EV')
+                #TODO: why t_S breaks xfrm:unsupported operand type(s) for -: 'float' and 'NoneType' but passing the number directly works!??
+                # Also makes the runtime way longer: move to global constraints for now
+        self.m.EVChargeDischarge = Disjunct(self.m.S_, self.m.V1_, self.m.T, rule=EVChargeDischarge)
 
-        def EVCharge(d, i, t):
-            m = d.model()
-            d.constraint_xkappa = Constraint(expr=m.xkappa[i,t] == 0, doc='EV must charge')
-            # if 'noxkappabounds' not in problem_type:
-            #     d.constraint_time_xkappa_lb = Constraint(expr=inequality(None, m.MT,  m.t_T - m.xw[i]), doc='V2G decisions must be made after arrival at the node') #TODO: redundant? sense?
-            d.constraint_energy_ev_limit = Constraint(expr= m.xp[i,t] == 0, doc='Charge limits for each EV at charging stations')
+        def EVIdle(d, i, j, t):
+            if i != j:
+                m = d.model()
+                d.constraint_xkappa = Constraint(expr=m.xkappa[i,j,t] == 0, doc='EV is idle')
+                d.constraint_energy_ev_limit = Constraint(expr= m.xp[i,j,t] == 0, doc='Charge limits for each EV at charging stations')
 
-        self.m.EVCharge = Disjunct(self.m.S_, self.m.T, rule=EVCharge)
+        self.m.EVIdle = Disjunct(self.m.S_, self.m.V1_, self.m.T, rule=EVIdle)
 
-        def ChargeDischargeDecision(m, i, t):
-            return [m.EVDischarge[i,t], m.EVCharge[i,t]]
-        self.m.ChargeDischargeDecision = Disjunction(self.m.S_, self.m.T, rule=ChargeDischargeDecision)
+        def EVState(m, i, j, t):
+            if i != j:
+                return [m.EVChargeDischarge[i,j,t], m.EVIdle[i,j,t]]
+            else:
+                return Disjunction.Skip
+        self.m.EVState = Disjunction(self.m.S_, self.m.V1_, self.m.T, rule=EVState)
 
         # && LOGICAL PROPOSITIONS
 
+        # for idx in self.m.E:
+        #     self.m.ArcOnBool[idx].associate_binary_var(self.m.ArcOn[idx])
+        #     self.m.ArcOffBool[idx].associate_binary_var(self.m.ArcOff[idx])
+        #
+        # for s in self.m.S_:
+        #     for j in self.m.V1_:
+        #         if s != j:
+        #             for t in self.m.T:
+        #                 self.m.EVChargeDischargeBool[s,j,t].associate_binary_var(self.m.EVChargeDischarge[s,j,t])
+        #                 self.m.EVIdleBool[s,j,t].associate_binary_var(self.m.EVIdle[s,j,t])
+        #
         # def ArcOnThen_(m, i, j, t):
-        #     '''Charging station visited by an EV at time t may allow charge or discharge actions'''
+        #     '''EV visiting charging station i at time t may charge or discharge'''
         #     if i != j:
-        #         returnreturn m.ArcOnBool[i,j].implies(xor(m.EVDischargeBool[i,t], m.EVChargeBool[i,t]))
+        #         return m.ArcOnBool[i,j].implies(xor(m.EVChargeDischargeBool[i,j,t], m.EVIdleBool[i,j,t]))
         #     else:
-        #         return LogicalConstraint.Skip
+        #         return Constraint.Skip
         # self.m.ArcOnThen_ = LogicalConstraint(self.m.S_, self.m.V1_, self.m.T, rule=ArcOnThen_)
-
-        # def ArcOffThen_(m, i, j, t): #TODO: redefine?
-        #     '''Charging station not visited by an EV at time t should not consider charge or discharge actions?
-        #     set to EVCharge (xkapppa=0)'''
+        #
+        # def ArcOffThen_(m, i, j, t):
+        #     '''EV not visiting charging station i at time t stays idle'''
         #     if i != j:
-        #         return m.ArcOffBool[i,j].implies(m.EVChargeBool[i,t])
+        #         print(m.ArcOnBool[i,j].get_associated_binary())
+        #         return m.ArcOffBool[i,j].implies(m.EVIdleBool[i,j,t])
         #     else:
-        #         return LogicalConstraint.Skip
-        # self.m.ArcOffThen_ = LogicalConstraint(self.m.S_, self.m.V1_ self.m.T, rule=ArcOffThen_)
-        # TODO: why logical constraint with if block break?
+        #         return Constraint.Skip
+        # self.m.ArcOffThen_ = LogicalConstraint(self.m.S_, self.m.V1_, self.m.T, rule=ArcOffThen_)
 
-        def ArcOnThen_(m, i, j, t):
-            '''Charging station visited by an EV at time t may allow charge or discharge actions'''
-
-            return m.ArcOnBool[i,j].implies(xor(m.EVDischargeBool[i,t], m.EVChargeBool[i,t]))
-
-        self.m.ArcOnThen_ = LogicalConstraint(self.m.S_, self.m.V1_-self.m.S_, self.m.T, rule=ArcOnThen_)
-
-        def ArcOffThen_(m, i, j, t): #TODO: redefine?
-            '''Charging station not visited by an EV at time t should not consider charge or discharge actions?
-            set to EVCharge (xkapppa=0)'''
-
-            return m.ArcOffBool[i,j].implies(m.EVChargeBool[i,t])
-
-        self.m.ArcOffThen_ = LogicalConstraint(self.m.S_, self.m.V1_-self.m.S_, self.m.T, rule=ArcOffThen_)
+        # def ArcOnThen_(m, i, j, t):
+        #     '''EV visiting charging station i at time t may charge or discharge'''
+        #     if i != j:
+        #         return m.ArcOn[i,j].indicator_var.implies(xor(m.EVChargeDischarge[i,j,t].indicator_var, m.EVIdle[i,j,t].indicator_var))
+        #     else:
+        #         return Constraint.Skip
+        # self.m.ArcOnThen_ = LogicalConstraint(self.m.S_, self.m.V1_, self.m.T, rule=ArcOnThen_)
+        #
+        # def ArcOffThen_(m, i, j, t):
+        #     '''EV not visiting charging station i at time t stays idle'''
+        #     if i != j:
+        #         return m.ArcOff[i,j].indicator_var.implies(m.EVIdle[i,j,t].indicator_var)
+        #     else:
+        #         return Constraint.Skip
+        # self.m.ArcOffThen_ = LogicalConstraint(self.m.S_, self.m.V1_, self.m.T, rule=ArcOffThen_)
 
         # %% GLOBAL CONSTRAINTS
 
@@ -264,7 +278,7 @@ class EVRPTW:
         def constraint_xgamma_xkappa(m, i, t):
             """Ensures charging can only happen when a vehicle is physically present at a node.
             IF $\sum_j{x_{ij}^\gamma}=0$, THEN $x^\kappa_{it}=0\ \forall t$, ELSE $x^\kappa_{it}=0\ \forall t<x^\omega_i$."""
-            return m.xkappa[i, t] <= sum(m.xgamma[i, j] for j in m.V1_ if i != j)
+            return sum(m.xkappa[i, j, t] for j in m.V1_ if i != j) <= sum(m.xgamma[i, j] for j in m.V1_ if i != j) #TODO: review
         self.m.constraint_xgamma_xkappa = Constraint(self.m.S_, self.m.T, rule=constraint_xgamma_xkappa)
 
         def constraint_node_time_window(m, i):
@@ -295,16 +309,30 @@ class EVRPTW:
 
         def constraint_energy_soe_station(m, i, t):
             """Minimum and Maximum SOE limit for each EV"""
-            return inequality(m.EMIN, m.xa[i] + m.t_S * sum(m.xp[i, b] for b in m.T if b <= t), m.EMAX)
+            return inequality(m.EMIN, m.xa[i] + m.t_S * sum(sum(m.xp[i, j, b] for j in m.V1_) for b in m.T if b <= t), m.EMAX)
         self.m.constraint_energy_soe_station = Constraint(self.m.S_, self.m.T, rule=constraint_energy_soe_station)
 
         def constraint_energy_peak(m, s, t):
             """Peak electric demand for each physical station s(i) ∈ S"""
             if 'noxd' not in problem_type:
-                return m.G[s, t] + sum(m.xp[i, t] for i in m.Smap[s]) <= m.xd[s]
+                return m.G[s, t] + sum(sum(m.xp[i, j, t] for j in m.V1_) for i in m.Smap[s]) <= m.xd[s]
             else:
                 return Constraint.Skip
         self.m.constraint_energy_peak = Constraint(self.m.S, self.m.T, rule=constraint_energy_peak)
+
+        # if 'noxkappabounds' not in problem_type:
+        #     def constraint_time_xkappa_lb(m, i, t):
+        #         """V2G decisions must be made after arrival at the node"""
+        #         return (m.t_T - t) * m.xkappa[i, t] - m.MT * (1 - m.xkappa[i, t]) <= m.t_T - m.xw[i]
+        #     self.m.constraint_time_xkappa_lb = Constraint(self.m.S_, self.m.T, rule=constraint_time_xkappa_lb)
+        #
+        #     def constraint_time_xkappa_ub(m, i, j, t):
+        #         """V2G decisions must be made before departure from the node"""
+        #         if i != j:
+        #             return (m.tS[i] + m.d[i, j] / m.v) * m.xgamma[i, j] + (t + m.t_S) * m.xkappa[i, t] - m.MT * (1 - m.xgamma[i, j]) <= m.xw[j]
+        #         else:
+        #             return Constraint.Skip
+        #     self.m.constraint_time_xkappa_ub = Constraint(self.m.S_, self.m.V1_, self.m.T, rule=constraint_time_xkappa_ub)
 
 
         # OBJECTIVE FUNCTION AND DEPENDENT FUNCTIONS
@@ -357,7 +385,7 @@ class EVRPTW:
 
     def R_energy_arbitrage_revenue(self, m):
         """Amortized G2V/V2G energy arbitrage (or net cost of charging) over all charging stations"""
-        return -m.t_S * sum(sum(sum(m.ce[s, t] * m.xp[i, t] for t in m.T) for i in m.Smap[s]) for s in m.S)
+        return -m.t_S * sum(sum(sum(sum(m.ce[s, t] * m.xp[i, j, t] for j in m.V1_) for t in m.T) for i in m.Smap[s]) for s in m.S)
 
     def R_delivery_revenue(self, m):
         """Amortized delivery revenue for goods delivered to customer nodes by entire fleet"""
@@ -374,7 +402,7 @@ class EVRPTW:
     def cycle_cost(self, m):
         """Adds a penalty for any battery actions."""
         # return m.cy * m.t_S * sum(sum(sum(m.xkappa[i, t] * m.xgamma[i, j] for t in m.T) for j in m.V1_ if i != j) for i in m.S_)
-        return m.cy * m.t_S * sum(sum(m.xkappa[i, t] for t in m.T) for i in m.S_)
+        return m.cy * m.t_S * sum(sum(sum(m.xkappa[i, j, t] for t in m.T) for i in m.S_) for j in m.V1_)
 
     # TODO: FIX t_S unit size so no decimals are needed
     def create_data_dictionary(self):
@@ -494,18 +522,6 @@ class EVRPTW:
             add_to_instance_name = ' ' + add_to_instance_name
         self.instance.name = '{} {}{}'.format(self.instance_name, self.problem_type, add_to_instance_name)
 
-        # TODO: out the if blocks in a function and call it here
-        for idx in self.instance.E:
-            self.instance.ArcOnBool[idx].associate_binary_var(self.instance.ArcOn[idx])
-            self.instance.ArcOffBool[idx].associate_binary_var(self.instance.ArcOff[idx])
-
-        for s in self.instance.S_:
-            for t in self.instance.T:
-                self.instance.EVDischargeBool[s,t].associate_binary_var(self.instance.EVDischarge[s,t])
-                self.instance.EVChargeBool[s,t].associate_binary_var(self.instance.EVCharge[s,t])
-
-        self.transform_instance()
-
     def transform_instance(self):
         problem_type = self.problem_type.lower().split() #TODO: make problem type list a class property to share with build_model
         if 'hull' in problem_type:
@@ -515,7 +531,7 @@ class EVRPTW:
         xfrm.apply_to(self.instance)
 
     # For Gurobi solver options, see: https://www.gurobi.com/documentation/9.1/refman/parameters.html
-    def make_solver(self, solve_options={'TimeLimit': 60 * 5}):  #, 'MIPFocus': 3, 'Cuts': 3
+    def make_solver(self, solve_options={'TimeLimit': 60 * 60}):  #, 'MIPFocus': 3, 'Cuts': 3
         # Specify solver
         self.opt = SolverFactory('gurobi', io_format='python')
 
@@ -536,6 +552,7 @@ class EVRPTW:
         logging.info('Solving instance...')
         self.results = self.opt.solve(self.instance, tee=True, options=self.solve_options)
         logging.info('Done')
+
 
     def solve(self):
         if not (hasattr(self, 'opt') | hasattr(self, 'solve_options')):
