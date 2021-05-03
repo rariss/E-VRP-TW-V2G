@@ -1,0 +1,32 @@
+D,,,,,,,,,,,
+node_id,node_type,node_description,d_x,d_y,tA,tB,tS,,,,
+D0,d,start,40,50,0,1236,0,,,,
+D1,d,end,40,50,0,1236,0,,,,
+,,,,,,,,,,,
+S,,,,,,,,,,,
+node_id,node_type,node_description,d_x,d_y,tA,tB,tS,cg,SMIN,SMAX,instances
+S0,s,s,40,50,0,1236,0,0,0,0.288184438,2
+S15,s,s,39,26,0,1236,0,0,0,0.288184438,2
+,,,,,,,,,,,
+M,,,,,,,,,,,
+node_id,node_type,node_description,d_x,d_y,tA,tB,tS,q,tQ,cq,
+C20,m,m,30,50,0,1136,90,10,0,1,
+C98,m,m,58,75,0,1115,90,20,0,1,
+C65,m,m,48,40,67,139,90,10,0,1,
+C57,m,m,40,15,989,1063,90,40,0,1,
+C24,m,m,25,50,0,1131,90,10,0,1,
+,,,,,,,,,,,
+Parameters,,,,,,,,,,,
+parameter,description,value,,,,,,,,,
+t_T,optimization time horizon,1236,,,,,,,,,
+t_S,time step size,4,,,,,,,,,
+,,,,,,,,,,,
+W,,,,,,,,,,,
+vehicle_type_id,N,r,v,cc,co,cm,cy,QMAX,EMIN,EMAX,PMAX
+EV,1,1,1,1000,1,0,0.003,200,0,77.75,0.288184438
+,,,,,,,,,,,
+T,,,,,,,,,,,
+t,G,G,ce,ce,,,,,,,
+,S0,S15,S0,S15,,,,,,,
+0,1,1,0.1,0.1,,,,,,,
+1236,1,1,0.1,0.1,,,,,,,
