@@ -156,11 +156,11 @@ class EVRPTW:
                     # Time Constraints
                     # Service time for each EV doing V2G/G2V at each charging station
                     d.constraint_time_station = Constraint(expr=m.xw[i] + (m.tS[i] + m.d[i, j] / m.v) + m.t_S * sum(
-                            m.xkappa[i, t] for t in m.T) <= m.xw[j])
+                            m.xkappa[i, t_] for t_ in m.T) <= m.xw[j])
 
                     if 'noxkappabounds' not in self.problem_types:
                         # V2G decisions must be made after arrival at the node
-                        d.constraint_time_xkappa_lb = Constraint(expr=m.xw[i] <= t )
+                        d.constraint_time_xkappa_lb = Constraint(expr=m.xw[i] <= t)
 
                         # V2G decisions must be made before departure from the node
                         d.constraint_time_xkappa_ub = Constraint(expr=(m.tS[i] + m.d[i, j] / m.v) + (t + m.t_S) <= m.xw[j])
@@ -172,7 +172,7 @@ class EVRPTW:
                         # Energy transition for each EV while at an intermediate charging station node i and traveling across edge (i, j)
                         d.constraint_energy_station = Constraint(
                             expr=m.xa[j] <= m.xa[i] + m.t_S * sum(
-                                m.eff * m.xc[i, t] - m.xg[i, t] / m.eff for t in m.T) - \
+                                m.eff * m.xc[i, t_] - m.xg[i, t_] / m.eff for t_ in m.T) - \
                                  (m.r * m.d[i, j]))
 
                         # Charge limits for each EV at charging stations
@@ -181,7 +181,7 @@ class EVRPTW:
 
                         # Charge limits for each EV at charging stations
                         d.constraint_energy_ev_limit_ub = Constraint(
-                            expr=m.xc[i, t] - m.xg[i, t] <= m.PMAX * m.xkappa[i, t])
+                            expr=m.xc[i, t] - m.xg[i, t] <= m.PMAX)
 
                         # Charge limits for an EV at charging station i
                         d.constraint_energy_station_limit_lb = Constraint(
@@ -202,22 +202,23 @@ class EVRPTW:
                     else:
                         # Energy transition for each EV while at an intermediate charging station node i and traveling across edge (i, j)
                         d.constraint_energy_station = Constraint(
-                            expr=m.xa[j] <= m.xa[i] + m.t_S * sum(m.xp[i, t] for t in m.T) - \
+                            expr=m.xa[j] <= m.xa[i] + m.t_S * sum(m.xp[i, t_] for t_ in m.T) - \
                                  (m.r * m.d[i, j]))
-                        # Charge limits for each EV at charging stations
-                        d.constraint_energy_ev_limit_lb = Constraint(expr=-m.PMAX <= m.xp[i, t])
 
                         # Charge limits for each EV at charging stations
-                        d.constraint_energy_ev_limit_ub = Constraint(
-                            expr=m.xp[i, t] <= m.PMAX * m.xkappa[i, t])
+                        # d.constraint_energy_ev_limit_lb = Constraint(expr=-m.PMAX <= m.xp[i, t])
+
+                        # Charge limits for each EV at charging stations
+                        # d.constraint_energy_ev_limit_ub = Constraint(
+                        #     expr=m.xp[i, t] <= m.PMAX)
 
                         # Charge limits for an EV at charging station i
                         d.constraint_energy_station_limit_lb = Constraint(
-                            expr=m.SMIN[i] <= m.xp[i, t])
+                            expr=0 <= m.xp[i, t] - m.SMIN[i])
 
                         # Charge limits for an EV at charging station i
                         d.constraint_energy_station_limit_ub = Constraint(
-                            expr=m.xp[i, t] <= m.SMAX[i])
+                            expr=m.xp[i, t] - m.SMAX[i]<= 0)
 
                         # Minimum and Maximum SOE limit for each EV
                         d.constraint_energy_soe_station_lb = Constraint(
@@ -333,10 +334,7 @@ class EVRPTW:
         self.m.disjunct_arc_off = Disjunct(self.m.V0_, self.m.V1_, self.m.T, rule=disjunct_arc_off)
 
         def disjunct_state(m, i, j, t):
-            if i != j:
-                return [m.disjunct_arc_v2g_on[i, j, t], m.disjunct_arc_v2g_off[i, j, t], m.disjunct_arc_off[i, j, t]]
-            else:
-                return Disjunction.Skip
+            return [m.disjunct_arc_v2g_on[i, j, t], m.disjunct_arc_v2g_off[i, j, t], m.disjunct_arc_off[i, j, t]]
         self.m.disjunct_state = Disjunction(self.m.V0_, self.m.V1_, self.m.T, rule=disjunct_state)
 
         # Global Constraints
