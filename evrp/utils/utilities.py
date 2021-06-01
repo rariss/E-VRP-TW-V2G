@@ -248,7 +248,10 @@ def merge_variable_results(m: 'obj', var_list: str, include_vehicle=False) -> 'p
     var_list.remove(v)
     x = getattr(m.instance, v)
 
-    keys, values = zip(*x.get_values().items())
+    if v0 in ['xgamma', 'xkappa']:
+        keys, values = zip(*{key: val.indicator_var.get_values()[None] for key, val in x.items()}.items())
+    else:
+        keys, values = zip(*x.get_values().items())
     idx = pd.MultiIndex.from_tuples(keys)
     x = pd.DataFrame(values, index=idx)
     x.columns = [v]
@@ -306,7 +309,7 @@ def trace_routes_util(from_node, end_node, visited, current_route, routes, graph
 
 
 def trace_routes(m: 'obj', tol=1e-4):
-    x_val = getattr(m.instance, 'xgamma').extract_values()
+    x_val = {k: v.indicator_var.get_values()[None] for k, v in getattr(m.instance, 'xgamma').items()}
     active_arcs = [n for n in list(x_val.items()) if n[1] > tol]
     active_arcs_list = list(list(zip(*active_arcs))[0])
 

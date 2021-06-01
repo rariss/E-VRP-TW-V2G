@@ -86,8 +86,8 @@ class EVRPTW:
 
         logging.info('Defining variables')
         # Defining variables
-        self.m.xgamma = Var(self.m.E, within=Boolean, initialize=0)  # Route decision of each edge for each EV
-        self.m.xkappa = Var(self.m.S_, self.m.T, within=Boolean, initialize=0)
+        # self.m.xgamma = Var(self.m.E, within=Boolean, initialize=0)  # Route decision of each edge for each EV
+        # self.m.xkappa = Var(self.m.S_, self.m.T, within=Boolean, initialize=0)
         self.m.xw = Var(self.m.V01_, within=NonNegativeReals, bounds=(0, self.m.MT))  # Arrival time for each vehicle at each node
         self.m.xq = Var(self.m.V01_, within=NonNegativeReals, bounds=(0, self.m.MQ))  # Payload of each vehicle before visiting each node
         self.m.xa = Var(self.m.V01_, within=NonNegativeReals, initialize=self.m.EMAX, bounds=(0, self.m.ME))  # Energy of each EV arriving at each node
@@ -101,15 +101,70 @@ class EVRPTW:
         logging.info('Defining constraints')
 
         # Disjunctive Sets
-        def disjunct_arc_v2g_on(d, i, j, t):
+        def disjunct_v2g_on(d, i, t):
+            m = d.model()
+
+            # For charging stations i in S_
+            # if i in m.S_:
+            # Time Constraints
+            # Vehicle must arrive before the current time if doing V2G
+            d.constraint_time_station_arrival = Constraint(expr=m.xw[i] <= t)
+
+            # Energy Constraints
+            # Minimum and Maximum SOE limit for each EV
+            # d.constraint_energy_soe_station = Constraint(expr=inequality(m.EMIN, m.xa[i], m.EMAX))
+
+            # Charge limits for each EV at charging stations
+            d.constraint_energy_ev_limit_lb = Constraint(expr=-m.PMAX <= m.xp[i, t])
+
+            # Charge limits for each EV at charging stations
+            d.constraint_energy_ev_limit_ub = Constraint(expr=m.xp[i, t] <= m.PMAX)
+
+            # Charge limits for an EV at charging station i
+            d.constraint_energy_station_limit_lb = Constraint(expr=0 <= m.xp[i, t] - m.SMIN[i])
+
+            # Charge limits for an EV at charging station i
+            d.constraint_energy_station_limit_ub = Constraint(expr=m.xp[i, t] - m.SMAX[i]<= 0)
+            #
+            # else:
+            #     return Disjunct.Skip
+        self.m.xkappa = Disjunct(self.m.S_, self.m.T, rule=disjunct_v2g_on)
+
+        def disjunct_v2g_off(d, i, t):
+            m = d.model()
+
+            # For all charging stations i in S_
+            # if i in m.S_:
+
+            # Turn off xp[i, t]
+            d.constraint_power_off = Constraint(expr=m.xp[i, t] == 0)
+
+            if 'splitxp' in self.problem_types:
+                # Turn off xc[i, t]
+                d.constraint_charge_off = Constraint(expr=m.xc[i, t] == 0)
+
+                # Turn off xg[i, t]
+                d.constraint_discharge_off = Constraint(expr=m.xg[i, t] == 0)
+
+            # else:
+            #     return Disjunct.Skip
+        self.m.xkappa_off = Disjunct(self.m.S_, self.m.T, rule=disjunct_v2g_off)
+
+        def disjunct_v2g_state(m, i, t):
+            return [m.xkappa[i, t], m.xkappa_off[i, t]]
+        self.m.disjunct_v2g_state = Disjunction(self.m.S_, self.m.T, rule=disjunct_v2g_state)
+
+        def disjunct_arc_on(d, i, j):
             if i != j:
                 m = d.model()
 
-                # To ensure only one constraint iteration for non-time constraints
-                # if t == m.T[1]:
                 # For all nodes i
                 # Turn on xgamma[i, j] variable
-                d.constraint_xgamma_on = Constraint(expr=m.xgamma[i, j] == 1)
+                # d.constraint_xgamma_on = Constraint(expr=m.xgamma[i, j] == 1)
+
+                # Arrival time must be within time window for each node
+                d.constraint_node_time_window = Constraint(
+                    expr=inequality(m.tA[i], m.xw[i], m.tB[i]))
 
                 # For start_node
                 if i == m.start_node:
@@ -142,28 +197,19 @@ class EVRPTW:
                     # Vehicles must unload payload for full customer demand when visiting a customer
                     d.constraint_payload = Constraint(expr=m.xq[j] <= m.xq[i] - m.q[i])
 
-                # To ensure only one constraint iteration for non-"j" constraints
-                # if j == m.end_node:
-                # Time Constraints
-                # Arrival time must be within time window for each node
-                d.constraint_node_time_window = Constraint(expr=inequality(m.tA[i], m.xw[i], m.tB[i]))
-
                 # For charging stations i in S_
                 if i in m.S_:
-                    # Turn on xkappa[i, t] variable
-                    d.constraint_xkappa_on = Constraint(expr=m.xkappa[i, t] == 1)
-
                     # Time Constraints
                     # Service time for each EV doing V2G/G2V at each charging station
                     d.constraint_time_station = Constraint(expr=m.xw[i] + (m.tS[i] + m.d[i, j] / m.v) + m.t_S * sum(
-                            m.xkappa[i, t_] for t_ in m.T) <= m.xw[j])
+                            m.xkappa[i, t_].indicator_var for t_ in m.T) <= m.xw[j])
 
-                    if 'noxkappabounds' not in self.problem_types:
-                        # V2G decisions must be made after arrival at the node
-                        d.constraint_time_xkappa_lb = Constraint(expr=m.xw[i] <= t)
-
-                        # V2G decisions must be made before departure from the node
-                        d.constraint_time_xkappa_ub = Constraint(expr=(m.tS[i] + m.d[i, j] / m.v) + (t + m.t_S) <= m.xw[j])
+                    # if 'noxkappabounds' not in self.problem_types:
+                    #     # V2G decisions must be made after arrival at the node
+                    #     d.constraint_time_xkappa_lb = Constraint(expr=m.xw[i] <= t)
+                    #
+                    #     # V2G decisions must be made before departure from the node
+                    #     d.constraint_time_xkappa_ub = Constraint(expr=(m.tS[i] + m.d[i, j] / m.v) + (t + m.t_S) <= m.xw[j])
 
                     # Energy Constraints
                     # TODO: Check if number of xkappa variables can be reduced for same energy / depot periods
@@ -175,29 +221,29 @@ class EVRPTW:
                                 m.eff * m.xc[i, t_] - m.xg[i, t_] / m.eff for t_ in m.T) - \
                                  (m.r * m.d[i, j]))
 
-                        # Charge limits for each EV at charging stations
-                        d.constraint_energy_ev_limit_lb = Constraint(
-                            expr=-m.PMAX <= m.xc[i, t] - m.xg[i, t])
+                        # # Charge limits for each EV at charging stations
+                        # d.constraint_energy_ev_limit_lb = Constraint(
+                        #     expr=-m.PMAX <= m.xc[i, t] - m.xg[i, t])
+                        #
+                        # # Charge limits for each EV at charging stations
+                        # d.constraint_energy_ev_limit_ub = Constraint(
+                        #     expr=m.xc[i, t] - m.xg[i, t] <= m.PMAX)
+                        #
+                        # # Charge limits for an EV at charging station i
+                        # d.constraint_energy_station_limit_lb = Constraint(
+                        #     expr=m.SMIN[i] <= m.xc[i, t] - m.xg[i, t])
+                        #
+                        # # Charge limits for an EV at charging station i
+                        # d.constraint_energy_station_limit_ub = Constraint(
+                        #     expr=m.xc[i, t] - m.xg[i, t] <= m.SMAX[i])
 
-                        # Charge limits for each EV at charging stations
-                        d.constraint_energy_ev_limit_ub = Constraint(
-                            expr=m.xc[i, t] - m.xg[i, t] <= m.PMAX)
-
-                        # Charge limits for an EV at charging station i
-                        d.constraint_energy_station_limit_lb = Constraint(
-                            expr=m.SMIN[i] <= m.xc[i, t] - m.xg[i, t])
-
-                        # Charge limits for an EV at charging station i
-                        d.constraint_energy_station_limit_ub = Constraint(
-                            expr=m.xc[i, t] - m.xg[i, t] <= m.SMAX[i])
-
-                        # Minimum and Maximum SOE limit for each EV
-                        d.constraint_energy_soe_station_lb = Constraint(
-                            expr=0 <= m.xa[i] + m.t_S * sum(
-                                m.eff * m.xc[i, b] - m.xg[i, b] / m.eff for b in m.T if b <= t) - m.EMIN)
-                        d.constraint_energy_soe_station_ub = Constraint(
-                            expr=m.xa[i] + m.t_S * sum(
-                                m.eff * m.xc[i, b] - m.xg[i, b] / m.eff for b in m.T if b <= t) - m.EMAX <= 0)
+                        # # Minimum and Maximum SOE limit for each EV
+                        # d.constraint_energy_soe_station_lb = Constraint(
+                        #     expr=0 <= m.xa[i] + m.t_S * sum(
+                        #         m.eff * m.xc[i, b] - m.xg[i, b] / m.eff for b in m.T if b <= t) - m.EMIN)
+                        # d.constraint_energy_soe_station_ub = Constraint(
+                        #     expr=m.xa[i] + m.t_S * sum(
+                        #         m.eff * m.xc[i, b] - m.xg[i, b] / m.eff for b in m.T if b <= t) - m.EMAX <= 0)
 
                     else:
                         # Energy transition for each EV while at an intermediate charging station node i and traveling across edge (i, j)
@@ -212,87 +258,19 @@ class EVRPTW:
                         # d.constraint_energy_ev_limit_ub = Constraint(
                         #     expr=m.xp[i, t] <= m.PMAX)
 
-                        # Charge limits for an EV at charging station i
-                        d.constraint_energy_station_limit_lb = Constraint(
-                            expr=0 <= m.xp[i, t] - m.SMIN[i])
-
-                        # Charge limits for an EV at charging station i
-                        d.constraint_energy_station_limit_ub = Constraint(
-                            expr=m.xp[i, t] - m.SMAX[i]<= 0)
-
-                        # Minimum and Maximum SOE limit for each EV
-                        d.constraint_energy_soe_station_lb = Constraint(
-                            expr=0 <= m.xa[i] + m.t_S * sum(m.xp[i, b] for b in m.T if b <= t) - m.EMIN)
-                        d.constraint_energy_soe_station_ub = Constraint(
-                            expr=m.xa[i] + m.t_S * sum(m.xp[i, b] for b in m.T if b <= t) - m.EMAX <= 0)
-
-                    # Payload Constraints
-                    # EV payload must not decrease when visiting a charging station
-                    d.constraint_payload_station = Constraint(expr=m.xq[j] <= m.xq[i])
-
-            else:
-                return Disjunct.Skip
-        self.m.disjunct_arc_v2g_on = Disjunct(self.m.V0_, self.m.V1_, self.m.T, rule=disjunct_arc_v2g_on)
-
-        def disjunct_arc_v2g_off(d, i, j, t):
-            if i != j:
-                m = d.model()
-
-                # To ensure only one constraint iteration for non-time constraints
-                # if t == m.T[1]:
-                # For all nodes i
-                # Turn on xgamma[i, j] variable
-                d.constraint_xgamma_on = Constraint(expr=m.xgamma[i, j] == 1)
-
-                # Time Constraints
-                # Arrival time must be within time window for each node
-                d.constraint_node_time_window = Constraint(expr=inequality(m.tA[i], m.xw[i], m.tB[i]))
-
-                # Energy Constraints
-                # TODO: Can we drop this constraint for the start_node?
-                # Energy transition for each EV while at node i and traveling across edge (i, j)
-                d.constraint_energy = Constraint(expr=m.xa[j] <= m.xa[i] - (m.r * m.d[i, j]))
-
-                # For start_node
-                if i == m.start_node:
-                    # Time Constraints
-                    # TODO: Can we drop the constraint for the start depot if we drop fixed service time?
-                    # Service time for each vehicle at start depot
-                    d.constraint_time_start_depot = Constraint(expr=m.xw[i] + (m.tS[i] + m.d[i, j] / m.v) <= m.xw[j])
-
-                # For customer nodes i in M
-                if i in m.M:
-                    # Time Constraints
-                    # TODO: Should we get rid of "unload time"?
-                    # Service time for each vehicle doing delivery at each customer node
-                    d.constraint_time_customer = Constraint(expr=m.xw[i] + (m.tS[i] + m.d[i, j] / m.v + m.tQ[i] * m.q[i]) <= m.xw[j])
-
-                    # Payload Constraints
-                    # Vehicles must unload payload for full customer demand when visiting a customer
-                    d.constraint_payload = Constraint(expr=m.xq[j] <= m.xq[i] - m.q[i])
-
-                # For charging stations i in S_
-                if i in m.S_:
-                    # Turn off xkappa[i, t] variable
-                    d.constraint_xkappa_off = Constraint(expr=m.xkappa[i, t] == 0)
-
-                    # Turn off xp[i, t]
-                    d.constraint_power_off = Constraint(expr=m.xp[i, t] == 0)
-
-                    if 'splitxp' in self.problem_types:
-                        # Turn off xc[i, t]
-                        d.constraint_charge_off = Constraint(expr=m.xc[i, t] == 0)
-
-                        # Turn off xg[i, t]
-                        d.constraint_discharge_off = Constraint(expr=m.xg[i, t] == 0)
-
-                    # Time Constraints
-                    # Service time for each EV doing V2G/G2V at each charging station
-                    d.constraint_time_station = Constraint(expr=m.xw[i] + (m.tS[i] + m.d[i, j] / m.v) <= m.xw[j])
-
-                    # Energy Constraints
-                    # Minimum and Maximum SOE limit for each EV
-                    # d.constraint_energy_soe_station = Constraint(expr=inequality(m.EMIN, m.xa[i], m.EMAX))
+                        # # Charge limits for an EV at charging station i
+                        # d.constraint_energy_station_limit_lb = Constraint(
+                        #     expr=0 <= m.xp[i, t] - m.SMIN[i])
+                        #
+                        # # Charge limits for an EV at charging station i
+                        # d.constraint_energy_station_limit_ub = Constraint(
+                        #     expr=m.xp[i, t] - m.SMAX[i]<= 0)
+                        #
+                        # # Minimum and Maximum SOE limit for each EV
+                        # d.constraint_energy_soe_station_lb = Constraint(
+                        #     expr=0 <= m.xa[i] + m.t_S * sum(m.xp[i, b] for b in m.T if b <= t) - m.EMIN)
+                        # d.constraint_energy_soe_station_ub = Constraint(
+                        #     expr=m.xa[i] + m.t_S * sum(m.xp[i, b] for b in m.T if b <= t) - m.EMAX <= 0)
 
                     # Payload Constraints
                     # EV payload must not decrease when visiting a charging station
@@ -300,74 +278,53 @@ class EVRPTW:
 
             else:
                 return Disjunct.Skip
-        self.m.disjunct_arc_v2g_off = Disjunct(self.m.V0_, self.m.V1_, self.m.T, rule=disjunct_arc_v2g_off)
+        self.m.xgamma = Disjunct(self.m.E, rule=disjunct_arc_on)
 
-        def disjunct_arc_off(d, i, j, t):
-            if i != j:
-                m = d.model()
+        def disjunct_arc_off(d, i, j):
+            m = d.model()
+            return Disjunct.Skip
+        self.m.xgamma_off = Disjunct(self.m.E, rule=disjunct_arc_off)
 
-                # For all nodes i
-                # Turn on xgamma[i, j] variable
-                d.constraint_xgamma_off = Constraint(expr=m.xgamma[i, j] == 0)
-
-                # For all charging stations i in S_
-                if i in m.S_:
-                    # Turn off xkappa[i, t] variable
-                    d.constraint_xkappa_off = Constraint(expr=m.xkappa[i, t] == 0)
-
-                    # Turn off xp[i, t]
-                    d.constraint_power_off = Constraint(expr=m.xp[i, t] == 0)
-
-                    if 'splitxp' in self.problem_types:
-                        # Turn off xc[i, t]
-                        d.constraint_charge_off = Constraint(expr=m.xc[i, t] == 0)
-
-                        # Turn off xg[i, t]
-                        d.constraint_discharge_off = Constraint(expr=m.xg[i, t] == 0)
-
-                # Time Constraints
-                # Energy Constraints
-                # Payload Constraints
-
-            else:
-                return Disjunct.Skip
-        self.m.disjunct_arc_off = Disjunct(self.m.V0_, self.m.V1_, self.m.T, rule=disjunct_arc_off)
-
-        def disjunct_state(m, i, j, t):
-            return [m.disjunct_arc_v2g_on[i, j, t], m.disjunct_arc_v2g_off[i, j, t], m.disjunct_arc_off[i, j, t]]
-        self.m.disjunct_state = Disjunction(self.m.V0_, self.m.V1_, self.m.T, rule=disjunct_state)
+        def disjunct_arc_state(m, i, j):
+            return [m.xgamma[i, j], m.xgamma_off[i, j]]
+        self.m.disjunct_arc_state = Disjunction(self.m.E, rule=disjunct_arc_state)
 
         # Global Constraints
+        # %% LOGICAL CONSTRAINTS
+        def constraint_logical(m, i, t):
+            return m.xkappa[i, t].indicator_var - sum(m.xgamma[i, j].indicator_var for j in m.V1_ if i != j) <= 0
+        self.m.constraint_logical = Constraint(self.m.S_, self.m.T, rule=constraint_logical)
+
         # %% ROUTING CONSTRAINTS
         #  TODO: upper bound on maximum number of vehicles in fleet based off starting routes?
 
         def constraint_visit_stations(m, i):
             """Charging station nodes can be visited at most once in extended graph"""
-            return sum(m.xgamma[i, j] for j in m.V1_ if i != j) <= 1
+            return sum(m.xgamma[i, j].indicator_var for j in m.V1_ if i != j) <= 1
         self.m.constraint_visit_stations = Constraint(self.m.S_, rule=constraint_visit_stations)
 
         def constraint_visit_customers(m, i):
             """EVs must visit customer nodes once"""
-            return sum(m.xgamma[i, j] for j in m.V1_ if i != j) == 1
+            return sum(m.xgamma[i, j].indicator_var for j in m.V1_ if i != j) == 1
         self.m.constraint_visit_customers = Constraint(self.m.M, rule=constraint_visit_customers)
 
         def constraint_single_route(m, i):
             """Vehicle incoming arcs equal outcoming arcs for any intermediate nodes"""
-            route_out = sum(m.xgamma[i, j] for j in m.V1_ if i != j)
-            route_in = sum(m.xgamma[j, i] for j in m.V0_ if i != j)
+            route_out = sum(m.xgamma[i, j].indicator_var for j in m.V1_ if i != j)
+            route_in = sum(m.xgamma[j, i].indicator_var for j in m.V0_ if i != j)
             return route_out - route_in == 0
         self.m.constraint_single_route = Constraint(self.m.V_, rule=constraint_single_route)
 
         if 'nominvehicles' not in self.problem_types:
             def constraint_min_vehicles(m, i):
                 """Requires at least one vehicle assignment"""
-                return sum(m.xgamma[i, j] for j in m.V1_ if i != j) >= 1
+                return sum(m.xgamma[i, j].indicator_var for j in m.V1_ if i != j) >= 1
             self.m.constraint_min_vehicles = Constraint(self.m.start_node, rule=constraint_min_vehicles)
 
         if 'maxvehicles' in self.problem_types:
             def constraint_max_vehicles(m, i):
                 """Requires at most N vehicle assignments"""
-                return sum(m.xgamma[i, j] for j in m.V1_ if i != j) <= m.N
+                return sum(m.xgamma[i, j].indicator_var for j in m.V1_ if i != j) <= m.N
             self.m.constraint_max_vehicles = Constraint(self.m.start_node, rule=constraint_max_vehicles)
 
         if 'nosymmetry' not in self.problem_types:
@@ -376,8 +333,8 @@ class EVRPTW:
                 duplicate_number = eval(i.split('_')[-1])
                 if duplicate_number >= 1:  # check if it is a duplicate node
                     previous_duplicate = i.split('_')[0] + '_' + str(duplicate_number-1)
-                    return sum(m.xgamma[i, j] for j in m.V1_ if i != j) <= \
-                           sum(m.xgamma[previous_duplicate, j] for j in m.V1_ if previous_duplicate != j)
+                    return sum(m.xgamma[i, j].indicator_var for j in m.V1_ if i != j) <= \
+                           sum(m.xgamma[previous_duplicate, j].indicator_var for j in m.V1_ if previous_duplicate != j)
                 else:
                     return Constraint.Skip
             self.m.constraint_station_symmetry = Constraint(self.m.S_, rule=constraint_station_symmetry)
@@ -387,9 +344,9 @@ class EVRPTW:
             def constraint_no_stationary_evs(m, i, j, s):
                 """Ensures no stationary vehicles staying at depot."""
                 if len(m.Smap[s]) > 1:
-                    return sum(m.xgamma[i, s_] + m.xgamma[s_, s__] + m.xgamma[s_, j] for s_ in m.Smap[s] for s__ in m.Smap[s] if s_ != s__) <= 0
+                    return sum(m.xgamma[i, s_].indicator_var + m.xgamma[s_, s__].indicator_var + m.xgamma[s_, j].indicator_var for s_ in m.Smap[s] for s__ in m.Smap[s] if s_ != s__) <= 0
                 else:
-                    return sum(m.xgamma[i, s_] + m.xgamma[s_, j] for s_ in m.Smap[s]) <= 0
+                    return sum(m.xgamma[i, s_].indicator_var + m.xgamma[s_, j].indicator_var for s_ in m.Smap[s]) <= 0
             self.m.constraint_no_stationary_evs = Constraint(self.m.start_node, self.m.end_node, self.m.S, rule=constraint_no_stationary_evs)
 
         # %% TIME CONSTRAINTS
@@ -449,6 +406,15 @@ class EVRPTW:
         #         else:
         #             return Constraint.Skip
         #     self.m.constraint_time_xkappa_ub = Constraint(self.m.S_, self.m.V1_, self.m.T, rule=constraint_time_xkappa_ub)
+
+        if 'noxkappabounds' not in self.problem_types:
+            def constraint_time_xkappa_ub(m, i, j, t):
+                """V2G decisions must be made before departure from the node"""
+                if i != j:
+                    return (m.tS[i] + m.d[i, j] / m.v) * m.xgamma[i, j].indicator_var + float(t + m.t_S) * m.xkappa[i, t].indicator_var - m.MT * (1 - m.xgamma[i, j].indicator_var) <= m.xw[j]
+                else:
+                    return Constraint.Skip
+            self.m.constraint_time_xkappa_ub = Constraint(self.m.S_, self.m.V1_, self.m.T, rule=constraint_time_xkappa_ub)
 
         # ENERGY CONSTRAINTS]
         # if 'splitxp' in self.problem_types:
@@ -529,7 +495,7 @@ class EVRPTW:
         def constraint_energy_soe(m, i):
             """Minimum and Maximum SOE limit for each EV"""
             return inequality(m.EMIN, m.xa[i], m.EMAX)
-        # self.m.constraint_energy_soe = Constraint(self.m.V01_, rule=constraint_energy_soe)
+        self.m.constraint_energy_soe = Constraint(self.m.V01_, rule=constraint_energy_soe)
 
         # def constraint_energy_soe_station(m, i, t):
         #     """Minimum and Maximum SOE limit for each EV"""
@@ -610,7 +576,7 @@ class EVRPTW:
 
     def C_fleet_capital_cost(self, m):
         """Cost of total number vehicles"""
-        return m.cc * sum(sum(m.xgamma[i, j] for j in m.V1_ if j != i) for i in m.start_node)
+        return m.cc * sum(sum(m.xgamma[i, j].indicator_var for j in m.V1_ if j != i) for i in m.start_node)
 
     def O_delivery_operating_cost(self, m):
         """Amortized delivery operating cost for utilized vehicles (wages)"""
@@ -637,7 +603,7 @@ class EVRPTW:
 
     def total_distance(self, m):
         """Total traveled distance"""
-        return sum(sum(m.d[i, j] * m.xgamma[i, j] for i in m.V0_ if i != j) for j in m.V1_)
+        return sum(sum(m.d[i, j] * m.xgamma[i, j].indicator_var for i in m.V0_ if i != j) for j in m.V1_)
 
     def total_time(self, m):
         """Total time traveled by all EVs"""
@@ -649,7 +615,7 @@ class EVRPTW:
         if 'splitxp' in self.problem_types:
             return m.cy * m.t_S * sum(sum(m.xc[i, t] for t in m.T) for i in m.S_)
         else:
-            return m.cy * m.t_S * sum(sum(m.xkappa[i, t] for t in m.T) for i in m.S_)
+            return m.cy * m.t_S * sum(sum(m.xkappa[i, t].indicator_var for t in m.T) for i in m.S_)
 
     # TODO: FIX t_S unit size so no decimals are needed
     def create_data_dictionary(self):
