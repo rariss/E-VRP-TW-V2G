@@ -101,9 +101,10 @@ class EVRPTW:
         logging.info('Defining constraints')
 
         # Disjunctive Sets
-        @self.m.Disjunct(self.m.E)
-        def disjunct_arc_on(d, i, j):
+        # @self.m.Disjunct(self.m.E)
+        def disjunct_arc_on(d, i, j, t):
             if i != j:
+
                 m = d.model()
 
                 # For all nodes i
@@ -173,73 +174,78 @@ class EVRPTW:
                     d.constraint_payload_station = Constraint(expr=m.xq[j] <= m.xq[i])
 
                     # NESTED DISJUNCTION - V2G STATE
-                    @self.m.Disjunct(self.m.S_, self.m.T)
-                    def disjunct_v2g_on(d, i, t):
-                        m = d.model()
+
+                    # @d.Disjunct(self.m.S_, self.m.T)
+                    def disjunct_v2g_on(d_inner, i, j, t):
+
+                        # print('***HERE***')
+                        # print('i: ', i)
+                        # print('j: ', j)
+                        # print('t: ', t)
+
+                        m = d_inner.model()
 
                         #Turn on xkappa
-                        d.constraint_xkappa_on = Constraint(expr=m.xkappa[i, t] == 1)
+                        d_inner.constraint_xkappa_on = Constraint(expr=m.xkappa[i, t] == 1)
 
                         # Time Constraints
                         # Vehicle must arrive before the current time if doing V2G
-                        d.constraint_time_station_arrival = Constraint(expr=m.xw[i] <= t)
+                        d_inner.constraint_time_station_arrival = Constraint(expr=m.xw[i] <= t)
 
                         # Energy Constraints
                         # Charge limits for each EV at charging stations
-                        d.constraint_energy_ev_limit_lb = Constraint(expr=-m.PMAX <= m.xp[i, t])
+                        d_inner.constraint_energy_ev_limit_lb = Constraint(expr=-m.PMAX <= m.xp[i, t])
 
                         # Charge limits for each EV at charging stations
-                        d.constraint_energy_ev_limit_ub = Constraint(expr=m.xp[i, t] <= m.PMAX)
+                        d_inner.constraint_energy_ev_limit_ub = Constraint(expr=m.xp[i, t] <= m.PMAX)
 
                         # Charge limits for an EV at charging station i
-                        d.constraint_energy_station_limit_lb = Constraint(expr=0 <= m.xp[i, t] - m.SMIN[i])
+                        d_inner.constraint_energy_station_limit_lb = Constraint(expr=0 <= m.xp[i, t] - m.SMIN[i])
 
                         # Charge limits for an EV at charging station i
-                        d.constraint_energy_station_limit_ub = Constraint(expr=m.xp[i, t] - m.SMAX[i]<= 0)
+                        d_inner.constraint_energy_station_limit_ub = Constraint(expr=m.xp[i, t] - m.SMAX[i]<= 0)
+                    d.disjunct_v2g_on = Disjunct({i}, {j}, {t}, rule=disjunct_v2g_on)
 
-                    # self.m.disjunct_v2g_on = Disjunct(self.m.S_, self.m.T, rule=disjunct_v2g_on)
+                    # @d.Disjunct(self.m.S_, self.m.T)
+                    def disjunct_v2g_off(d_inner, i, j, t):
+                        m = d_inner.model()
 
-                    @self.m.Disjunct(self.m.S_, self.m.T)
-                    def disjunct_v2g_off(d, i, t):
-                        m = d.model()
-
-                        #Turn off xkappa
-                        d.constraint_xkappa_off = Constraint(expr=m.xkappa[i, t] == 0)
+                        # Turn off xkappa
+                        d_inner.constraint_xkappa_off = Constraint(expr=m.xkappa[i, t] == 0)
 
                         # Turn off xp[i, t]
-                        d.constraint_power_off = Constraint(expr=m.xp[i, t] == 0)
+                        d_inner.constraint_power_off = Constraint(expr=m.xp[i, t] == 0)
 
                         if 'splitxp' in self.problem_types:
                             # Turn off xc[i, t]
-                            d.constraint_charge_off = Constraint(expr=m.xc[i, t] == 0)
+                            d_inner.constraint_charge_off = Constraint(expr=m.xc[i, t] == 0)
 
                             # Turn off xg[i, t]
-                            d.constraint_discharge_off = Constraint(expr=m.xg[i, t] == 0)
+                            d_inner.constraint_discharge_off = Constraint(expr=m.xg[i, t] == 0)
+                    d.disjunct_v2g_off = Disjunct({i}, {j}, {t}, rule=disjunct_v2g_off)
 
-                    # self.m.disjunct_v2g_off = Disjunct(self.m.S_, self.m.T, rule=disjunct_v2g_off)
-
-                    @self.m.Disjunction(self.m.S_, self.m.T)
-                    def disjunct_v2g_state(m, i, t):
-                        return [m.disjunct_v2g_on[i, t], m.disjunct_v2g_off[i, t]]
-                    # self.m.disjunct_v2g_state = Disjunction(self.m.S_, self.m.T, rule=disjunct_v2g_state)
+                    # @d.Disjunction(self.m.S_, self.m.T)
+                    def disjunct_v2g_state(d, i, j, t):
+                        return [d.disjunct_v2g_on[i, j, t], d.disjunct_v2g_off[i, j, t]]
+                    d.disjunct_v2g_state = Disjunction({i}, {j}, {t}, rule=disjunct_v2g_state)
 
             else:
                 return Disjunct.Skip
-        # self.m.disjunct_arc_on = Disjunct(self.m.E, rule=disjunct_arc_on)
+        self.m.disjunct_arc_on = Disjunct(self.m.E, self.m.T, rule=disjunct_arc_on)
 
-        @self.m.Disjunct(self.m.E)
-        def disjunct_arc_off(d, i, j):
+        # @self.m.Disjunct(self.m.E)
+        def disjunct_arc_off(d, i, j , t):
             if i != j:
                 m = d.model()
                 d.constraint_xgamma_off = Constraint(expr=m.xgamma[i, j] == 0)
             else:
                 return Disjunct.Skip
-        # self.m.disjunct_arc_off = Disjunct(self.m.E, rule=disjunct_arc_off)
+        self.m.disjunct_arc_off = Disjunct(self.m.E, self.m.T, rule=disjunct_arc_off)
 
-        self.m.Disjunction(self.m.E)
-        def disjunct_arc_state(m, i, j):
-            return [m.disjunct_arc_on[i, j], m.disjunct_arc_off[i, j]]
-        # self.m.disjunct_arc_state = Disjunction(self.m.E, rule=disjunct_arc_state)
+        # self.m.Disjunction(self.m.E)
+        def disjunct_arc_state(m, i, j, t):
+            return [m.disjunct_arc_on[i, j, t], m.disjunct_arc_off[i, j, t]]
+        self.m.disjunct_arc_state = Disjunction(self.m.E, self.m.T, rule=disjunct_arc_state)
 
         # Global Constraints
         # %% LOGICAL CONSTRAINTS
@@ -578,7 +584,7 @@ class EVRPTW:
         xfrm.apply_to(self.instance)
 
     # For Gurobi solver options, see: https://www.gurobi.com/documentation/9.1/refman/parameters.html
-    def make_solver(self, solve_options={'TimeLimit': 60 * 2}):  #, 'MIPFocus': 3, 'Cuts': 3
+    def make_solver(self, solve_options={'TimeLimit': 60 * 15}):  #, 'MIPFocus': 3, 'Cuts': 3
         # Specify solver
         self.opt = SolverFactory('gurobi', io_format='python')
 
