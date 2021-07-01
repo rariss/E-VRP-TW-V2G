@@ -139,6 +139,7 @@ class EVRPTW:
             if i != j:
 
                 d_ij.constraint_xgamma_customer = Constraint(expr=m.xgamma[i, j] == 1)
+                d_ij.constraint_xgamma_other_customer_off = Constraint(expr=sum(m.xgamma[i, k] for k in m.V1_ if i!=k) == 1)
 
                 # Time Constraints
                 # TODO: Should we get rid of "unload time"?
@@ -170,6 +171,7 @@ class EVRPTW:
             if i != j:
 
                 d_ij.constraint_xgamma_station = Constraint(expr=m.xgamma[i, j] == 1)
+                d_ij.constraint_xgamma_other_station_off = Constraint(expr=sum(m.xgamma[i, k] for k in m.V1_ if i!=k) == 1)
 
                 # Define constraints for outer disjunct x^gamma_ij
                 # Time Constraints
@@ -227,27 +229,36 @@ class EVRPTW:
                     m = d_ijt.model()
 
                     d_ijt.constraint_xkappa_station = Constraint(expr=m.xkappa[i, t] == 0)
+                    if 'splitxp' in self.problem_types:
+                        d_ijt.constraint_xc_station = Constraint(expr=m.xc[i, t] == 0)
+                        d_ijt.constraint_xg_station = Constraint(expr=m.xg[i, t] == 0)
+                    else:
+                        d_ijt.constraint_xp_station = Constraint(expr=m.xp[i, t] == 0)
 
                 # Declare disjunctions between inner disjuncts
                 @d_ij.Disjunction(m.T)
-                def xkappa_disjunction(d_ij, t):
-                    return [d_ij.xkappa_station[t], d_ij.xkappa_station_off[t]]
+                def xkappa_disjunction(d_ijt, t):
+                    return [d_ijt.xkappa_station[t], d_ijt.xkappa_station_off[t]]
 
                 # Service time for each EV doing V2G/G2V at each charging station
                 d_ij.constraint_time_station = Constraint(
                     expr=m.xw[i] + (m.tS[i] + m.d[i, j] / m.v) + m.t_S * sum(
                         m.xkappa[i, t_] for t_ in m.T) <= m.xw[j])
             else:
-                Disjunct.Skip
+                return Disjunct.Skip
 
         # Define Station Disjunct Sets
         @self.m.Disjunct(self.m.S_)
         def xgamma_station_off(d_ij, i):
             m = d_ij.model()
 
-            d_ij.constraint_xgamma_start = Constraint(expr=sum(m.xgamma[i, j] for j in m.V1_ if i!= j) == 0)
-
-            return Disjunct.Skip
+            d_ij.constraint_xgamma_station = Constraint(expr=sum(m.xgamma[i, j] for j in m.V1_ if i!= j) == 0)
+            d_ij.constraint_xkappa_station = Constraint(expr=sum(m.xkappa[i, t] for t in m.T) == 0)
+            if 'splitxp' in self.problem_types:
+                d_ij.constraint_xc_station = Constraint(expr=sum(m.xc[i, t] for t in m.T) == 0)
+                d_ij.constraint_xg_station = Constraint(expr=sum(m.xg[i, t] for t in m.T) == 0)
+            else:
+                d_ij.constraint_xp_station = Constraint(expr=sum(m.xp[i, t] for t in m.T) == 0)  # TODO: Need to make sure won't set charge=discharge
 
         # Declare disjunctions between outer disjuncts
         @self.m.Disjunction(self.m.S_)
