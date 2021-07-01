@@ -155,12 +155,12 @@ class EVRPTW:
                 # Vehicles must unload payload for full customer demand when visiting a customer
                 d_ij.constraint_payload = Constraint(expr=m.xq[j] <= m.xq[i] - m.q[i])
             else:
-                d_ij.constraint_xgamma_customer = Constraint(expr=m.xgamma[i, j] == 0)
+                Disjunct.Skip
 
         # Declare Customer Nodes Disjunctions
         @self.m.Disjunction(self.m.M)
         def xgamma_customer_disjunction(m, i):
-            return [d_ij for d_ij in m.xgamma_customer[i, :]]
+            return [d_ij for d_ij in m.xgamma_customer[i, :] if d_ij.index()[0] != d_ij.index()[1]]
 
         # Define Station Disjunct Sets
         @self.m.Disjunct(self.m.S_, self.m.V1_)
@@ -227,7 +227,6 @@ class EVRPTW:
                     m = d_ijt.model()
 
                     d_ijt.constraint_xkappa_station = Constraint(expr=m.xkappa[i, t] == 0)
-                    return Disjunct.Skip
 
                 # Declare disjunctions between inner disjuncts
                 @d_ij.Disjunction(m.T)
@@ -239,7 +238,7 @@ class EVRPTW:
                     expr=m.xw[i] + (m.tS[i] + m.d[i, j] / m.v) + m.t_S * sum(
                         m.xkappa[i, t_] for t_ in m.T) <= m.xw[j])
             else:
-                d_ij.constraint_xgamma_station = Constraint(expr=m.xgamma[i, j] == 0)
+                Disjunct.Skip
 
         # Define Station Disjunct Sets
         @self.m.Disjunct(self.m.S_)
@@ -253,7 +252,7 @@ class EVRPTW:
         # Declare disjunctions between outer disjuncts
         @self.m.Disjunction(self.m.S_)
         def xgamma_station_disjunction(m, i):
-            d = [d_ij for d_ij in m.xgamma_station[i, :]]
+            d = [d_ij for d_ij in m.xgamma_station[i, :] if d_ij.index()[0] != d_ij.index()[1]]
             return [*d, m.xgamma_station_off[i]]
 
         # Global Constraints
