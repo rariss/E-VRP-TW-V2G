@@ -102,11 +102,11 @@ class EVRPTW:
 
         # Disjunctive Sets
         # Define Start Node Disjunct sets
-        @self.m.Disjunct(self.m.start_node, self.m.V1_)
+        @self.m.Disjunct(self.m.start_node, self.m.V_)
         def xgamma_start(d_ij, i, j):
             m = d_ij.model()
 
-            m.xgamma[i, j] = 1
+            d_ij.constraint_xgamma_start = Constraint(expr=m.xgamma[i, j] == 1)
 
             # Time Constraints
             # TODO: Can we drop the constraint for the start depot if we drop fixed service time?
@@ -120,18 +120,25 @@ class EVRPTW:
             d_ij.constraint_energy_customer = Constraint(
                 expr=m.xa[j] <= m.xa[i] - (m.r * m.d[i, j]))
 
+        @self.m.Disjunct(self.m.start_node, self.m.V_)
+        def xgamma_start_off(d_ij, i, j):
+            m = d_ij.model()
+
+            d_ij.constraint_xgamma_start = Constraint(expr=m.xgamma[i, j] == 0)
+
         # Declare Start Node Disjunctions
-        @self.m.Disjunction(self.m.start_node, self.m.V1_)
+        @self.m.Disjunction(self.m.start_node, self.m.V_)
         def xgamma_start_disjunction(m, i, j):
-            return [m.xgamma_start[i, j]]
+            return [m.xgamma_start[i, j], m.xgamma_start_off[i, j]]
 
         # Define Customer Node Disjunct Sets
         @self.m.Disjunct(self.m.M, self.m.V1_)
         def xgamma_customer(d_ij, i, j):
-            if i!=j:
-                m = d_ij.model()
+            m = d_ij.model()
 
-                m.xgamma[i, j] = 1
+            if i != j:
+
+                d_ij.constraint_xgamma_customer = Constraint(expr=m.xgamma[i, j] == 1)
 
                 # Time Constraints
                 # TODO: Should we get rid of "unload time"?
@@ -148,7 +155,7 @@ class EVRPTW:
                 # Vehicles must unload payload for full customer demand when visiting a customer
                 d_ij.constraint_payload = Constraint(expr=m.xq[j] <= m.xq[i] - m.q[i])
             else:
-                return Disjunct.Skip
+                d_ij.constraint_xgamma_customer = Constraint(expr=m.xgamma[i, j] == 0)
 
         # Declare Customer Nodes Disjunctions
         @self.m.Disjunction(self.m.M)
@@ -158,10 +165,11 @@ class EVRPTW:
         # Define Station Disjunct Sets
         @self.m.Disjunct(self.m.S_, self.m.V1_)
         def xgamma_station(d_ij, i, j):
-            if i!=j:
-                m = d_ij.model()
+            m = d_ij.model()
 
-                m.xgamma[i, j] = 1
+            if i != j:
+
+                d_ij.constraint_xgamma_station = Constraint(expr=m.xgamma[i, j] == 1)
 
                 # Define constraints for outer disjunct x^gamma_ij
                 # Time Constraints
@@ -190,48 +198,55 @@ class EVRPTW:
                     # Define constraints for inner disjunct x^kappa_it
                     m = d_ijt.model()
 
-                    m.xkappa[i, t] = 1
+                    d_ijt.constraint_xkappa_station = Constraint(expr=m.xkappa[i, t] == 1)
 
-                    if i in m.S_:
-                        # Time Constraints
-                        if 'noxkappabounds' not in self.problem_types:
-                            # Vehicle must arrive before the current time if doing V2G
-                            d_ijt.constraint_time_station_arrival = Constraint(expr=m.xw[i] <= t)
+                    # Time Constraints
+                    if 'noxkappabounds' not in self.problem_types:
+                        # Vehicle must arrive before the current time if doing V2G
+                        d_ijt.constraint_time_station_arrival = Constraint(expr=m.xw[i] <= t)
 
-                            # V2G decisions must be made before departure from the node
-                            d_ijt.constraint_time_xkappa_ub = Constraint(expr=(m.tS[i] + m.d[i, j] / m.v) + float(t + m.t_S) <= m.xw[j])
+                        # V2G decisions must be made before departure from the node
+                        d_ijt.constraint_time_xkappa_ub = Constraint(expr=(m.tS[i] + m.d[i, j] / m.v) + float(t + m.t_S) <= m.xw[j])
 
-                        # Energy Constraints
-                        # Charge limits for each EV at charging stations
-                        d_ijt.constraint_energy_ev_limit_lb = Constraint(expr=-m.PMAX <= m.xp[i, t])
+                    # Energy Constraints
+                    # Charge limits for each EV at charging stations
+                    d_ijt.constraint_energy_ev_limit_lb = Constraint(expr=-m.PMAX <= m.xp[i, t])
 
-                        # Charge limits for each EV at charging stations
-                        d_ijt.constraint_energy_ev_limit_ub = Constraint(expr=m.xp[i, t] <= m.PMAX)
+                    # Charge limits for each EV at charging stations
+                    d_ijt.constraint_energy_ev_limit_ub = Constraint(expr=m.xp[i, t] <= m.PMAX)
 
-                        # Charge limits for an EV at charging station i
-                        d_ijt.constraint_energy_station_limit_lb = Constraint(expr=0 <= m.xp[i, t] - m.SMIN[i])
+                    # Charge limits for an EV at charging station i
+                    d_ijt.constraint_energy_station_limit_lb = Constraint(expr=0 <= m.xp[i, t] - m.SMIN[i])
 
-                        # Charge limits for an EV at charging station i
-                        d_ijt.constraint_energy_station_limit_ub = Constraint(expr=m.xp[i, t] - m.SMAX[i] <= 0)
-                    else:
-                        return Disjunct.Skip
+                    # Charge limits for an EV at charging station i
+                    d_ijt.constraint_energy_station_limit_ub = Constraint(expr=m.xp[i, t] - m.SMAX[i] <= 0)
+
+                @d_ij.Disjunct(m.T)
+                def xkappa_station_off(d_ijt, t):
+                    # Define constraints for inner disjunct x^kappa_it
+                    m = d_ijt.model()
+
+                    d_ijt.constraint_xkappa_station = Constraint(expr=m.xkappa[i, t] == 0)
+                    return Disjunct.Skip
 
                 # Declare disjunctions between inner disjuncts
                 @d_ij.Disjunction(m.T)
                 def xkappa_disjunction(d_ij, t):
-                    return [d_ij.xkappa_station[t]]
+                    return [d_ij.xkappa_station[t], d_ij.xkappa_station_off[t]]
 
                 # Service time for each EV doing V2G/G2V at each charging station
                 d_ij.constraint_time_station = Constraint(
                     expr=m.xw[i] + (m.tS[i] + m.d[i, j] / m.v) + m.t_S * sum(
                         m.xkappa[i, t_] for t_ in m.T) <= m.xw[j])
             else:
-                return Disjunct.Skip
+                d_ij.constraint_xgamma_station = Constraint(expr=m.xgamma[i, j] == 0)
 
         # Define Station Disjunct Sets
         @self.m.Disjunct(self.m.S_)
         def xgamma_station_off(d_ij, i):
             m = d_ij.model()
+
+            d_ij.constraint_xgamma_start = Constraint(expr=sum(m.xgamma[i, j] for j in m.V1_ if i!= j) == 0)
 
             return Disjunct.Skip
 
@@ -270,13 +285,13 @@ class EVRPTW:
         if 'nominvehicles' not in self.problem_types:
             def constraint_min_vehicles(m, i):
                 """Requires at least one vehicle assignment"""
-                return sum(m.xgamma[i, j] for j in m.V1_ if i != j) >= 1
+                return sum(m.xgamma[i, j] for j in m.V_ if i != j) >= 1
             self.m.constraint_min_vehicles = Constraint(self.m.start_node, rule=constraint_min_vehicles)
 
         if 'maxvehicles' in self.problem_types:
             def constraint_max_vehicles(m, i):
                 """Requires at most N vehicle assignments"""
-                return sum(m.xgamma[i, j] for j in m.V1_ if i != j) <= m.N
+                return sum(m.xgamma[i, j] for j in m.V_ if i != j) <= m.N
             self.m.constraint_max_vehicles = Constraint(self.m.start_node, rule=constraint_max_vehicles)
 
         if 'nosymmetry' not in self.problem_types:
