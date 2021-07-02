@@ -211,17 +211,30 @@ class EVRPTW:
                         d_ijt.constraint_time_xkappa_ub = Constraint(expr=(m.tS[i] + m.d[i, j] / m.v) + float(t + m.t_S) <= m.xw[j])
 
                     # Energy Constraints
-                    # Charge limits for each EV at charging stations
-                    d_ijt.constraint_energy_ev_limit_lb = Constraint(expr=-m.PMAX <= m.xp[i, t])
+                    if 'splitxp' in self.problem_types:
+                        # Charge limits for each EV at charging stations
+                        d_ijt.constraint_energy_ev_limit_lb = Constraint(expr=-m.PMAX <= m.xc[i, t] - m.xg[i, t])
 
-                    # Charge limits for each EV at charging stations
-                    d_ijt.constraint_energy_ev_limit_ub = Constraint(expr=m.xp[i, t] <= m.PMAX)
+                        # Charge limits for each EV at charging stations
+                        d_ijt.constraint_energy_ev_limit_ub = Constraint(expr=m.xc[i, t] - m.xg[i, t] <= m.PMAX)
 
-                    # Charge limits for an EV at charging station i
-                    d_ijt.constraint_energy_station_limit_lb = Constraint(expr=0 <= m.xp[i, t] - m.SMIN[i])
+                        # Charge limits for an EV at charging station i
+                        d_ijt.constraint_energy_station_limit_lb = Constraint(expr=0 <= m.xc[i, t] - m.xg[i, t] - m.SMIN[i])
 
-                    # Charge limits for an EV at charging station i
-                    d_ijt.constraint_energy_station_limit_ub = Constraint(expr=m.xp[i, t] - m.SMAX[i] <= 0)
+                        # Charge limits for an EV at charging station i
+                        d_ijt.constraint_energy_station_limit_ub = Constraint(expr=m.xc[i, t] - m.xg[i, t] - m.SMAX[i] <= 0)
+                    else:
+                        # Charge limits for each EV at charging stations
+                        d_ijt.constraint_energy_ev_limit_lb = Constraint(expr=-m.PMAX <= m.xp[i, t])
+
+                        # Charge limits for each EV at charging stations
+                        d_ijt.constraint_energy_ev_limit_ub = Constraint(expr=m.xp[i, t] <= m.PMAX)
+
+                        # Charge limits for an EV at charging station i
+                        d_ijt.constraint_energy_station_limit_lb = Constraint(expr=0 <= m.xp[i, t] - m.SMIN[i])
+
+                        # Charge limits for an EV at charging station i
+                        d_ijt.constraint_energy_station_limit_ub = Constraint(expr=m.xp[i, t] - m.SMAX[i] <= 0)
 
                 @d_ij.Disjunct(m.T)
                 def xkappa_station_off(d_ijt, t):
@@ -252,7 +265,7 @@ class EVRPTW:
         def xgamma_station_off(d_ij, i):
             m = d_ij.model()
 
-            d_ij.constraint_xgamma_station = Constraint(expr=sum(m.xgamma[i, j] for j in m.V1_ if i!= j) == 0)
+            d_ij.constraint_xgamma_station = Constraint(expr=sum(m.xgamma[i, k] for k in m.V1_ if i != k) == 0)
             d_ij.constraint_xkappa_station = Constraint(expr=sum(m.xkappa[i, t] for t in m.T) == 0)
             if 'splitxp' in self.problem_types:
                 d_ij.constraint_xc_station = Constraint(expr=sum(m.xc[i, t] for t in m.T) == 0)
@@ -318,13 +331,10 @@ class EVRPTW:
 
         # TODO: Need to implement so that doesn't pass through station at depot (This currently prohibits tours of type depot>any station>depot)
         if 'stationaryevs' not in self.problem_types:
-            def constraint_no_stationary_evs(m, i, j, s):
+            def constraint_no_stationary_evs(m, i, j, s_):
                 """Ensures no stationary vehicles staying at depot."""
-                if len(m.Smap[s]) > 1:
-                    return sum(m.xgamma[i, s_] + m.xgamma[s_, s__] + m.xgamma[s_, j] for s_ in m.Smap[s] for s__ in m.Smap[s] if s_ != s__) <= 0
-                else:
-                    return sum(m.xgamma[i, s_] + m.xgamma[s_, j] for s_ in m.Smap[s]) <= 0
-            self.m.constraint_no_stationary_evs = Constraint(self.m.start_node, self.m.end_node, self.m.S, rule=constraint_no_stationary_evs)
+                return m.xgamma[i, s_] + m.xgamma[s_, j] <= 1
+            self.m.constraint_no_stationary_evs = Constraint(self.m.start_node, self.m.end_node, self.m.S_, rule=constraint_no_stationary_evs)
 
         def constraint_terminal_node_time(m, i):  # TODO: Could remove if m.tB[i] = m.t_T - m.tS[i]
             """Arrival time must be within time window for each node"""
@@ -365,7 +375,10 @@ class EVRPTW:
 
         def constraint_energy_soe_station(m, i, t): #Initially missing
             """Minimum and Maximum SOE limit for each EV"""
-            return inequality(m.EMIN, m.xa[i] + m.t_S * sum(m.xp[i, b] for b in m.T if b <= t), m.EMAX)
+            if 'splitxp' in self.problem_types:
+                return inequality(m.EMIN, m.xa[i] + m.t_S * sum(m.eff * m.xc[i, b] - m.xg[i, b] / m.eff for b in m.T if b <= t), m.EMAX)
+            else:
+                return inequality(m.EMIN, m.xa[i] + m.t_S * sum(m.xp[i, b] for b in m.T if b <= t), m.EMAX)
         self.m.constraint_energy_soe_station = Constraint(self.m.S_, self.m.T, rule=constraint_energy_soe_station)
 
         # See this implementation example: https://stackoverflow.com/questions/53966482/how-to-map-different-indices-in-pyomo
@@ -461,7 +474,7 @@ class EVRPTW:
         if 'splitxp' in self.problem_types:
             return m.cy * m.t_S * sum(sum(m.xc[i, t] for t in m.T) for i in m.S_)
         else:
-            return m.cy * m.t_S * sum(sum(m.xkappa[i, t].indicator_var for t in m.T) for i in m.S_)  #TODO: Refactor for Disjuncts
+            return m.cy * m.t_S * sum(sum(m.xkappa[i, t] for t in m.T) for i in m.S_)  #TODO: Refactor for Disjuncts
 
     # TODO: FIX t_S unit size so no decimals are needed
     def create_data_dictionary(self):
@@ -586,6 +599,8 @@ class EVRPTW:
             xfrm_key = 'hull'
         elif 'bigm' in self.problem_types:
             xfrm_key = 'bigm'
+        elif 'cuttingplane' in self.problem_types:
+            xfrm_key = 'cuttingplane'  # Hybrid BM/HR Reformulation
         else:
             logging.error('Must specify either "hull" or "bigm" in problem_type to define gdp instance.')
 
