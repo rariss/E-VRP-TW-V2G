@@ -334,21 +334,7 @@ class EVRPTW:
         def constraint_node_time_window(m, i):
             """Arrival time must be within time window for each node"""
             return inequality(m.tA[i], m.xw[i], m.tB[i])
-        self.constraint_node_time_window = Constraint(self.m.V01_, rule=constraint_node_time_window)
-
-        # if 'noxkappabounds' not in self.problem_types:
-        #     def constraint_time_xkappa_lb(m, i, t): #Initially missing
-        #         """V2G decisions must be made after arrival at the node"""
-        #         return float(m.t_T - t) * m.xkappa[i, t].indicator_var  - m.MT * (1 - m.xkappa[i, t].indicator_var) <= m.t_T - m.xw[i]
-        #     self.m.constraint_time_xkappa_lb = Constraint(self.m.S_, self.m.T, rule=constraint_time_xkappa_lb)
-        #
-        #     def constraint_time_xkappa_ub(m, i, j, t):
-        #         """V2G decisions must be made before departure from the node"""
-        #         if i != j:
-        #             return (m.tS[i] + m.d[i, j] / m.v) * m.xgamma[i, j].indicator_var + float(t + m.t_S) * m.xkappa[i, t].indicator_var - m.MT * (1 - m.xgamma[i, j].indicator_var) <= m.xw[j]
-        #         else:
-        #             return Constraint.Skip
-        #     self.m.constraint_time_xkappa_ub = Constraint(self.m.S_, self.m.V1_, self.m.T, rule=constraint_time_xkappa_ub)
+        self.m.constraint_node_time_window = Constraint(self.m.V01_, rule=constraint_node_time_window)
 
         if 'start=end' in self.problem_types:
             def constraint_energy_start_end_soe(m, i, j):
