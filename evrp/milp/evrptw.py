@@ -171,7 +171,7 @@ class EVRPTW:
             if i != j:
 
                 d_ij.constraint_xgamma_station = Constraint(expr=m.xgamma[i, j] == 1)
-                d_ij.constraint_xgamma_other_station_off = Constraint(expr=sum(m.xgamma[i, k] for k in m.V1_ if i!=k) == 1)
+                # d_ij.constraint_xgamma_other_station_off = Constraint(expr=sum(m.xgamma[i, k] for k in m.V1_ if i!=k) == 1)
 
                 # Define constraints for outer disjunct x^gamma_ij
                 # Time Constraints
@@ -609,7 +609,7 @@ class EVRPTW:
         xfrm.apply_to(self.instance)
 
     # For Gurobi solver options, see: https://www.gurobi.com/documentation/9.1/refman/parameters.html
-    def make_solver(self, solve_options={'TimeLimit': 60 * 2}):  #, 'MIPFocus': 3, 'Cuts': 3
+    def make_solver(self, solve_options={'TimeLimit': 60 * 15}):  #, 'MIPFocus': 3, 'Cuts': 3
         # Specify solver
         self.opt = SolverFactory('gurobi', io_format='python')
 
