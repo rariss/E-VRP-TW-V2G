@@ -145,13 +145,14 @@ class EVRPTW:
 
         # TODO: Need to implement so that doesn't pass through station at depot (This currently prohibits tours of type depot>any station>depot)
         if 'stationaryevs' not in self.problem_types:
-            def constraint_no_stationary_evs(m, i, j, s):
+            def constraint_no_stationary_evs(m, i, j, s_):
                 """Ensures no stationary vehicles staying at depot."""
-                if len(m.Smap[s]) > 1:
-                    return sum(m.xgamma[i, s_] + m.xgamma[s_, s__] + m.xgamma[s_, j] for s_ in m.Smap[s] for s__ in m.Smap[s] if s_ != s__) <= 0
-                else:
-                    return sum(m.xgamma[i, s_] + m.xgamma[s_, j] for s_ in m.Smap[s]) <= 0
-            self.m.constraint_no_stationary_evs = Constraint(self.m.start_node, self.m.end_node, self.m.S, rule=constraint_no_stationary_evs)
+                # if len(m.Smap[s]) > 1:
+                #     return sum(m.xgamma[i, s_] + m.xgamma[s_, s__] + m.xgamma[s_, j] for s_ in m.Smap[s] for s__ in m.Smap[s] if s_ != s__) <= 0
+                # else:
+                #     return sum(m.xgamma[i, s_] + m.xgamma[s_, j] for s_ in m.Smap[s]) <= 0
+                return m.xgamma[i, s_] + m.xgamma[s_, j] <= 1
+            self.m.constraint_no_stationary_evs = Constraint(self.m.start_node, self.m.end_node, self.m.S_, rule=constraint_no_stationary_evs)
 
         # %% TIME CONSTRAINTS
         def constraint_xgamma_xkappa(m, i, t):
