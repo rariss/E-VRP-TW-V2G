@@ -516,4 +516,3 @@ def convert_txt_instances_to_csv(instance, folder='config/test_instances/evrptw_
             f.write(k + ','*csv_rows +'\n')
             df.to_csv(f, index=False, sep=',')
             f.write(','*csv_rows+'\n')
-{"mode":"full","isActive":false}
