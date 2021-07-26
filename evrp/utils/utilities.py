@@ -432,7 +432,7 @@ def convert_txt_instances_to_csv(instance, folder='config/test_instances/evrptw_
     """Converts a Schneider txt test instance into a csv format for EVRPTWV2G starting point."""
     # Default parameters
     defaults = {'N': [1], 'cc': [1000], 'co': [1], 'cm': [0], 'cy': [3e-3], 'EMIN': [0],
-                'cg': 0, 'SMIN': 0, 'instances': 1, 'tQ': 0, 'cq': 1, 't_S': 1, 'G': 1, 'ce': 0.1
+                'cg': 0, 'SMIN': 0, 'instances': 1, 'tQ': 0, 'cq': 1, 't_S': 1, 'G': 1, 'ce': 0.1, 'eff': 0.9
     }  # Must use lists if table generated from dict. Use single value if updating a dataframe value
 
     fpath = folder + instance + '.txt'
@@ -458,6 +458,7 @@ def convert_txt_instances_to_csv(instance, folder='config/test_instances/evrptw_
                            'r': [other_dict['r']],
                            'v': [other_dict['v']],
                            'cc': defaults['cc'], 'co': defaults['co'], 'cm': defaults['cm'], 'cy': defaults['cy'],
+                           'eff': defaults['eff'],
                            'QMAX': [other_dict['C']],
                            'EMIN': defaults['EMIN'],
                            'EMAX': [other_dict['Q']],
@@ -515,3 +516,4 @@ def convert_txt_instances_to_csv(instance, folder='config/test_instances/evrptw_
             f.write(k + ','*csv_rows +'\n')
             df.to_csv(f, index=False, sep=',')
             f.write(','*csv_rows+'\n')
+{"mode":"full","isActive":false}
