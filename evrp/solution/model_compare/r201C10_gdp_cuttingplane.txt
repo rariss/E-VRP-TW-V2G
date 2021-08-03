@@ -1,0 +1,3 @@
+Note: 
+* Manually created this solution file for record.
+* Stuck on model transformation for about 3 hours. Manually interrupted it.

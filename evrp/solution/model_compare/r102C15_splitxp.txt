@@ -1,0 +1,33 @@
+Objective: 5244.35, 
+Gap: 77.13%, Solver time: 3604.0s
+Dist.: 419.32, CapEx: 5000.00, OpEx: 419.32, Delivery: 191.00, EA: -15.57, DCM: 0.00, Cycle: 0.47
+Build duration: 8.47s
+Total solve duration: 3611.37s
+
+
+--------------------------------------------
+
+Problem: 
+- Name: x7997
+  Lower bound: 1199.6373129747922
+  Upper bound: 5244.354023301318
+  Number of objectives: 1
+  Number of constraints: 60698
+  Number of variables: 6157
+  Number of binary variables: 2393
+  Number of integer variables: 2393
+  Number of continuous variables: 3764
+  Number of nonzeros: 1187940
+  Sense: minimize
+Solver: 
+- Status: aborted
+  Return code: 0
+  Message: Optimization terminated because the time expended exceeded the value specified in the TimeLimit parameter.
+  Termination condition: maxTimeLimit
+  Termination message: Optimization terminated because the time expended exceeded the value specified in the TimeLimit parameter.
+  Wall time: 3600.114269256592
+  Error rc: 0
+  Time: 3604.0483684539795
+Solution: 
+- number of solutions: 0
+  number of solutions displayed: 0

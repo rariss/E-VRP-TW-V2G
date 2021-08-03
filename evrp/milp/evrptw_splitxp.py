@@ -1,6 +1,7 @@
 import logging
 
 import pandas as pd
+import datetime
 from pyomo.environ import *
 
 from utils.utilities import parse_csv_tables, calculate_distance_matrix, generate_index_mapping
@@ -19,6 +20,8 @@ class EVRPTW:
         """
         self.problem_type = problem_type
         self.problem_types = self.problem_type.lower().split()
+
+        self.model_build_start_time = datetime.datetime.now()
 
         # Instantiate pyomo Abstract Model
         self.m = AbstractModel()
@@ -504,7 +507,8 @@ class EVRPTW:
         # Determine whether to use google maps (i.e. negative x, y assumes longitude)
         if pd.DataFrame(self.data['V_'][['d_x', 'd_y']] < 0).any(axis=None):
             logging.info('Using Google Maps Distance API to generate distance matrix')
-            self.dist_type = 'googlemaps'
+            # self.dist_type = 'googlemaps' #TODO: revert
+            self.dist_type = 'scipy'
         else:
             self.dist_type = 'scipy'
             logging.info('Using Scipy euclidian distances to generate distance matrix')
@@ -532,6 +536,8 @@ class EVRPTW:
             add_to_instance_name = ' ' + add_to_instance_name
         self.instance.name = '{} {}{}'.format(self.instance_name, self.problem_type, add_to_instance_name)
 
+        self.model_build_end_time = datetime.datetime.now()
+
     # For Gurobi solver options, see: https://www.gurobi.com/documentation/9.1/refman/parameters.html
     def make_solver(self, solve_options={'TimeLimit': 60 * 2}):  #, 'MIPFocus': 3, 'Cuts': 3
         # Specify solver
@@ -557,6 +563,11 @@ class EVRPTW:
             self.set_xp()
         logging.info('Done')
 
+        self.model_solve_end_time = datetime.datetime.now()
+
+        self.model_build_duration = (self.model_build_end_time - self.model_build_start_time).total_seconds()
+        self.model_solve_duration = (self.model_solve_end_time - self.model_build_end_time).total_seconds()
+
     def solve(self):
         if not (hasattr(self, 'opt') | hasattr(self, 'solve_options')):
             logging.info('Making solver...')
@@ -568,6 +579,11 @@ class EVRPTW:
         if 'splitxp' in self.problem_types:
             self.set_xp()
         logging.info('Done')
+
+        self.model_solve_end_time = datetime.datetime.now()
+
+        self.model_build_duration = (self.model_build_end_time - self.model_build_start_time).total_seconds()
+        self.model_solve_duration = (self.model_solve_end_time - self.model_build_end_time).total_seconds()
 
     def warmstart_solve(self):
         if not (hasattr(self, 'opt') | hasattr(self, 'solve_options')):

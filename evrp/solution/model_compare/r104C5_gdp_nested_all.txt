@@ -1,0 +1,34 @@
+Objective: 2052.90, 
+Gap: 0.00%, Solver time: 68.3s
+Dist.: 136.69, CapEx: 2000.00, OpEx: 136.69, Delivery: 86.00, EA: -2.15, DCM: 0.00, Cycle: 0.06
+Build duration: 9.50s
+Xfrm duration: 34.46s
+Total solve duration: 84.01s
+
+
+--------------------------------------------
+
+Problem: 
+- Name: x14053
+  Lower bound: 2052.903401019714
+  Upper bound: 2052.903401019714
+  Number of objectives: 1
+  Number of constraints: 93234
+  Number of variables: 13363
+  Number of binary variables: 11949
+  Number of integer variables: 11949
+  Number of continuous variables: 1414
+  Number of nonzeros: 521226
+  Sense: minimize
+Solver: 
+- Status: ok
+  Return code: 0
+  Message: Model was solved to optimality (subject to tolerances), and an optimal solution is available.
+  Termination condition: optimal
+  Termination message: Model was solved to optimality (subject to tolerances), and an optimal solution is available.
+  Wall time: 65.33847427368164
+  Error rc: 0
+  Time: 68.27547645568848
+Solution: 
+- number of solutions: 0
+  number of solutions displayed: 0

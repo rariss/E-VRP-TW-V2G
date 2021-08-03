@@ -1,0 +1,34 @@
+Objective: 2079.69, 
+Gap: 51.58%, Solver time: 933.5s
+Dist.: 246.37, CapEx: 2000.00, OpEx: 246.37, Delivery: 181.00, EA: -13.90, DCM: 0.00, Cycle: 0.42
+Build duration: 4078.77s
+Xfrm duration: 130.47s
+Total solve duration: 1018.33s
+
+
+--------------------------------------------
+
+Problem: 
+- Name: x390947
+  Lower bound: 1007.0333919484905
+  Upper bound: 2079.691533407281
+  Number of objectives: 1
+  Number of constraints: 677043
+  Number of variables: 378947
+  Number of binary variables: 8422
+  Number of integer variables: 8422
+  Number of continuous variables: 370525
+  Number of nonzeros: 5840297
+  Sense: minimize
+Solver: 
+- Status: aborted
+  Return code: 0
+  Message: Optimization terminated because the time expended exceeded the value specified in the TimeLimit parameter.
+  Termination condition: maxTimeLimit
+  Termination message: Optimization terminated because the time expended exceeded the value specified in the TimeLimit parameter.
+  Wall time: 914.7737007141113
+  Error rc: 0
+  Time: 933.4604434967041
+Solution: 
+- number of solutions: 0
+  number of solutions displayed: 0

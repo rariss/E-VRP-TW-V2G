@@ -1,6 +1,7 @@
 import logging
 
 import pandas as pd
+import datetime
 from pyomo.environ import *
 from pyomo.gdp import *
 
@@ -20,6 +21,8 @@ class EVRPTW:
         """
         self.problem_type = problem_type
         self.problem_types = self.problem_type.lower().split()
+
+        self.model_build_start_time = datetime.datetime.now()
 
         # Instantiate pyomo Abstract Model
         self.m = AbstractModel()
@@ -120,7 +123,6 @@ class EVRPTW:
 
             # Charge limits for an EV at charging station i
             d.constraint_energy_station_limit_ub = Constraint(expr=m.xp[i, t] - m.SMAX[i]<= 0)
-
         self.m.xkappa = Disjunct(self.m.S_, self.m.T, rule=disjunct_v2g_on)
 
         def disjunct_v2g_off(d, i, t):
@@ -135,7 +137,6 @@ class EVRPTW:
 
                 # Turn off xg[i, t]
                 d.constraint_discharge_off = Constraint(expr=m.xg[i, t] == 0)
-
         self.m.xkappa_off = Disjunct(self.m.S_, self.m.T, rule=disjunct_v2g_off)
 
         def disjunct_v2g_state(m, i, t):
@@ -231,6 +232,22 @@ class EVRPTW:
             return m.xkappa[i, t].indicator_var - sum(m.xgamma[i, j].indicator_var for j in m.V1_ if i != j) <= 0
         self.m.constraint_logical = Constraint(self.m.S_, self.m.T, rule=constraint_logical)
 
+        def constraint_energy_station_limit_lb(m, i, t):  # TODO: Combine duplicates to be within limits at each time
+            """Charge limits for an EV at charging station i"""
+            if 'splitxp' in self.problem_types:
+                return m.SMIN[i] * m.xkappa[i, t].indicator_var <= m.xc[i, t] - m.xg[i, t]
+            else:
+                return m.SMIN[i] * m.xkappa[i, t].indicator_var <= m.xp[i, t]
+        self.m.constraint_energy_station_limit_lb = Constraint(self.m.S_, self.m.T, rule=constraint_energy_station_limit_lb)
+
+        def constraint_energy_station_limit_ub(m, i, t):  # TODO: Combine duplicates to be within limits at each time
+            """Charge limits for an EV at charging station i"""
+            if 'splitxp' in self.problem_types:
+                return m.xc[i, t] - m.xg[i, t] <= m.SMAX[i] * m.xkappa[i, t].indicator_var
+            else:
+                return m.xp[i, t] <= m.SMAX[i] * m.xkappa[i, t].indicator_var
+        self.m.constraint_energy_station_limit_ub = Constraint(self.m.S_, self.m.T, rule=constraint_energy_station_limit_ub)
+
         # %% ROUTING CONSTRAINTS
         #  TODO: upper bound on maximum number of vehicles in fleet based off starting routes?
 
@@ -277,13 +294,10 @@ class EVRPTW:
 
         # TODO: Need to implement so that doesn't pass through station at depot (This currently prohibits tours of type depot>any station>depot)
         if 'stationaryevs' not in self.problem_types:
-            def constraint_no_stationary_evs(m, i, j, s):
+            def constraint_no_stationary_evs(m, i, j, s_):
                 """Ensures no stationary vehicles staying at depot."""
-                if len(m.Smap[s]) > 1:
-                    return sum(m.xgamma[i, s_].indicator_var + m.xgamma[s_, s__].indicator_var + m.xgamma[s_, j].indicator_var for s_ in m.Smap[s] for s__ in m.Smap[s] if s_ != s__) <= 0
-                else:
-                    return sum(m.xgamma[i, s_].indicator_var + m.xgamma[s_, j].indicator_var for s_ in m.Smap[s]) <= 0
-            # self.m.constraint_no_stationary_evs = Constraint(self.m.start_node, self.m.end_node, self.m.S, rule=constraint_no_stationary_evs)
+                return m.xgamma[i, s_].indicator_var + m.xgamma[s_, j].indicator_var <= 1
+            self.m.constraint_no_stationary_evs = Constraint(self.m.start_node, self.m.end_node, self.m.S_, rule=constraint_no_stationary_evs)
 
         def constraint_terminal_node_time(m, i):  # TODO: Could remove if m.tB[i] = m.t_T - m.tS[i]
             """Arrival time must be within time window for each node"""
@@ -522,7 +536,8 @@ class EVRPTW:
         # Determine whether to use google maps (i.e. negative x, y assumes longitude)
         if pd.DataFrame(self.data['V_'][['d_x', 'd_y']] < 0).any(axis=None):
             logging.info('Using Google Maps Distance API to generate distance matrix')
-            self.dist_type = 'googlemaps'
+            # self.dist_type = 'googlemaps' #TODO: revert
+            self.dist_type = 'scipy'
         else:
             self.dist_type = 'scipy'
             logging.info('Using Scipy euclidian distances to generate distance matrix')
@@ -550,21 +565,31 @@ class EVRPTW:
             add_to_instance_name = ' ' + add_to_instance_name
         self.instance.name = '{} {}{}'.format(self.instance_name, self.problem_type, add_to_instance_name)
 
-        if 'hull' in self.problem_types:
-            xfrm_key = 'hull'
-        elif 'bigm' in self.problem_types:
-            xfrm_key = 'bigm'
-        else:
-            logging.error('Must specify either "hull" or "bigm" in problem_type to define gdp instance.')
+        self.model_build_end_time = datetime.datetime.now()
 
-        # Apply convex hull or big-M transform
-        xfrm = TransformationFactory('gdp.{}'.format(xfrm_key))
-        xfrm.apply_to(self.instance)
+        if 'gdpopt' not in self.problem_types:
+            if 'hull' in self.problem_types:
+                xfrm_key = 'hull'
+            elif 'bigm' in self.problem_types:
+                xfrm_key = 'bigm'
+            elif 'cuttingplane' in self.problem_types:
+                xfrm_key = 'cuttingplane'
+            else:
+                logging.error('Must specify either "hull" or "bigm" in problem_type to define gdp instance.')
+
+            # Apply convex hull or big-M transform
+            xfrm = TransformationFactory('gdp.{}'.format(xfrm_key))
+            xfrm.apply_to(self.instance)
+
+            self.model_xfrm_end_time = datetime.datetime.now()
 
     # For Gurobi solver options, see: https://www.gurobi.com/documentation/9.1/refman/parameters.html
     def make_solver(self, solve_options={'TimeLimit': 60 * 2}):  #, 'MIPFocus': 3, 'Cuts': 3
         # Specify solver
-        self.opt = SolverFactory('gurobi', io_format='python')
+        if 'gdpopt' in self.problem_types:
+            self.opt = SolverFactory('gdpopt')
+        else:
+            self.opt = SolverFactory('gurobi', io_format='python')
 
         # Solver options
         self.solve_options = solve_options  # 'Symmetry': 2
@@ -581,7 +606,10 @@ class EVRPTW:
 
         # Solve instance
         logging.info('Solving instance...')
-        self.results = self.opt.solve(self.instance, tee=True, options=self.solve_options)
+        if 'gdpopt' in self.problem_types:
+            self.results = self.opt.solve(self.instance, tee=True, strategy='LOA', time_limit=60*15)
+        else:
+            self.results = self.opt.solve(self.instance, tee=True, options=self.solve_options)
         if 'splitxp' in self.problem_types:
             self.set_xp()
         logging.info('Done')
@@ -593,10 +621,22 @@ class EVRPTW:
 
         # Solve instance
         logging.info('Solving instance...')
-        self.results = self.opt.solve(self.instance, tee=True, options=self.solve_options)
+        if 'gdpopt' in self.problem_types:
+            self.results = self.opt.solve(self.instance, tee=True, strategy='LOA', time_limit=60*60)
+        else:
+            self.results = self.opt.solve(self.instance, tee=True, options=self.solve_options)
         if 'splitxp' in self.problem_types:
             self.set_xp()
         logging.info('Done')
+
+        self.model_solve_end_time = datetime.datetime.now()
+
+        self.model_build_duration = (self.model_build_end_time - self.model_build_start_time).total_seconds()
+        if 'gdpopt' not in self.problem_types:
+            self.model_xfrm_duration = (self.model_xfrm_end_time - self.model_build_end_time).total_seconds()
+            self.model_solve_duration = (self.model_solve_end_time - self.model_xfrm_end_time).total_seconds()
+        else:
+            self.model_solve_duration = (self.model_solve_end_time - self.model_build_end_time).total_seconds()
 
     def warmstart_solve(self):
         if not (hasattr(self, 'opt') | hasattr(self, 'solve_options')):

@@ -1,0 +1,33 @@
+Objective: 3059.12, 
+Gap: 66.26%, Solver time: 950.0s
+Dist.: 234.09, CapEx: 3000.00, OpEx: 234.09, Delivery: 181.00, EA: -5.85, DCM: 0.00, Cycle: 0.18
+Build duration: 88.63s
+Total solve duration: 999.70s
+
+
+--------------------------------------------
+
+Problem: 
+- Name: x16264
+  Lower bound: 1032.109317610076
+  Upper bound: 3059.1170786111243
+  Number of objectives: 1
+  Number of constraints: 92734
+  Number of variables: 12264
+  Number of binary variables: 4211
+  Number of integer variables: 4211
+  Number of continuous variables: 8053
+  Number of nonzeros: 8478548
+  Sense: minimize
+Solver: 
+- Status: aborted
+  Return code: 0
+  Message: Optimization terminated because the time expended exceeded the value specified in the TimeLimit parameter.
+  Termination condition: maxTimeLimit
+  Termination message: Optimization terminated because the time expended exceeded the value specified in the TimeLimit parameter.
+  Wall time: 900.8808784484863
+  Error rc: 0
+  Time: 949.9623131752014
+Solution: 
+- number of solutions: 0
+  number of solutions displayed: 0

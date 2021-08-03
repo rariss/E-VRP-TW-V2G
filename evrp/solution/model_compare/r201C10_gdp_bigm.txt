@@ -1,0 +1,34 @@
+Objective: 2046.65, 
+Gap: 49.14%, Solver time: 912.1s
+Dist.: 216.72, CapEx: 2000.00, OpEx: 216.72, Delivery: 181.00, EA: -10.61, DCM: 0.00, Cycle: 0.32
+Build duration: 1502.34s
+Xfrm duration: 43.89s
+Total solve duration: 940.72s
+
+
+--------------------------------------------
+
+Problem: 
+- Name: x20475
+  Lower bound: 1041.0161783092747
+  Upper bound: 2046.6471586162847
+  Number of objectives: 1
+  Number of constraints: 137335
+  Number of variables: 20475
+  Number of binary variables: 8422
+  Number of integer variables: 8422
+  Number of continuous variables: 12053
+  Number of nonzeros: 4587640
+  Sense: minimize
+Solver: 
+- Status: aborted
+  Return code: 0
+  Message: Optimization terminated because the time expended exceeded the value specified in the TimeLimit parameter.
+  Termination condition: maxTimeLimit
+  Termination message: Optimization terminated because the time expended exceeded the value specified in the TimeLimit parameter.
+  Wall time: 902.9408588409424
+  Error rc: 0
+  Time: 912.1191749572754
+Solution: 
+- number of solutions: 0
+  number of solutions displayed: 0

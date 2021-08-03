@@ -1,0 +1,33 @@
+Objective: 4138.33, 
+Gap: 46.88%, Solver time: 3603.5s
+Dist.: 336.15, CapEx: 4000.00, OpEx: 336.15, Delivery: 211.00, EA: -12.79, DCM: 0.00, Cycle: 0.38
+Build duration: 7.80s
+Total solve duration: 3609.14s
+
+
+--------------------------------------------
+
+Problem: 
+- Name: x6059
+  Lower bound: 2198.1562652466505
+  Upper bound: 4138.329306512931
+  Number of objectives: 1
+  Number of constraints: 42934
+  Number of variables: 4679
+  Number of binary variables: 1843
+  Number of integer variables: 1843
+  Number of continuous variables: 2836
+  Number of nonzeros: 872216
+  Sense: minimize
+Solver: 
+- Status: aborted
+  Return code: 0
+  Message: Optimization terminated because the time expended exceeded the value specified in the TimeLimit parameter.
+  Termination condition: maxTimeLimit
+  Termination message: Optimization terminated because the time expended exceeded the value specified in the TimeLimit parameter.
+  Wall time: 3600.1162757873535
+  Error rc: 0
+  Time: 3603.45686006546
+Solution: 
+- number of solutions: 0
+  number of solutions displayed: 0

@@ -1,0 +1,34 @@
+Objective: 2070.57, 
+Gap: 50.98%, Solver time: 947.3s
+Dist.: 238.19, CapEx: 2000.00, OpEx: 238.19, Delivery: 181.00, EA: -12.99, DCM: 0.00, Cycle: 0.39
+Build duration: 119.40s
+Xfrm duration: 341.12s
+Total solve duration: 1111.38s
+
+
+--------------------------------------------
+
+Problem: 
+- Name: x128686
+  Lower bound: 1015.023093914115
+  Upper bound: 2070.5722323153395
+  Number of objectives: 1
+  Number of constraints: 922179
+  Number of variables: 124686
+  Number of binary variables: 116633
+  Number of integer variables: 116633
+  Number of continuous variables: 8053
+  Number of nonzeros: 10016906
+  Sense: minimize
+Solver: 
+- Status: aborted
+  Return code: 0
+  Message: Optimization terminated because the time expended exceeded the value specified in the TimeLimit parameter.
+  Termination condition: maxTimeLimit
+  Termination message: Optimization terminated because the time expended exceeded the value specified in the TimeLimit parameter.
+  Wall time: 900.5946083068848
+  Error rc: 0
+  Time: 947.2510752677917
+Solution: 
+- number of solutions: 0
+  number of solutions displayed: 0

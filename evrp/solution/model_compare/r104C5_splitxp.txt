@@ -1,0 +1,33 @@
+Objective: 2052.90, 
+Gap: 0.00%, Solver time: 11.2s
+Dist.: 136.69, CapEx: 2000.00, OpEx: 136.69, Delivery: 86.00, EA: -2.15, DCM: 0.00, Cycle: 0.06
+Build duration: 1.93s
+Total solve duration: 14.12s
+
+
+--------------------------------------------
+
+Problem: 
+- Name: x2867
+  Lower bound: 2052.9034010197142
+  Upper bound: 2052.9034010197142
+  Number of objectives: 1
+  Number of constraints: 12013
+  Number of variables: 2177
+  Number of binary variables: 763
+  Number of integer variables: 763
+  Number of continuous variables: 1414
+  Number of nonzeros: 371420
+  Sense: minimize
+Solver: 
+- Status: ok
+  Return code: 0
+  Message: Model was solved to optimality (subject to tolerances), and an optimal solution is available.
+  Termination condition: optimal
+  Termination message: Model was solved to optimality (subject to tolerances), and an optimal solution is available.
+  Wall time: 10.021768569946289
+  Error rc: 0
+  Time: 11.177903175354004
+Solution: 
+- number of solutions: 0
+  number of solutions displayed: 0

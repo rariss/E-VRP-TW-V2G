@@ -1,0 +1,34 @@
+Objective: 2052.90, 
+Gap: 0.00%, Solver time: 11.9s
+Dist.: 136.69, CapEx: 2000.00, OpEx: 136.69, Delivery: 86.00, EA: -2.15, DCM: 0.00, Cycle: 0.06
+Build duration: 87.79s
+Xfrm duration: 7.49s
+Total solve duration: 14.80s
+
+
+--------------------------------------------
+
+Problem: 
+- Name: x3630
+  Lower bound: 2052.903401019714
+  Upper bound: 2052.903401019714
+  Number of objectives: 1
+  Number of constraints: 19802
+  Number of variables: 3630
+  Number of binary variables: 1526
+  Number of integer variables: 1526
+  Number of continuous variables: 2104
+  Number of nonzeros: 227538
+  Sense: minimize
+Solver: 
+- Status: ok
+  Return code: 0
+  Message: Model was solved to optimality (subject to tolerances), and an optimal solution is available.
+  Termination condition: optimal
+  Termination message: Model was solved to optimality (subject to tolerances), and an optimal solution is available.
+  Wall time: 10.940237045288086
+  Error rc: 0
+  Time: 11.89801287651062
+Solution: 
+- number of solutions: 0
+  number of solutions displayed: 0

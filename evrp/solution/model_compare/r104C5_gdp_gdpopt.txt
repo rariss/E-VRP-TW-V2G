@@ -1,0 +1,1 @@
+Unknown attribute `Time' for object with type <class 'pyomo.opt.results.solver.SolverInformation'>

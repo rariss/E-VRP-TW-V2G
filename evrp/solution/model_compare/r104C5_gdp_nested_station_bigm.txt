@@ -1,0 +1,34 @@
+Objective: 2052.65, 
+Gap: 48.62%, Solver time: 121.5s
+Dist.: 136.69, CapEx: 2000.00, OpEx: 136.69, Delivery: 86.00, EA: -1.93, DCM: 0.00, Cycle: 0.03
+Build duration: 3.88s
+Xfrm duration: 19.40s
+Total solve duration: 129.09s
+
+
+--------------------------------------------
+
+Problem: 
+- Name: x12610
+  Lower bound: 1054.5526027113822
+  Upper bound: 2052.6540077694867
+  Number of objectives: 1
+  Number of constraints: 80595
+  Number of variables: 12610
+  Number of binary variables: 11886
+  Number of integer variables: 11886
+  Number of continuous variables: 724
+  Number of nonzeros: 322146
+  Sense: minimize
+Solver: 
+- Status: aborted
+  Return code: 0
+  Message: Optimization terminated because the time expended exceeded the value specified in the TimeLimit parameter.
+  Termination condition: maxTimeLimit
+  Termination message: Optimization terminated because the time expended exceeded the value specified in the TimeLimit parameter.
+  Wall time: 120.56402587890625
+  Error rc: 0
+  Time: 121.50388288497925
+Solution: 
+- number of solutions: 0
+  number of solutions displayed: 0

@@ -1,0 +1,33 @@
+Objective: 3213.81, 
+Gap: 0.00%, Solver time: 610.9s
+Dist.: 345.93, CapEx: 3000.00, OpEx: 345.93, Delivery: 146.00, EA: -13.48, DCM: 0.00, Cycle: 0.40
+Build duration: 3.15s
+Total solve duration: 628.69s
+
+
+--------------------------------------------
+
+Problem: 
+- Name: x4104
+  Lower bound: 3213.8079496659007
+  Upper bound: 3213.807949665901
+  Number of objectives: 1
+  Number of constraints: 22814
+  Number of variables: 3144
+  Number of binary variables: 1171
+  Number of integer variables: 1171
+  Number of continuous variables: 1973
+  Number of nonzeros: 577588
+  Sense: minimize
+Solver: 
+- Status: ok
+  Return code: 0
+  Message: Model was solved to optimality (subject to tolerances), and an optimal solution is available.
+  Termination condition: optimal
+  Termination message: Model was solved to optimality (subject to tolerances), and an optimal solution is available.
+  Wall time: 609.1790180206299
+  Error rc: 0
+  Time: 610.9438977241516
+Solution: 
+- number of solutions: 0
+  number of solutions displayed: 0

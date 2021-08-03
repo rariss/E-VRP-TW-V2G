@@ -1,0 +1,34 @@
+Objective: 2103.09, 
+Gap: 0.00%, Solver time: 118.3s
+Dist.: 156.08, CapEx: 2000.00, OpEx: 156.08, Delivery: 58.00, EA: -4.87, DCM: 0.00, Cycle: 0.15
+Build duration: 99.04s
+Xfrm duration: 15.48s
+Total solve duration: 132.45s
+
+
+--------------------------------------------
+
+Problem: 
+- Name: x43110
+  Lower bound: 2103.0939537748386
+  Upper bound: 2103.0939537748386
+  Number of objectives: 1
+  Number of constraints: 76262
+  Number of variables: 41040
+  Number of binary variables: 1526
+  Number of integer variables: 1526
+  Number of continuous variables: 39514
+  Number of nonzeros: 358152
+  Sense: minimize
+Solver: 
+- Status: ok
+  Return code: 0
+  Message: Model was solved to optimality (subject to tolerances), and an optimal solution is available.
+  Termination condition: optimal
+  Termination message: Model was solved to optimality (subject to tolerances), and an optimal solution is available.
+  Wall time: 115.7657413482666
+  Error rc: 0
+  Time: 118.33553671836853
+Solution: 
+- number of solutions: 0
+  number of solutions displayed: 0

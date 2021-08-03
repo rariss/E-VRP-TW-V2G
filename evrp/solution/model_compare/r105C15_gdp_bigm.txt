@@ -1,0 +1,34 @@
+Objective: 4131.61, 
+Gap: 23.68%, Solver time: 3601.3s
+Dist.: 331.44, CapEx: 4000.00, OpEx: 331.44, Delivery: 211.00, EA: -10.84, DCM: 0.00, Cycle: 0.33
+Build duration: 303.26s
+Xfrm duration: 5.84s
+Total solve duration: 3606.29s
+
+
+--------------------------------------------
+
+Problem: 
+- Name: x7902
+  Lower bound: 3153.1549394142667
+  Upper bound: 4131.605698954718
+  Number of objectives: 1
+  Number of constraints: 59457
+  Number of variables: 7902
+  Number of binary variables: 3686
+  Number of integer variables: 3686
+  Number of continuous variables: 4216
+  Number of nonzeros: 604172
+  Sense: minimize
+Solver: 
+- Status: aborted
+  Return code: 0
+  Message: Optimization terminated because the time expended exceeded the value specified in the TimeLimit parameter.
+  Termination condition: maxTimeLimit
+  Termination message: Optimization terminated because the time expended exceeded the value specified in the TimeLimit parameter.
+  Wall time: 3600.082601547241
+  Error rc: 0
+  Time: 3601.3331911563873
+Solution: 
+- number of solutions: 0
+  number of solutions displayed: 0

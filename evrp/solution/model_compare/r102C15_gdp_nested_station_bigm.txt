@@ -1,0 +1,34 @@
+Objective: 5244.35, 
+Gap: 78.34%, Solver time: 3607.1s
+Dist.: 419.32, CapEx: 5000.00, OpEx: 419.32, Delivery: 191.00, EA: -15.57, DCM: 0.00, Cycle: 0.47
+Build duration: 33.28s
+Xfrm duration: 139.91s
+Total solve duration: 3672.25s
+
+
+--------------------------------------------
+
+Problem: 
+- Name: x93220
+  Lower bound: 1135.762095841155
+  Upper bound: 5244.354023301318
+  Number of objectives: 1
+  Number of constraints: 688246
+  Number of variables: 91380
+  Number of binary variables: 87616
+  Number of integer variables: 87616
+  Number of continuous variables: 3764
+  Number of nonzeros: 2379281
+  Sense: minimize
+Solver: 
+- Status: aborted
+  Return code: 0
+  Message: Optimization terminated because the time expended exceeded the value specified in the TimeLimit parameter.
+  Termination condition: maxTimeLimit
+  Termination message: Optimization terminated because the time expended exceeded the value specified in the TimeLimit parameter.
+  Wall time: 3600.3028411865234
+  Error rc: 0
+  Time: 3607.1480298042297
+Solution: 
+- number of solutions: 0
+  number of solutions displayed: 0

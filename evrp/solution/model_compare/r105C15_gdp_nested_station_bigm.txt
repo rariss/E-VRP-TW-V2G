@@ -1,0 +1,34 @@
+Objective: 4138.33, 
+Gap: 58.65%, Solver time: 3605.4s
+Dist.: 336.15, CapEx: 4000.00, OpEx: 336.15, Delivery: 211.00, EA: -12.79, DCM: 0.00, Cycle: 0.38
+Build duration: 23.53s
+Xfrm duration: 98.80s
+Total solve duration: 3650.68s
+
+
+--------------------------------------------
+
+Problem: 
+- Name: x64508
+  Lower bound: 1711.0012420412381
+  Upper bound: 4138.329306512927
+  Number of objectives: 1
+  Number of constraints: 472418
+  Number of variables: 63128
+  Number of binary variables: 60292
+  Number of integer variables: 60292
+  Number of continuous variables: 2836
+  Number of nonzeros: 1690063
+  Sense: minimize
+Solver: 
+- Status: aborted
+  Return code: 0
+  Message: Optimization terminated because the time expended exceeded the value specified in the TimeLimit parameter.
+  Termination condition: maxTimeLimit
+  Termination message: Optimization terminated because the time expended exceeded the value specified in the TimeLimit parameter.
+  Wall time: 3600.208465576172
+  Error rc: 0
+  Time: 3605.4062345027924
+Solution: 
+- number of solutions: 0
+  number of solutions displayed: 0

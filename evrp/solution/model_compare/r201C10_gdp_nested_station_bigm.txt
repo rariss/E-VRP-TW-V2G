@@ -1,0 +1,34 @@
+Objective: 5101.16, 
+Gap: 80.29%, Solver time: 948.1s
+Dist.: 276.65, CapEx: 5000.00, OpEx: 276.65, Delivery: 181.00, EA: -5.35, DCM: 0.00, Cycle: 0.16
+Build duration: 125.66s
+Xfrm duration: 356.51s
+Total solve duration: 1118.42s
+
+
+--------------------------------------------
+
+Problem: 
+- Name: x128492
+  Lower bound: 1005.5220357779616
+  Upper bound: 5101.163498883646
+  Number of objectives: 1
+  Number of constraints: 913520
+  Number of variables: 124492
+  Number of binary variables: 116439
+  Number of integer variables: 116439
+  Number of continuous variables: 8053
+  Number of nonzeros: 10023769
+  Sense: minimize
+Solver: 
+- Status: aborted
+  Return code: 0
+  Message: Optimization terminated because the time expended exceeded the value specified in the TimeLimit parameter.
+  Termination condition: maxTimeLimit
+  Termination message: Optimization terminated because the time expended exceeded the value specified in the TimeLimit parameter.
+  Wall time: 900.668399810791
+  Error rc: 0
+  Time: 948.0606667995453
+Solution: 
+- number of solutions: 0
+  number of solutions displayed: 0
