@@ -341,6 +341,14 @@ class EVRPTW:
                 return m.xq[i] <= m.QMAX  # xq is NonNegative
         self.m.constraint_payload_limit = Constraint(self.m.V01_, rule=constraint_payload_limit)
 
+        def constraint_no_visit_duplicate_station(m, s):
+            """Ensures no visit between duplicate nodes of the same charging station."""
+            if len(m.Smap[s]) > 1:
+                return sum(m.xgamma[s_, s__]for s_ in m.Smap[s] for s__ in m.Smap[s] if s_ != s__) <= 0
+            else:
+                return Constraint.Skip
+        self.m.constraint_no_visit_duplicate_station = Constraint(self.m.S, rule=constraint_no_visit_duplicate_station)
+
         # OBJECTIVE FUNCTION AND DEPENDENT FUNCTIONS
         self.m.obj = Objective(rule=self.obj, sense=minimize)
 

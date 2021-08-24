@@ -191,7 +191,7 @@ class EVRPTW:
                     # Time Constraints
                     # Service time for each EV doing V2G/G2V at each charging station
                     d.constraint_time_station = Constraint(expr=m.xw[i] + (m.tS[i] + m.d[i, j] / m.v) + m.t_S * sum(
-                            m.xkappa[i, t_].indicator_var for t_ in m.T) <= m.xw[j])
+                            m.xkappa[i, t_].binary_indicator_var for t_ in m.T) <= m.xw[j])
 
                     # Energy Constraints
                     # TODO: Check if number of xkappa variables can be reduced for same energy / depot periods
@@ -229,23 +229,23 @@ class EVRPTW:
         # Global Constraints
         # %% LOGICAL CONSTRAINTS
         def constraint_logical(m, i, t):
-            return m.xkappa[i, t].indicator_var - sum(m.xgamma[i, j].indicator_var for j in m.V1_ if i != j) <= 0
+            return m.xkappa[i, t].binary_indicator_var - sum(m.xgamma[i, j].binary_indicator_var for j in m.V1_ if i != j) <= 0
         self.m.constraint_logical = Constraint(self.m.S_, self.m.T, rule=constraint_logical)
 
         def constraint_energy_station_limit_lb(m, i, t):  # TODO: Combine duplicates to be within limits at each time
             """Charge limits for an EV at charging station i"""
             if 'splitxp' in self.problem_types:
-                return m.SMIN[i] * m.xkappa[i, t].indicator_var <= m.xc[i, t] - m.xg[i, t]
+                return m.SMIN[i] * m.xkappa[i, t].binary_indicator_var <= m.xc[i, t] - m.xg[i, t]
             else:
-                return m.SMIN[i] * m.xkappa[i, t].indicator_var <= m.xp[i, t]
+                return m.SMIN[i] * m.xkappa[i, t].binary_indicator_var <= m.xp[i, t]
         self.m.constraint_energy_station_limit_lb = Constraint(self.m.S_, self.m.T, rule=constraint_energy_station_limit_lb)
 
         def constraint_energy_station_limit_ub(m, i, t):  # TODO: Combine duplicates to be within limits at each time
             """Charge limits for an EV at charging station i"""
             if 'splitxp' in self.problem_types:
-                return m.xc[i, t] - m.xg[i, t] <= m.SMAX[i] * m.xkappa[i, t].indicator_var
+                return m.xc[i, t] - m.xg[i, t] <= m.SMAX[i] * m.xkappa[i, t].binary_indicator_var
             else:
-                return m.xp[i, t] <= m.SMAX[i] * m.xkappa[i, t].indicator_var
+                return m.xp[i, t] <= m.SMAX[i] * m.xkappa[i, t].binary_indicator_var
         self.m.constraint_energy_station_limit_ub = Constraint(self.m.S_, self.m.T, rule=constraint_energy_station_limit_ub)
 
         # %% ROUTING CONSTRAINTS
@@ -253,31 +253,31 @@ class EVRPTW:
 
         def constraint_visit_stations(m, i):
             """Charging station nodes can be visited at most once in extended graph"""
-            return sum(m.xgamma[i, j].indicator_var for j in m.V1_ if i != j) <= 1
+            return sum(m.xgamma[i, j].binary_indicator_var for j in m.V1_ if i != j) <= 1
         self.m.constraint_visit_stations = Constraint(self.m.S_, rule=constraint_visit_stations)
 
         def constraint_visit_customers(m, i):
             """EVs must visit customer nodes once"""
-            return sum(m.xgamma[i, j].indicator_var for j in m.V1_ if i != j) == 1
+            return sum(m.xgamma[i, j].binary_indicator_var for j in m.V1_ if i != j) == 1
         self.m.constraint_visit_customers = Constraint(self.m.M, rule=constraint_visit_customers)
 
         def constraint_single_route(m, i):
             """Vehicle incoming arcs equal outcoming arcs for any intermediate nodes"""
-            route_out = sum(m.xgamma[i, j].indicator_var for j in m.V1_ if i != j)
-            route_in = sum(m.xgamma[j, i].indicator_var for j in m.V0_ if i != j)
+            route_out = sum(m.xgamma[i, j].binary_indicator_var for j in m.V1_ if i != j)
+            route_in = sum(m.xgamma[j, i].binary_indicator_var for j in m.V0_ if i != j)
             return route_out - route_in == 0
         self.m.constraint_single_route = Constraint(self.m.V_, rule=constraint_single_route)
 
         if 'nominvehicles' not in self.problem_types:
             def constraint_min_vehicles(m, i):
                 """Requires at least one vehicle assignment"""
-                return sum(m.xgamma[i, j].indicator_var for j in m.V1_ if i != j) >= 1
+                return sum(m.xgamma[i, j].binary_indicator_var for j in m.V1_ if i != j) >= 1
             self.m.constraint_min_vehicles = Constraint(self.m.start_node, rule=constraint_min_vehicles)
 
         if 'maxvehicles' in self.problem_types:
             def constraint_max_vehicles(m, i):
                 """Requires at most N vehicle assignments"""
-                return sum(m.xgamma[i, j].indicator_var for j in m.V1_ if i != j) <= m.N
+                return sum(m.xgamma[i, j].binary_indicator_var for j in m.V1_ if i != j) <= m.N
             self.m.constraint_max_vehicles = Constraint(self.m.start_node, rule=constraint_max_vehicles)
 
         if 'nosymmetry' not in self.problem_types:
@@ -286,8 +286,8 @@ class EVRPTW:
                 duplicate_number = eval(i.split('_')[-1])
                 if duplicate_number >= 1:  # check if it is a duplicate node
                     previous_duplicate = i.split('_')[0] + '_' + str(duplicate_number-1)
-                    return sum(m.xgamma[i, j].indicator_var for j in m.V1_ if i != j) <= \
-                           sum(m.xgamma[previous_duplicate, j].indicator_var for j in m.V1_ if previous_duplicate != j)
+                    return sum(m.xgamma[i, j].binary_indicator_var for j in m.V1_ if i != j) <= \
+                           sum(m.xgamma[previous_duplicate, j].binary_indicator_var for j in m.V1_ if previous_duplicate != j)
                 else:
                     return Constraint.Skip
             self.m.constraint_station_symmetry = Constraint(self.m.S_, rule=constraint_station_symmetry)
@@ -296,7 +296,7 @@ class EVRPTW:
         if 'stationaryevs' not in self.problem_types:
             def constraint_no_stationary_evs(m, i, j, s_):
                 """Ensures no stationary vehicles staying at depot."""
-                return m.xgamma[i, s_].indicator_var + m.xgamma[s_, j].indicator_var <= 1
+                return m.xgamma[i, s_].binary_indicator_var + m.xgamma[s_, j].binary_indicator_var <= 1
             self.m.constraint_no_stationary_evs = Constraint(self.m.start_node, self.m.end_node, self.m.S_, rule=constraint_no_stationary_evs)
 
         def constraint_terminal_node_time(m, i):  # TODO: Could remove if m.tB[i] = m.t_T - m.tS[i]
@@ -307,13 +307,13 @@ class EVRPTW:
         if 'noxkappabounds' not in self.problem_types:
             def constraint_time_xkappa_lb(m, i, t): #Initially missing
                 """V2G decisions must be made after arrival at the node"""
-                return float(m.t_T - t) * m.xkappa[i, t].indicator_var  - m.MT * (1 - m.xkappa[i, t].indicator_var) <= m.t_T - m.xw[i]
+                return float(m.t_T - t) * m.xkappa[i, t].binary_indicator_var  - m.MT * (1 - m.xkappa[i, t].binary_indicator_var) <= m.t_T - m.xw[i]
             self.m.constraint_time_xkappa_lb = Constraint(self.m.S_, self.m.T, rule=constraint_time_xkappa_lb)
 
             def constraint_time_xkappa_ub(m, i, j, t):
                 """V2G decisions must be made before departure from the node"""
                 if i != j:
-                    return (m.tS[i] + m.d[i, j] / m.v) * m.xgamma[i, j].indicator_var + float(t + m.t_S) * m.xkappa[i, t].indicator_var - m.MT * (1 - m.xgamma[i, j].indicator_var) <= m.xw[j]
+                    return (m.tS[i] + m.d[i, j] / m.v) * m.xgamma[i, j].binary_indicator_var + float(t + m.t_S) * m.xkappa[i, t].binary_indicator_var - m.MT * (1 - m.xgamma[i, j].binary_indicator_var) <= m.xw[j]
                 else:
                     return Constraint.Skip
             self.m.constraint_time_xkappa_ub = Constraint(self.m.S_, self.m.V1_, self.m.T, rule=constraint_time_xkappa_ub)
@@ -342,12 +342,15 @@ class EVRPTW:
         def constraint_xgamma_xkappa(m, i, t): #Initially missing
             """Ensures charging can only happen when a vehicle is physically present at a node.
             IF $\sum_j{x_{ij}^\gamma}=0$, THEN $x^\kappa_{it}=0\ \forall t$, ELSE $x^\kappa_{it}=0\ \forall t<x^\omega_i$."""
-            return m.xkappa[i, t].indicator_var <= sum(m.xgamma[i, j].indicator_var for j in m.V1_ if i != j) #TODO: review
+            return m.xkappa[i, t].binary_indicator_var <= sum(m.xgamma[i, j].binary_indicator_var for j in m.V1_ if i != j) #TODO: review
         self.m.constraint_xgamma_xkappa = Constraint(self.m.S_, self.m.T, rule=constraint_xgamma_xkappa)
 
         def constraint_energy_soe_station(m, i, t): #Initially missing
             """Minimum and Maximum SOE limit for each EV"""
-            return inequality(m.EMIN, m.xa[i] + m.t_S * sum(m.xp[i, b] for b in m.T if b <= t), m.EMAX)
+            if 'splitxp' in self.problem_types:
+                return inequality(m.EMIN, m.xa[i] + m.t_S * sum(m.eff * m.xc[i, b] - m.xg[i, b] / m.eff for b in m.T if b <= t), m.EMAX)
+            else:
+                return inequality(m.EMIN, m.xa[i] + m.t_S * sum(m.xp[i, b] for b in m.T if b <= t), m.EMAX)
         self.m.constraint_energy_soe_station = Constraint(self.m.S_, self.m.T, rule=constraint_energy_soe_station)
 
         # See this implementation example: https://stackoverflow.com/questions/53966482/how-to-map-different-indices-in-pyomo
@@ -404,7 +407,7 @@ class EVRPTW:
 
     def C_fleet_capital_cost(self, m):
         """Cost of total number vehicles"""
-        return m.cc * sum(sum(m.xgamma[i, j].indicator_var for j in m.V1_ if j != i) for i in m.start_node)
+        return m.cc * sum(sum(m.xgamma[i, j].binary_indicator_var for j in m.V1_ if j != i) for i in m.start_node)
 
     def O_delivery_operating_cost(self, m):
         """Amortized delivery operating cost for utilized vehicles (wages)"""
@@ -431,7 +434,7 @@ class EVRPTW:
 
     def total_distance(self, m):
         """Total traveled distance"""
-        return sum(sum(m.d[i, j] * m.xgamma[i, j].indicator_var for i in m.V0_ if i != j) for j in m.V1_)
+        return sum(sum(m.d[i, j] * m.xgamma[i, j].binary_indicator_var for i in m.V0_ if i != j) for j in m.V1_)
 
     def total_time(self, m):
         """Total time traveled by all EVs"""
@@ -443,7 +446,7 @@ class EVRPTW:
         if 'splitxp' in self.problem_types:
             return m.cy * m.t_S * sum(sum(m.xc[i, t] for t in m.T) for i in m.S_)
         else:
-            return m.cy * m.t_S * sum(sum(m.xkappa[i, t].indicator_var for t in m.T) for i in m.S_)
+            return m.cy * m.t_S * sum(sum(m.xkappa[i, t].binary_indicator_var for t in m.T) for i in m.S_)
 
     # TODO: FIX t_S unit size so no decimals are needed
     def create_data_dictionary(self):
