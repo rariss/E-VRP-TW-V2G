@@ -16,7 +16,7 @@ class EVRPTW:
     def __init__(self, problem_type: str):
         """
         :param problem_type: Objective options include: {Schneider} OR {OpEx, CapEx, Cycle, EA, DCM, Delivery}
-         Constraint options include: {Start=End, FullStart=End, NoXkappaBounds, NoMinVehicles, MaxVehicles, NoSymmetry, NoXd, SplitXp, StationaryEVs}
+         Constraint options include: {Start=End, FullStart=End, NoXkappaBounds, NoMinVehicles, MaxVehicles, NoSymmetry, NoXd, SplitXp, StationaryEVs, NoExport}
         """
         self.problem_type = problem_type
         self.problem_types = self.problem_type.lower().split()
@@ -323,6 +323,17 @@ class EVRPTW:
             else:
                 return Constraint.Skip
         self.m.constraint_energy_peak = Constraint(self.m.S, self.m.T, rule=constraint_energy_peak)
+
+        def constraint_no_export(m, s, t):
+            """Limits energy discharge to coincident load profile so no energy is exported"""
+            if 'noexport' in self.problem_types:
+                if 'splitxp' in self.problem_types:
+                    return m.G[s, t] + sum(m.xc[i, t] - m.xg[i, t] for i in m.Smap[s]) >= 0
+                else:
+                    return m.G[s, t] + sum(m.xp[i, t] for i in m.Smap[s]) >= 0
+            else:
+                return Constraint.Skip
+        self.m.constraint_no_export = Constraint(self.m.S, self.m.T, rule=constraint_no_export)
 
         # PAYLOAD CONSTRAINTS
         def constraint_payload(m, i, j):
