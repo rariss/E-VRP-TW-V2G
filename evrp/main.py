@@ -1,6 +1,6 @@
 import sys
 
-from milp.evrptw_splitxp import EVRPTW
+from milp.evrptw import EVRPTW
 from utils.plot import plot_evrptwv2g
 
 

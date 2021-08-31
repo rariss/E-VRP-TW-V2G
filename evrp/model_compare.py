@@ -2,7 +2,6 @@ import sys
 from os import listdir
 
 from milp.evrptw import EVRPTW
-from milp.evrptw_splitxp import EVRPTW as EVRPTW_splitxp
 from milp.evrptw_gdp import EVRPTW as EVRPTW_gdp
 from milp.evrptw_gdp_nested_station import EVRPTW as EVRPTW_gdp_nested_station
 from milp.evrptw_gdp_nested_all import EVRPTW as EVRPTW_gdp_nested_all
@@ -54,7 +53,7 @@ def main():
     fpath = 'config/test_instances/model_compare/'
     instances = listdir(fpath)
 
-    model_type = {'splitxp' : EVRPTW_splitxp,
+    model_type = {'splitxp' : EVRPTW,
                     'gdp_nested_station' : EVRPTW_gdp_nested_station,
                     'gdp' : EVRPTW_gdp,
                     'gdp_nested_all' : EVRPTW_gdp_nested_all}
