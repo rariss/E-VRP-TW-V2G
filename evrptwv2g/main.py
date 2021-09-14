@@ -2,7 +2,7 @@ import sys
 import os
 import logging.config
 
-from milp.evrptwv2g import EVRPTWV2G
+from milp.evrptwv2g_base import EVRPTWV2G
 from utils.plot import plot_evrptwv2g
 from config.LOCAL_CONFIG import DIR_INSTANCES
 
