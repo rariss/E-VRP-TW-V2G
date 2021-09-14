@@ -13,8 +13,8 @@
 import os
 import sys
 _HERE = os.path.dirname(__file__)
-_ROOT_DIR = os.path.abspath(os.path.join(_HERE, '..'))
-_PACKAGE_DIR = os.path.abspath(os.path.join(_HERE, '../evrptwv2g'))
+_ROOT_DIR = os.path.abspath(os.path.join(_HERE, 'E-VRP-TW-V2G'))
+_PACKAGE_DIR = os.path.abspath(os.path.join(_HERE, 'E-VRP-TW-V2G/evrptwv2g'))
 
 sys.path.insert(0, _ROOT_DIR)
 sys.path.insert(0, _PACKAGE_DIR)
