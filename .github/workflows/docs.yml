@@ -11,12 +11,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-    - uses: actions/checkout@v2
+    - name: Checkout Repository
+      uses: actions/checkout@v2
 
     - name: Install Python
       uses: actions/setup-python@v1
       with:
         python-version: 3.8
+
     # https://docs.github.com/en/actions/guides/building-and-testing-python#installing-dependencies
     # ^-- This gives info on installing dependencies with pip
     - name: Install dependencies
@@ -41,10 +43,10 @@ jobs:
         pip list --not-required
         pip list
 
-    - uses: actions/checkout@v1
     - name: Build Docs
+      working-directory: ./docs
       run: |
-        make clean ./docs/html
+        make clean html
 
     # https://github.com/peaceiris/actions-gh-pages
     - name: Deploy
