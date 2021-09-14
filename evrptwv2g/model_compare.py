@@ -69,7 +69,7 @@ def main():
 
         for model in model_type:
 
-            if model is 'splitxp':
+            if model == 'splitxp':
 
                 sol_tag = instance[:-4] + model + '.txt'
                 problem_type_ = problem_type_generic
