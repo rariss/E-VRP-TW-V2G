@@ -1,0 +1,6 @@
+evrptwv2g.milp.tsp.TSP
+======================
+
+.. currentmodule:: evrptwv2g.milp.tsp
+
+.. autoclass:: TSP

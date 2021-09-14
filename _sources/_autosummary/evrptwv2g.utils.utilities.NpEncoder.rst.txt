@@ -1,0 +1,6 @@
+evrptwv2g.utils.utilities.NpEncoder
+===================================
+
+.. currentmodule:: evrptwv2g.utils.utilities
+
+.. autoclass:: NpEncoder

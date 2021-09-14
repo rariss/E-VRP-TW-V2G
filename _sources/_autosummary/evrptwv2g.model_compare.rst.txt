@@ -1,0 +1,32 @@
+evrptwv2g.model\_compare
+========================
+
+.. automodule:: evrptwv2g.model_compare
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      main
+      save_solution
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

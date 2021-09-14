@@ -1,0 +1,6 @@
+evrptwv2g.model\_compare.main
+=============================
+
+.. currentmodule:: evrptwv2g.model_compare
+
+.. autofunction:: main

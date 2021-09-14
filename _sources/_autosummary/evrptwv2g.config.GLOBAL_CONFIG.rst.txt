@@ -1,0 +1,23 @@
+evrptwv2g.config.GLOBAL\_CONFIG
+===============================
+
+.. automodule:: evrptwv2g.config.GLOBAL_CONFIG
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

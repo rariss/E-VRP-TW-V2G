@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>evrptwv2g.utils.utilities.calculate_distance_matrix &mdash; E-VRP-TW-V2G 1.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="evrptwv2g.utils.utilities.convert_txt_instances_to_csv" href="evrptwv2g.utils.utilities.convert_txt_instances_to_csv.html" />
+    <link rel="prev" title="evrptwv2g.utils.utilities" href="evrptwv2g.utils.utilities.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> E-VRP-TW-V2G
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="evrptwv2g.html">evrptwv2g</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="evrptwv2g.config.html">evrptwv2g.config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="evrptwv2g.main.html">evrptwv2g.main</a></li>
+<li class="toctree-l2"><a class="reference internal" href="evrptwv2g.milp.html">evrptwv2g.milp</a></li>
+<li class="toctree-l2"><a class="reference internal" href="evrptwv2g.model_compare.html">evrptwv2g.model_compare</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="evrptwv2g.utils.html">evrptwv2g.utils</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="evrptwv2g.utils.graph.html">evrptwv2g.utils.graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="evrptwv2g.utils.plot.html">evrptwv2g.utils.plot</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="evrptwv2g.utils.utilities.html">evrptwv2g.utils.utilities</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">evrptwv2g.utils.utilities.calculate_distance_matrix</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.utils.utilities.convert_txt_instances_to_csv.html">evrptwv2g.utils.utilities.convert_txt_instances_to_csv</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.utils.utilities.create_coordinate_dict.html">evrptwv2g.utils.utilities.create_coordinate_dict</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.utils.utilities.create_flat_distance_matrix.html">evrptwv2g.utils.utilities.create_flat_distance_matrix</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.utils.utilities.create_flat_optimal_edges.html">evrptwv2g.utils.utilities.create_flat_optimal_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.utils.utilities.create_json_inputs.html">evrptwv2g.utils.utilities.create_json_inputs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.utils.utilities.create_json_out.html">evrptwv2g.utils.utilities.create_json_out</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.utils.utilities.create_optimal_edges.html">evrptwv2g.utils.utilities.create_optimal_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.utils.utilities.create_plotting_edges.html">evrptwv2g.utils.utilities.create_plotting_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.utils.utilities.generate_index_mapping.html">evrptwv2g.utils.utilities.generate_index_mapping</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.utils.utilities.merge_variable_results.html">evrptwv2g.utils.utilities.merge_variable_results</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.utils.utilities.parse_csv_tables.html">evrptwv2g.utils.utilities.parse_csv_tables</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.utils.utilities.read_instance_json_str.html">evrptwv2g.utils.utilities.read_instance_json_str</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.utils.utilities.results_to_dfs.html">evrptwv2g.utils.utilities.results_to_dfs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.utils.utilities.trace_routes.html">evrptwv2g.utils.utilities.trace_routes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.utils.utilities.trace_routes_util.html">evrptwv2g.utils.utilities.trace_routes_util</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.utils.utilities.update_instance_json.html">evrptwv2g.utils.utilities.update_instance_json</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.utils.utilities.NpEncoder.html">evrptwv2g.utils.utilities.NpEncoder</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">E-VRP-TW-V2G</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="evrptwv2g.html">evrptwv2g</a> &raquo;</li>
+          <li><a href="evrptwv2g.utils.html">evrptwv2g.utils</a> &raquo;</li>
+          <li><a href="evrptwv2g.utils.utilities.html">evrptwv2g.utils.utilities</a> &raquo;</li>
+      <li>evrptwv2g.utils.utilities.calculate_distance_matrix</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_autosummary/evrptwv2g.utils.utilities.calculate_distance_matrix.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="evrptwv2g-utils-utilities-calculate-distance-matrix">
+<h1>evrptwv2g.utils.utilities.calculate_distance_matrix<a class="headerlink" href="#evrptwv2g-utils-utilities-calculate-distance-matrix" title="Permalink to this headline"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="evrptwv2g.utils.utilities.calculate_distance_matrix">
+<span class="sig-prename descclassname"><span class="pre">evrptwv2g.utils.utilities.</span></span><span class="sig-name descname"><span class="pre">calculate_distance_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">pandas.core.frame.DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'euclidean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dist_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'scipy'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">pandas.core.frame.DataFrame</span></span></span><a class="headerlink" href="#evrptwv2g.utils.utilities.calculate_distance_matrix" title="Permalink to this definition"></a></dt>
+<dd><p>Calculates a square distance matrix given a set of vertices with (x,y) coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>df</strong> (<em>np.array</em>) – Vx2 matrix for V vertices with (x,y) coordinates</p></li>
+<li><p><strong>metric</strong> (<em>str</em>) – scipy distance metric, default is ‘euclidean’</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Square matrix of distances between every vertex.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>pd.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="evrptwv2g.utils.utilities.html" class="btn btn-neutral float-left" title="evrptwv2g.utils.utilities" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="evrptwv2g.utils.utilities.convert_txt_instances_to_csv.html" class="btn btn-neutral float-right" title="evrptwv2g.utils.utilities.convert_txt_instances_to_csv" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Rami Ariss.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

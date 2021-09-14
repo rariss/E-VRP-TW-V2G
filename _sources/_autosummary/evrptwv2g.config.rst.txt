@@ -1,0 +1,31 @@
+evrptwv2g.config
+================
+
+.. automodule:: evrptwv2g.config
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. autosummary::
+   :toctree:
+   :template: custom-module-template.rst
+   :recursive:
+
+   evrptwv2g.config.GLOBAL_CONFIG
+   evrptwv2g.config.LOCAL_CONFIG
+

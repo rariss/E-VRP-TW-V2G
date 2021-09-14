@@ -1,0 +1,6 @@
+evrptwv2g.utils.utilities.read\_instance\_json\_str
+===================================================
+
+.. currentmodule:: evrptwv2g.utils.utilities
+
+.. autofunction:: read_instance_json_str

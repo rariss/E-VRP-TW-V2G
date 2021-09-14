@@ -1,0 +1,56 @@
+evrptwv2g.utils.utilities
+=========================
+
+.. automodule:: evrptwv2g.utils.utilities
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      calculate_distance_matrix
+      convert_txt_instances_to_csv
+      create_coordinate_dict
+      create_flat_distance_matrix
+      create_flat_optimal_edges
+      create_json_inputs
+      create_json_out
+      create_optimal_edges
+      create_plotting_edges
+      generate_index_mapping
+      merge_variable_results
+      parse_csv_tables
+      read_instance_json_str
+      results_to_dfs
+      trace_routes
+      trace_routes_util
+      update_instance_json
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :nosignatures:
+   
+      NpEncoder
+   
+   
+
+   
+   
+   
+
+
+

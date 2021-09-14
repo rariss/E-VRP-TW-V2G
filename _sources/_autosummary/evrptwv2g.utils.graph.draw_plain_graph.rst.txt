@@ -1,0 +1,6 @@
+evrptwv2g.utils.graph.draw\_plain\_graph
+========================================
+
+.. currentmodule:: evrptwv2g.utils.graph
+
+.. autofunction:: draw_plain_graph

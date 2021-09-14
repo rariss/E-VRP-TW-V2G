@@ -1,0 +1,6 @@
+evrptwv2g.utils.plot.plot\_evrptwv2g
+====================================
+
+.. currentmodule:: evrptwv2g.utils.plot
+
+.. autofunction:: plot_evrptwv2g
