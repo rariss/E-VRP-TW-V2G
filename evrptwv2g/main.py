@@ -8,8 +8,7 @@ from config.LOCAL_CONFIG import DIR_INSTANCES
 
 _HERE = os.path.dirname(__file__)
 _CONFIG = os.path.abspath(os.path.join(_HERE, 'config/loggingconfig.ini'))
-print(_CONFIG)
-logging.config.fileConfig('_CONFIG')
+logging.config.fileConfig(_CONFIG)
 
 
 def main(instance: str, problem_type: str, dist_type: str):

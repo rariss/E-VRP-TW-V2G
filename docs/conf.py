@@ -13,19 +13,19 @@
 import os
 import sys
 _HERE = os.path.dirname(__file__)
-print(_HERE)
-print([f.path for f in os.scandir(_HERE) if f.is_dir()])
+# print(_HERE)
+# print([f.path for f in os.scandir(_HERE) if f.is_dir()])
 _ROOT_DIR = os.path.abspath(os.path.join(_HERE, '..'))
-print(_ROOT_DIR)
-print([f.path for f in os.scandir(_ROOT_DIR) if f.is_dir()])
+# print(_ROOT_DIR)
+# print([f.path for f in os.scandir(_ROOT_DIR) if f.is_dir()])
 _PACKAGE_DIR = os.path.abspath(os.path.join(_HERE, '../evrptwv2g'))
-print(_PACKAGE_DIR)
-print([f.path for f in os.scandir(_PACKAGE_DIR) if f.is_dir()])
+# print(_PACKAGE_DIR)
+# print([f.path for f in os.scandir(_PACKAGE_DIR) if f.is_dir()])
 
 sys.path.insert(0, _ROOT_DIR)
 sys.path.insert(0, _PACKAGE_DIR)
 
-import evrptwv2g
+# import evrptwv2g
 
 
 # -- Project information -----------------------------------------------------
