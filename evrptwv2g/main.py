@@ -1,11 +1,15 @@
 import sys
+import os
 import logging.config
 
 from milp.evrptwv2g import EVRPTWV2G
 from utils.plot import plot_evrptwv2g
 from config.LOCAL_CONFIG import DIR_INSTANCES
 
-logging.config.fileConfig('config/loggingconfig.ini')
+_HERE = os.path.dirname(__file__)
+_CONFIG = os.path.abspath(os.path.join(_HERE, 'config/loggingconfig.ini'))
+print(_CONFIG)
+logging.config.fileConfig('_CONFIG')
 
 
 def main(instance: str, problem_type: str, dist_type: str):
