@@ -1,0 +1,1 @@
+from . import LOCAL_CONFIG, GLOBAL_CONFIG
