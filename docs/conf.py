@@ -14,8 +14,13 @@ import os
 import sys
 _HERE = os.path.dirname(__file__)
 print(_HERE)
+print([f.path for f in os.scandir(_HERE) if f.is_dir()])
 _ROOT_DIR = os.path.abspath(os.path.join(_HERE, '..'))
+print(_ROOT_DIR)
+print([f.path for f in os.scandir(_ROOT_DIR) if f.is_dir()])
 _PACKAGE_DIR = os.path.abspath(os.path.join(_HERE, '../evrptwv2g'))
+print(_PACKAGE_DIR)
+print([f.path for f in os.scandir(_PACKAGE_DIR) if f.is_dir()])
 _GITHUB_DIR = os.path.abspath('/home/runner/work/E-VRP-TW-V2G/E-VRP-TW-V2G')
 _GITHUB_PACKAGE_DIR = os.path.abspath('/home/runner/work/E-VRP-TW-V2G/E-VRP-TW-V2G/evrptwv2g')
 
