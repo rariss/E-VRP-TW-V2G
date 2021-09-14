@@ -13,8 +13,9 @@
 import os
 import sys
 _HERE = os.path.dirname(__file__)
-_ROOT_DIR = os.path.abspath(os.path.join(_HERE, 'E-VRP-TW-V2G'))
-_PACKAGE_DIR = os.path.abspath(os.path.join(_HERE, 'E-VRP-TW-V2G/evrptwv2g'))
+print(_HERE)
+_ROOT_DIR = os.path.abspath(os.path.join(_HERE, './E-VRP-TW-V2G'))
+_PACKAGE_DIR = os.path.abspath(os.path.join(_HERE, './E-VRP-TW-V2G/evrptwv2g'))
 
 sys.path.insert(0, _ROOT_DIR)
 sys.path.insert(0, _PACKAGE_DIR)
@@ -24,7 +25,7 @@ sys.path.insert(0, _PACKAGE_DIR)
 
 # -- Project information -----------------------------------------------------
 
-project = 'EVRP-TW-V2G'
+project = 'E-VRP-TW-V2G'
 copyright = '2021, Rami Ariss'
 author = 'Rami Ariss'
 

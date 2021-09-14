@@ -75,8 +75,8 @@ python -m pip install gurobipy
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-### Running the EVRP-TW-V2G model
-Running `main.py` will run the base EVRP-TW-V2G model, outputting the optimal solution and generating a figure of the results.
+### Running the E-VRP-TW-V2G model
+Running `main.py` will run the base E-VRP-TW-V2G model, outputting the optimal solution and generating a figure of the results.
 
 1. Update the instance input directory `DIR_INSTANCES` and the output directory `DIR_OUTPUT` in `LOCAL_CONFIG.py`
 2. Run `main.py` from terminal using `python3 main.py '<instance>' '<objective and constraint options>' '<distance matrix type>'` where:
@@ -93,7 +93,7 @@ python3 main.py 'v2g_m06_s7_ca_tesla_dis_ea_t1_eff' 'splitXp start=end ea capex 
 
 ### Creating new test instance CSVs
 1. Pass a Schneider text instance name to `convert_txt_instances_to_csv`
-2. The Schneider text instance will be converted to a comparable CSV for the EVRP-TW-V2G model,
+2. The Schneider text instance will be converted to a comparable CSV for the E-VRP-TW-V2G model,
 saved in the same `DIR_INSTANCES` folder
 
 ### Generating a distance matrix CSV using the Google Maps API
@@ -122,7 +122,7 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 Rami Ariss - [LinkedIn](https://www.linkedin.com/in/ramiariss/) - [CMU Directory](https://www.cmu.edu/cee/people/cee-phd-students.html)
 
-[EVRP-TW-V2G Repository](https://github.com/rariss/E-VRP-TW-V2G)
+[E-VRP-TW-V2G Repository](https://github.com/rariss/E-VRP-TW-V2G)
 
 <!-- ACKNOWLEDGEMENTS -->
 ## Acknowledgements
