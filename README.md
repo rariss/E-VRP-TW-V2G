@@ -1,15 +1,3 @@
-## Installation
-1. Install latest version of anaconda with python 3.8
-2. Install latest version of gurobi (which should have gurobipy 9.1.0). You will need to obtain an academic license from the gurobi website / server.
-3. Install remaining python dependencies in requirements.txt.
-4. Install an IDE. Either Jupyter or Pycharm or both.
-5. Clone our e-vrp repository and pull the master branch.
-6. Navigate to the cloned e-vrp folder and run jupyter notebook e-vryp-tw.ipynb to be able to run our code in your browser.
-
-## Authors
-**Rami Ariss**, Civil and Environmental Engineering, PhD, Carnegie Mellon University
-
-
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
