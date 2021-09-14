@@ -22,7 +22,7 @@ jobs:
       run: |
         pip3 install sphinx-rtd-theme
         pip3 install -r requirements.txt
-        cd dics
+        cd docs
         make clean html
 
     # https://github.com/peaceiris/actions-gh-pages
