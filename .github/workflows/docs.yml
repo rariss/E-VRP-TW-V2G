@@ -22,6 +22,7 @@ jobs:
       run: |
         pip3 install sphinx-rtd-theme
         pip3 install -r requirements.txt
+        pip3 install -e .
         cd docs
         make clean html
 

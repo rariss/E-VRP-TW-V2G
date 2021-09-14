@@ -15,15 +15,11 @@ import sys
 _HERE = os.path.dirname(__file__)
 _ROOT_DIR = os.path.abspath(os.path.join(_HERE, '..'))
 _PACKAGE_DIR = os.path.abspath(os.path.join(_HERE, '../evrptwv2g'))
-# _SUBPACKAGE_DIR1 = os.path.abspath(os.path.join(_HERE, '../load_profitability/methods'))
-# _SUBPACKAGE_DIR2 = os.path.abspath(os.path.join(_HERE, '../load_profitability/utils'))
 
 sys.path.insert(0, _ROOT_DIR)
 sys.path.insert(0, _PACKAGE_DIR)
-# sys.path.insert(0, _SUBPACKAGE_DIR1)
-# sys.path.insert(0, _SUBPACKAGE_DIR2)
 
-# import load_profitability
+# import evrptwv2g
 
 
 # -- Project information -----------------------------------------------------
@@ -70,4 +66,4 @@ html_theme = 'sphinx_rtd_theme'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = []  # '_static'
