@@ -21,15 +21,11 @@ print([f.path for f in os.scandir(_ROOT_DIR) if f.is_dir()])
 _PACKAGE_DIR = os.path.abspath(os.path.join(_HERE, '../evrptwv2g'))
 print(_PACKAGE_DIR)
 print([f.path for f in os.scandir(_PACKAGE_DIR) if f.is_dir()])
-_GITHUB_DIR = os.path.abspath('/home/runner/work/E-VRP-TW-V2G/E-VRP-TW-V2G')
-_GITHUB_PACKAGE_DIR = os.path.abspath('/home/runner/work/E-VRP-TW-V2G/E-VRP-TW-V2G/evrptwv2g')
 
 sys.path.insert(0, _ROOT_DIR)
 sys.path.insert(0, _PACKAGE_DIR)
-sys.path.insert(0, _GITHUB_DIR)
-sys.path.insert(0, _GITHUB_PACKAGE_DIR)
 
-# import evrptwv2g
+import evrptwv2g
 
 
 # -- Project information -----------------------------------------------------

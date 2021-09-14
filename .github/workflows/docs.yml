@@ -26,7 +26,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install sphinx-rtd-theme
         pip install -r requirements.txt
-        pip install -e .
 
     - name: Debugging information
       run: |
@@ -45,6 +44,7 @@ jobs:
 
     - name: Build Docs
       run: |
+        pip install -e ..
         make clean html
       working-directory: ./docs
 
