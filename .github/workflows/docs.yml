@@ -13,8 +13,6 @@ jobs:
 
     - name: Checkout Repository
       uses: actions/checkout@v2
-      with:
-        path: ..
 
     - name: Install Python
       uses: actions/setup-python@v1
