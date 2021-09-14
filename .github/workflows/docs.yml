@@ -25,6 +25,12 @@ jobs:
         cd docs
         make clean html
 
+    # Add the .nojekyll file
+    - name: nojekyll
+      if: ${{ github.event_name == 'push' }}
+      run: |
+        touch gh-pages/.nojekyll
+
     # https://github.com/peaceiris/actions-gh-pages
     - name: Deploy
       if: success()
@@ -32,5 +38,4 @@ jobs:
       with:
         publish_branch: gh-pages
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: E-VRP-TW-V2G/docs/_build/html/
-        destination_dir: docs
+        publish_dir: ./_build/html
