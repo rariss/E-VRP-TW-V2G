@@ -41,9 +41,10 @@ jobs:
         pip list --not-required
         pip list
 
+    - uses: actions/checkout@v1
     - name: Build Docs
+      uses: ./docs
       run: |
-        cd docs
         make clean html
 
     # https://github.com/peaceiris/actions-gh-pages
