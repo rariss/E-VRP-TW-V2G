@@ -55,6 +55,7 @@ class EVRPTWV2G:
         self.m.v = Param(mutable=True, doc='Average speed')
         self.m.t_T = Param(doc='Time horizon')
         self.m.t_S = Param(doc='Time step size')
+        self.m.t_H = Param(doc='Hours per time step unit')
         if 'splitxp' in self.problem_types:
             self.m.eff = Param(doc='One-way efficiency')
 
@@ -181,7 +182,7 @@ class EVRPTWV2G:
         def constraint_time_start_depot(m, i, j):  # TODO: Can we drop the constraint for the start depot if we drop fixed service time?
             """Service time for each vehicle at start depot"""
             if i != j:
-                return m.xw[i] + (m.tS[i] + m.d[i, j] / m.v) * m.xgamma[i, j] \
+                return m.xw[i] + (m.tS[i] + m.d[i, j] / m.v) * m.xgamma[i, j] / m.t_H \
                        - m.MT * (1 - m.xgamma[i, j]) <= m.xw[j]
             else:
                 return Constraint.Skip
@@ -190,7 +191,7 @@ class EVRPTWV2G:
         def constraint_time_station(m, i, j):
             """Service time for each EV doing V2G/G2V at each charging station"""
             if i != j:
-                return m.xw[i] + (m.tS[i] + m.d[i, j] / m.v) * m.xgamma[i, j] + m.t_S * sum(m.xkappa[i, t] for t in m.T) \
+                return m.xw[i] + (m.tS[i] + m.d[i, j] / m.v) * m.xgamma[i, j] / m.t_H + m.t_S * sum(m.xkappa[i, t] for t in m.T) \
                        - m.MT * (1 - m.xgamma[i, j]) <= m.xw[j]
             else:
                 return Constraint.Skip
@@ -200,7 +201,7 @@ class EVRPTWV2G:
             """Service time for each vehicle doing delivery at each customer node"""
             if i != j:
                 return m.xw[i] + (m.tS[i] + m.d[i, j] / m.v + m.tQ[i] * m.q[i]) \
-                       * m.xgamma[i, j] - m.MT * (1 - m.xgamma[i, j]) <= m.xw[j]
+                       * m.xgamma[i, j] / m.t_H - m.MT * (1 - m.xgamma[i, j]) <= m.xw[j]
             else:
                 return Constraint.Skip
         self.m.constraint_time_customer = Constraint(self.m.M, self.m.V1_, rule=constraint_time_customer)
@@ -212,7 +213,7 @@ class EVRPTWV2G:
 
         def constraint_terminal_node_time(m, i):  # TODO: Could remove if m.tB[i] = m.t_T - m.tS[i]
             """Arrival time must be within time window for each node"""
-            return m.xw[i] + m.tS[i] <= m.t_T
+            return m.xw[i] + m.tS[i] / m.t_H <= m.t_T
         self.m.constraint_terminal_node_time = Constraint(self.m.end_node, rule=constraint_terminal_node_time)
 
         if 'noxkappabounds' not in self.problem_types:
@@ -224,7 +225,7 @@ class EVRPTWV2G:
             def constraint_time_xkappa_ub(m, i, j, t):
                 """V2G decisions must be made before departure from the node"""
                 if i != j:
-                    return (m.tS[i] + m.d[i, j] / m.v) * m.xgamma[i, j] + (t + m.t_S) * m.xkappa[i, t] - m.MT * (1 - m.xgamma[i, j]) <= m.xw[j]
+                    return (m.tS[i] + m.d[i, j] / m.v) * m.xgamma[i, j] / m.t_H + (t + m.t_S) * m.xkappa[i, t] - m.MT * (1 - m.xgamma[i, j]) <= m.xw[j]
                 else:
                     return Constraint.Skip
             self.m.constraint_time_xkappa_ub = Constraint(self.m.S_, self.m.V1_, self.m.T, rule=constraint_time_xkappa_ub)
@@ -240,10 +241,10 @@ class EVRPTWV2G:
             """Energy transition for each EV while at an intermediate charging station node i and traveling across edge (i, j)"""
             if i != j:
                 if 'splitxp' in self.problem_types:
-                    return m.xa[j] <= m.xa[i] + m.t_S * sum(m.eff * m.xc[i, t] - m.xg[i, t] / m.eff for t in m.T) - \
+                    return m.xa[j] <= m.xa[i] + m.t_H * m.t_S * sum(m.eff * m.xc[i, t] - m.xg[i, t] / m.eff for t in m.T) - \
                            (m.r * m.d[i, j]) * m.xgamma[i, j] + m.ME * (1 - m.xgamma[i, j])
                 else:
-                    return m.xa[j] <= m.xa[i] + m.t_S * sum(m.xp[i, t] for t in m.T) - \
+                    return m.xa[j] <= m.xa[i] + m.t_H * m.t_S * sum(m.xp[i, t] for t in m.T) - \
                            (m.r * m.d[i, j]) * m.xgamma[i, j] + m.ME * (1 - m.xgamma[i, j])
             else:
                 return Constraint.Skip
@@ -313,9 +314,9 @@ class EVRPTWV2G:
         def constraint_energy_soe_station(m, i, t):
             """Minimum and Maximum SOE limit for each EV"""
             if 'splitxp' in self.problem_types:
-                return inequality(m.EMIN, m.xa[i] + m.t_S * sum(m.eff * m.xc[i, b] - m.xg[i, b] / m.eff for b in m.T if b <= t), m.EMAX)
+                return inequality(m.EMIN, m.xa[i] + m.t_H * m.t_S * sum(m.eff * m.xc[i, b] - m.xg[i, b] / m.eff for b in m.T if b <= t), m.EMAX)
             else:
-                return inequality(m.EMIN, m.xa[i] + m.t_S * sum(m.xp[i, b] for b in m.T if b <= t), m.EMAX)
+                return inequality(m.EMIN, m.xa[i] + m.t_H * m.t_S * sum(m.xp[i, b] for b in m.T if b <= t), m.EMAX)
         self.m.constraint_energy_soe_station = Constraint(self.m.S_, self.m.T, rule=constraint_energy_soe_station)
 
         # See this implementation example: https://stackoverflow.com/questions/53966482/how-to-map-different-indices-in-pyomo
@@ -417,9 +418,9 @@ class EVRPTWV2G:
     def R_energy_arbitrage_revenue(self, m):
         """Amortized G2V/V2G energy arbitrage (or net cost of charging) over all charging stations"""
         if 'splitxp' in self.problem_types:
-            return -m.t_S * sum(sum(sum(m.ce[s, t] * (m.xc[i, t] - m.xg[i, t]) for t in m.T) for i in m.Smap[s]) for s in m.S)
+            return -m.t_H * m.t_S * sum(sum(sum(m.ce[s, t] * (m.xc[i, t] - m.xg[i, t]) for t in m.T) for i in m.Smap[s]) for s in m.S)
         else:
-            return -m.t_S * sum(sum(sum(m.ce[s, t] * m.xp[i, t] for t in m.T) for i in m.Smap[s]) for s in m.S)
+            return -m.t_H * m.t_S * sum(sum(sum(m.ce[s, t] * m.xp[i, t] for t in m.T) for i in m.Smap[s]) for s in m.S)
 
     def R_delivery_revenue(self, m):
         """Amortized delivery revenue for goods delivered to customer nodes by entire fleet"""
@@ -437,9 +438,9 @@ class EVRPTWV2G:
         """Adds a penalty for any battery actions."""
         # return m.cy * m.t_S * sum(sum(sum(m.xkappa[i, t] * m.xgamma[i, j] for t in m.T) for j in m.V1_ if i != j) for i in m.S_)
         if 'splitxp' in self.problem_types:
-            return m.cy * m.t_S * sum(sum(m.xc[i, t] for t in m.T) for i in m.S_)
+            return m.cy * m.t_H * m.t_S * sum(sum(m.xc[i, t] for t in m.T) for i in m.S_)
         else:
-            return m.cy * m.t_S * sum(sum(m.xkappa[i, t] for t in m.T) for i in m.S_)
+            return m.cy * m.t_H * m.t_S * sum(sum(m.xkappa[i, t] for t in m.T) for i in m.S_)
 
     # TODO: FIX t_S unit size so no decimals are needed
     def create_data_dictionary(self):
@@ -480,6 +481,7 @@ class EVRPTWV2G:
                 'Smap': self.s2s_,
                 't_T': {None: self.t_T},
                 't_S': {None: self.t_S},
+                't_H': {None: self.t_H},
                 'T': {None: list(range(0, self.t_T, self.t_S))}
             }
         }
@@ -516,6 +518,7 @@ class EVRPTWV2G:
         log.info('Creating timeseries data')
         self.t_T = self.data['Parameters'].loc['t_T', 'value'].astype(int)
         self.t_S = self.data['Parameters'].loc['t_S', 'value'].astype(int)
+        self.t_H = self.data['Parameters'].loc['t_H', 'value'].astype(float)
 
         for col in self.data['T'].columns.get_level_values(0).drop_duplicates():  # Produces energy price (ce) and demand (G) timeseries
             self.data[col] = self.data['T'][col].reindex(range(0, self.t_T, self.t_S), method='ffill')
@@ -555,7 +558,7 @@ class EVRPTWV2G:
         self.model_build_end_time = datetime.datetime.now()
 
     # For Gurobi solver options, see: https://www.gurobi.com/documentation/9.1/refman/parameters.html
-    def make_solver(self, solve_options={'TimeLimit': 60 * .1}):  #, 'MIPFocus': 3, 'Cuts': 3
+    def make_solver(self, solve_options={'TimeLimit': 60 * 5}):  #, 'MIPFocus': 3, 'Cuts': 3
         # Specify solver
         self.opt = SolverFactory('gurobi', io_format='python')
 

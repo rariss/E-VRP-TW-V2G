@@ -440,7 +440,7 @@ def convert_txt_instances_to_csv(instance, folder=f'{LOCAL_CONFIG.DIR_INSTANCES}
     """Converts a Schneider txt test instance into a csv format for EVRPTWV2G starting point."""
     # Default parameters
     defaults = {'N': [1], 'cc': [1000], 'co': [1], 'cm': [0], 'cy': [3e-3], 'EMIN': [0],
-                'cg': 0, 'SMIN': 0, 'instances': 1, 'tQ': 0, 'cq': 1, 't_S': 1, 'G': 1, 'ce': 0.1, 'eff': 0.9
+                'cg': 0, 'SMIN': 0, 'instances': 1, 'tQ': 0, 'cq': 1, 't_S': 1, 't_H': 1, 'G': 1, 'ce': 0.1, 'eff': 0.9
     }  # Must use lists if table generated from dict. Use single value if updating a dataframe value
 
     fpath = folder + instance + '.txt'
@@ -501,9 +501,9 @@ def convert_txt_instances_to_csv(instance, folder=f'{LOCAL_CONFIG.DIR_INSTANCES}
     M['cq'] = defaults['cq']
 
     # Make parameters table
-    P = pd.DataFrame(data={'parameter': ['t_T', 't_S'],
-                           'description': ['optimization time horizon', 'time step size'],
-                           'value': [graph['tB'].max(), defaults['t_S']]
+    P = pd.DataFrame(data={'parameter': ['t_T', 't_S', 't_H'],
+                           'description': ['optimization time horizon', 'time step size', 'hours per time step unit'],
+                           'value': [graph['tB'].max(), defaults['t_S'], defaults['t_H']]
                            })
 
     # Make time table

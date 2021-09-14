@@ -21,6 +21,7 @@ Parameters,,,,,,,,,,,,,
 parameter,description,value
 t_T,optimization time horizon,230.0
 t_S,time step size,1.0
+t_H,hours per time step unit,1.0
 ,,,,,,,,,,,,,
 W,,,,,,,,,,,,,
 vehicle_type_id,N,r,v,cc,co,cm,cy,eff,QMAX,EMIN,EMAX,PMAX
