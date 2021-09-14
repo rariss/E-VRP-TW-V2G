@@ -15,7 +15,7 @@ time-varying energy arbitrage and peak shaving to maximize net amortized profit.
    :template: custom-module-template.rst
    :recursive:
 
-   evrptwv2g
+   evrptwv2g-1.0
 
 
 Indices and tables
