@@ -26,7 +26,7 @@ evrptwv2g.milp
    :template: custom-module-template.rst
    :recursive:
 
-   evrptwv2g.milp.evrptwv2g
+   evrptwv2g.milp.evrptwv2g_base
    evrptwv2g.milp.evrptwv2g_gdp
    evrptwv2g.milp.evrptwv2g_gdp_nested_all
    evrptwv2g.milp.evrptwv2g_gdp_nested_station

@@ -1,7 +1,7 @@
-evrptwv2g.milp.evrptwv2g
-========================
+evrptwv2g.milp.evrptwv2g\_base
+==============================
 
-.. automodule:: evrptwv2g.milp.evrptwv2g
+.. automodule:: evrptwv2g.milp.evrptwv2g_base
 
    
    
