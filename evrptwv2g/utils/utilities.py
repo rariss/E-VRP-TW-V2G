@@ -435,8 +435,8 @@ def update_instance_json(var_list, new_concrete_instance, instance_json):
     return new_concrete_instance
 
 
-def convert_txt_instances_to_csv(instance, folder=f'{LOCAL_CONFIG.DIR_INSTANCES}/evrptw_instances/',
-                                 output_folder=f'{LOCAL_CONFIG.DIR_INSTANCES}'):
+def convert_txt_instances_to_csv(instance, folder=f'{LOCAL_CONFIG.DIR_INSTANCES}/test_instances/evrptw_instances/',
+                                 output_folder=f'{LOCAL_CONFIG.DIR_INSTANCES}/test_instances'):
     """Converts a Schneider txt test instance into a csv format for EVRPTWV2G starting point."""
     # Default parameters
     defaults = {'N': [1], 'cc': [1000], 'co': [1], 'cm': [0], 'cy': [3e-3], 'EMIN': [0],
@@ -524,3 +524,19 @@ def convert_txt_instances_to_csv(instance, folder=f'{LOCAL_CONFIG.DIR_INSTANCES}
             f.write(k + ','*csv_rows +'\n')
             df.to_csv(f, index=False, sep=',')
             f.write(','*csv_rows+'\n')
+
+def generate_stats(m):
+    """
+    Calculates output statistics
+    :param m:
+    :return:
+    """
+    stats = {'total_distance': m.total_distance(m.instance)(),
+             'C_fleet_capital_cost': m.C_fleet_capital_cost(m.instance)(),
+             'O_delivery_operating_cost': m.O_delivery_operating_cost(m.instance)() + m.O_maintenance_operating_cost(m.instance)(),
+             'R_delivery_revenue': m.R_delivery_revenue(m.instance)(),
+             'R_energy_arbitrage_revenue': m.R_energy_arbitrage_revenue(m.instance)(),
+             'R_peak_shaving_revenue': m.R_peak_shaving_revenue(m.instance)(),
+             'cycle_cost': m.cycle_cost(m.instance)()}
+
+    return stats

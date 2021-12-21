@@ -11,7 +11,7 @@ from datetime import datetime
 from matplotlib.gridspec import GridSpec
 from matplotlib.ticker import MultipleLocator
 from plotly.subplots import make_subplots
-from evrptwv2g.utils.utilities import create_plotting_edges, results_to_dfs
+from evrptwv2g.utils.utilities import create_plotting_edges, results_to_dfs, generate_stats
 
 log = logging.getLogger('root')
 
@@ -112,13 +112,7 @@ def plot_evrptwv2g(m: 'obj', **kwargs):
     axs_tw = fig.add_subplot(gs[1, 0], sharex=axs_q)
 
     # Generate objective results for plot title
-    obj_breakdown = [m.total_distance(m.instance)(),
-                     m.C_fleet_capital_cost(m.instance)(),
-                     m.O_delivery_operating_cost(m.instance)() + m.O_maintenance_operating_cost(m.instance)(),
-                     m.R_delivery_revenue(m.instance)(),
-                     m.R_energy_arbitrage_revenue(m.instance)(),
-                     m.R_peak_shaving_revenue(m.instance)(),
-                     m.cycle_cost(m.instance)()]
+    obj_breakdown = generate_stats(m).values()
 
     # Generate plot title
     title = ''

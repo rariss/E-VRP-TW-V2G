@@ -22,6 +22,8 @@ def main(instance: str, problem_type: str, dist_type: str):
 
     x, xp, traces, routes = plot_evrptwv2g(m, save=True)
 
+    return m, x, xp, traces, routes
+
 
 if __name__ == "__main__":
     instance = sys.argv[1]
@@ -32,4 +34,4 @@ if __name__ == "__main__":
     else:
         dist_type = 'scipy'
 
-    main(instance, problem_type, dist_type)
+    _ = main(instance, problem_type, dist_type)
