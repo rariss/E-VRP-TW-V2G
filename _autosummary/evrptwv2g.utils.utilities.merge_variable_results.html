@@ -19,7 +19,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="evrptwv2g.utils.utilities.parse_csv_tables" href="evrptwv2g.utils.utilities.parse_csv_tables.html" />
-    <link rel="prev" title="evrptwv2g.utils.utilities.generate_index_mapping" href="evrptwv2g.utils.utilities.generate_index_mapping.html" /> 
+    <link rel="prev" title="evrptwv2g.utils.utilities.generate_stats" href="evrptwv2g.utils.utilities.generate_stats.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -43,6 +43,7 @@
 <li class="toctree-l2"><a class="reference internal" href="evrptwv2g.main.html">evrptwv2g.main</a></li>
 <li class="toctree-l2"><a class="reference internal" href="evrptwv2g.milp.html">evrptwv2g.milp</a></li>
 <li class="toctree-l2"><a class="reference internal" href="evrptwv2g.model_compare.html">evrptwv2g.model_compare</a></li>
+<li class="toctree-l2"><a class="reference internal" href="evrptwv2g.run_parallel.html">evrptwv2g.run_parallel</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="evrptwv2g.utils.html">evrptwv2g.utils</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="evrptwv2g.utils.graph.html">evrptwv2g.utils.graph</a></li>
 <li class="toctree-l3"><a class="reference internal" href="evrptwv2g.utils.plot.html">evrptwv2g.utils.plot</a></li>
@@ -57,6 +58,7 @@
 <li class="toctree-l4"><a class="reference internal" href="evrptwv2g.utils.utilities.create_optimal_edges.html">evrptwv2g.utils.utilities.create_optimal_edges</a></li>
 <li class="toctree-l4"><a class="reference internal" href="evrptwv2g.utils.utilities.create_plotting_edges.html">evrptwv2g.utils.utilities.create_plotting_edges</a></li>
 <li class="toctree-l4"><a class="reference internal" href="evrptwv2g.utils.utilities.generate_index_mapping.html">evrptwv2g.utils.utilities.generate_index_mapping</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.utils.utilities.generate_stats.html">evrptwv2g.utils.utilities.generate_stats</a></li>
 <li class="toctree-l4 current"><a class="current reference internal" href="#">evrptwv2g.utils.utilities.merge_variable_results</a></li>
 <li class="toctree-l4"><a class="reference internal" href="evrptwv2g.utils.utilities.parse_csv_tables.html">evrptwv2g.utils.utilities.parse_csv_tables</a></li>
 <li class="toctree-l4"><a class="reference internal" href="evrptwv2g.utils.utilities.read_instance_json_str.html">evrptwv2g.utils.utilities.read_instance_json_str</a></li>
@@ -104,7 +106,7 @@
 <h1>evrptwv2g.utils.utilities.merge_variable_results<a class="headerlink" href="#evrptwv2g-utils-utilities-merge-variable-results" title="Permalink to this headline"></a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="evrptwv2g.utils.utilities.merge_variable_results">
-<span class="sig-prename descclassname"><span class="pre">evrptwv2g.utils.utilities.</span></span><span class="sig-name descname"><span class="pre">merge_variable_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_list</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_vehicle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">pd.DataFrame</span></span></span><a class="headerlink" href="#evrptwv2g.utils.utilities.merge_variable_results" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">evrptwv2g.utils.utilities.</span></span><span class="sig-name descname"><span class="pre">merge_variable_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_vehicle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">pd.DataFrame</span></span></span><a class="headerlink" href="#evrptwv2g.utils.utilities.merge_variable_results" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 </section>
@@ -113,7 +115,7 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="evrptwv2g.utils.utilities.generate_index_mapping.html" class="btn btn-neutral float-left" title="evrptwv2g.utils.utilities.generate_index_mapping" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="evrptwv2g.utils.utilities.generate_stats.html" class="btn btn-neutral float-left" title="evrptwv2g.utils.utilities.generate_stats" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="evrptwv2g.utils.utilities.parse_csv_tables.html" class="btn btn-neutral float-right" title="evrptwv2g.utils.utilities.parse_csv_tables" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

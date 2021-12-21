@@ -1,0 +1,6 @@
+evrptwv2g.run\_parallel.main
+============================
+
+.. currentmodule:: evrptwv2g.run_parallel
+
+.. autofunction:: main

@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>evrptwv2g.model_compare.save_solution &mdash; E-VRP-TW-V2G 1.0 documentation</title>
+  <title>evrptwv2g.run_parallel.run_evrptwv2g &mdash; E-VRP-TW-V2G 1.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -18,8 +18,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="evrptwv2g.run_parallel" href="evrptwv2g.run_parallel.html" />
-    <link rel="prev" title="evrptwv2g.model_compare.main" href="evrptwv2g.model_compare.main.html" /> 
+    <link rel="next" title="evrptwv2g.utils" href="evrptwv2g.utils.html" />
+    <link rel="prev" title="evrptwv2g.run_parallel.main" href="evrptwv2g.run_parallel.main.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -42,12 +42,12 @@
 <li class="toctree-l2"><a class="reference internal" href="evrptwv2g.config.html">evrptwv2g.config</a></li>
 <li class="toctree-l2"><a class="reference internal" href="evrptwv2g.main.html">evrptwv2g.main</a></li>
 <li class="toctree-l2"><a class="reference internal" href="evrptwv2g.milp.html">evrptwv2g.milp</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="evrptwv2g.model_compare.html">evrptwv2g.model_compare</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="evrptwv2g.model_compare.main.html">evrptwv2g.model_compare.main</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">evrptwv2g.model_compare.save_solution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="evrptwv2g.model_compare.html">evrptwv2g.model_compare</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="evrptwv2g.run_parallel.html">evrptwv2g.run_parallel</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="evrptwv2g.run_parallel.main.html">evrptwv2g.run_parallel.main</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">evrptwv2g.run_parallel.run_evrptwv2g</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="evrptwv2g.run_parallel.html">evrptwv2g.run_parallel</a></li>
 <li class="toctree-l2"><a class="reference internal" href="evrptwv2g.utils.html">evrptwv2g.utils</a></li>
 </ul>
 </li>
@@ -68,10 +68,10 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
           <li><a href="evrptwv2g.html">evrptwv2g</a> &raquo;</li>
-          <li><a href="evrptwv2g.model_compare.html">evrptwv2g.model_compare</a> &raquo;</li>
-      <li>evrptwv2g.model_compare.save_solution</li>
+          <li><a href="evrptwv2g.run_parallel.html">evrptwv2g.run_parallel</a> &raquo;</li>
+      <li>evrptwv2g.run_parallel.run_evrptwv2g</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/_autosummary/evrptwv2g.model_compare.save_solution.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/_autosummary/evrptwv2g.run_parallel.run_evrptwv2g.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -79,12 +79,14 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="evrptwv2g-model-compare-save-solution">
-<h1>evrptwv2g.model_compare.save_solution<a class="headerlink" href="#evrptwv2g-model-compare-save-solution" title="Permalink to this headline"></a></h1>
+  <section id="evrptwv2g-run-parallel-run-evrptwv2g">
+<h1>evrptwv2g.run_parallel.run_evrptwv2g<a class="headerlink" href="#evrptwv2g-run-parallel-run-evrptwv2g" title="Permalink to this headline"></a></h1>
 <dl class="py function">
-<dt class="sig sig-object py" id="evrptwv2g.model_compare.save_solution">
-<span class="sig-prename descclassname"><span class="pre">evrptwv2g.model_compare.</span></span><span class="sig-name descname"><span class="pre">save_solution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sol_tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#evrptwv2g.model_compare.save_solution" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dt class="sig sig-object py" id="evrptwv2g.run_parallel.run_evrptwv2g">
+<span class="sig-prename descclassname"><span class="pre">evrptwv2g.run_parallel.</span></span><span class="sig-name descname"><span class="pre">run_evrptwv2g</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">problem_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dist_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#evrptwv2g.run_parallel.run_evrptwv2g" title="Permalink to this definition"></a></dt>
+<dd><p>Allows us to call the script from the command line
+:param process: filename of main process</p>
+</dd></dl>
 
 </section>
 
@@ -92,8 +94,8 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="evrptwv2g.model_compare.main.html" class="btn btn-neutral float-left" title="evrptwv2g.model_compare.main" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="evrptwv2g.run_parallel.html" class="btn btn-neutral float-right" title="evrptwv2g.run_parallel" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="evrptwv2g.run_parallel.main.html" class="btn btn-neutral float-left" title="evrptwv2g.run_parallel.main" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="evrptwv2g.utils.html" class="btn btn-neutral float-right" title="evrptwv2g.utils" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

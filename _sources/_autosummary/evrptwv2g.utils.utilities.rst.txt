@@ -25,6 +25,7 @@ evrptwv2g.utils.utilities
       create_optimal_edges
       create_plotting_edges
       generate_index_mapping
+      generate_stats
       merge_variable_results
       parse_csv_tables
       read_instance_json_str

@@ -1,0 +1,6 @@
+evrptwv2g.utils.utilities.generate\_stats
+=========================================
+
+.. currentmodule:: evrptwv2g.utils.utilities
+
+.. autofunction:: generate_stats
