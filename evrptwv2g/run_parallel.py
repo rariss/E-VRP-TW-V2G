@@ -30,7 +30,9 @@ def run_evrptwv2g(instance: str, problem_type: str, dist_type: str):
 
     x, xp, traces, routes = plot_evrptwv2g(m, save=True)
 
-    return m, x, xp, traces, routes
+    m_stats = generate_stats(m)  # For parallelizing, need to generate stats so model with <locals> not returned (fails to pickle for pool)
+
+    return m_stats, x, xp, traces, routes
 
 def main(fpath_instances: str, n_processes: int=2):
     """
@@ -64,17 +66,17 @@ def main(fpath_instances: str, n_processes: int=2):
     stats_dicts = []
     for i, r in enumerate(results):
         d = {'instance': run_instances.index[i]}  # unique instance name
-        stat = generate_stats(r[0])  # dict of statistics given model
+        stat = r[0]  # dict of statistics given model
         d.update(stat)
         stats_dicts.append(d)  # append dict of instance stats to list
 
     stats = pd.DataFrame(stats_dicts).set_index('instance')  # generate dataframe from list of stats dicts
 
-    instances.join(stats)  # combine stats dataframes into original instances dataframe for output
+    instances_stats = instances.merge(stats, how='outer', left_index=True, right_index=True)  # combine stats dataframes into original instances dataframe for output
 
     # Export instances results to CSV
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    instances.to_csv(f'{os.path.dirname(fpath_instances)}/{timestamp}_{os.path.basename(fpath_instances)}')
+    instances_stats.to_csv(f'{os.path.dirname(fpath_instances)}/{timestamp}_{os.path.basename(fpath_instances)}')
 
     return instances
 
