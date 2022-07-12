@@ -531,12 +531,43 @@ def generate_stats(m):
     :param m:
     :return:
     """
-    stats = {'total_distance': m.total_distance(m.instance)(),
-             'C_fleet_capital_cost': m.C_fleet_capital_cost(m.instance)(),
-             'O_delivery_operating_cost': m.O_delivery_operating_cost(m.instance)() + m.O_maintenance_operating_cost(m.instance)(),
-             'R_delivery_revenue': m.R_delivery_revenue(m.instance)(),
-             'R_energy_arbitrage_revenue': m.R_energy_arbitrage_revenue(m.instance)(),
-             'R_peak_shaving_revenue': m.R_peak_shaving_revenue(m.instance)(),
-             'cycle_cost': m.cycle_cost(m.instance)()}
-
+    stats = {
+        # INPUTS
+        'MQ_payload_constraints': m.instance.MQ.value,
+        'MT_service_time_constraints': m.MT,
+        'ME_energy_constraints': m.ME,
+        'cc_capital_cost': m.cc,
+        'co_operating_cost': m.co,
+        'cm_maintenance_cost': m.cm,
+        'cy_cycle_cost': m.cy,
+        'QMAX_max_payload': m.QMAX,
+        'EMAX_max_soe': m.EMAX,
+        'EMIN_min_soe': m.EMIN,
+        'PMAX_max_ev_power': m.PMAX,
+        'N_max_evs': m.N,
+        'r_ev_consumption_rate': m.r,
+        'v_speed': m.v,
+        't_T_time_horizon': m.t_T,
+        't_S_time_step': m.t_S,
+        't_H_hours_per_time_step': m.t_H,
+        'eff': m.eff or 1.,
+        # SET
+        'V01__num_nodes': len(m.V01_),
+        'E_num_edges': len(m.E),
+        'S__num_stations_extended': len(m.S_),
+        'S_num_stations': len(m.S),
+        'M_num_customers': len(m.M),
+        'T_num_time': len(m.T),
+        # RESULTS
+        'total_distance': m.total_distance(m.instance)(),
+        'fleet_size': m.C_fleet_capital_cost(m.instance)() / m.cc,
+        'C_fleet_capital_cost': m.C_fleet_capital_cost(m.instance)(),
+        'O_delivery_operating_cost': m.O_delivery_operating_cost(m.instance)() + m.O_maintenance_operating_cost(m.instance)(),
+        'R_delivery_revenue': m.R_delivery_revenue(m.instance)(),
+        'R_energy_arbitrage_revenue': m.R_energy_arbitrage_revenue(m.instance)(),
+        'R_peak_shaving_revenue': m.R_peak_shaving_revenue(m.instance)(),
+        'cycle_cost': m.cycle_cost(m.instance)()
+    }
+    # averaes over parameter sets
+    # average decision variables per vehicle
     return stats
