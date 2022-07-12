@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>evrptwv2g &mdash; E-VRP-TW-V2G 1.0 documentation</title>
+  <title>evrptwv2g.run_batch &mdash; E-VRP-TW-V2G 1.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -19,8 +19,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="evrptwv2g.config" href="evrptwv2g.config.html" />
-    <link rel="prev" title="Welcome to E-VRP-TW-V2G’s documentation!" href="../index.html" /> 
+    <link rel="next" title="evrptwv2g.run_batch.main" href="evrptwv2g.run_batch.main.html" />
+    <link rel="prev" title="evrptwv2g.model_compare.save_solution" href="evrptwv2g.model_compare.save_solution.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -39,12 +39,16 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">evrptwv2g</a><ul>
+<li class="toctree-l1 current"><a class="reference internal" href="evrptwv2g.html">evrptwv2g</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="evrptwv2g.config.html">evrptwv2g.config</a></li>
 <li class="toctree-l2"><a class="reference internal" href="evrptwv2g.main.html">evrptwv2g.main</a></li>
 <li class="toctree-l2"><a class="reference internal" href="evrptwv2g.milp.html">evrptwv2g.milp</a></li>
 <li class="toctree-l2"><a class="reference internal" href="evrptwv2g.model_compare.html">evrptwv2g.model_compare</a></li>
-<li class="toctree-l2"><a class="reference internal" href="evrptwv2g.run_batch.html">evrptwv2g.run_batch</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">evrptwv2g.run_batch</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="evrptwv2g.run_batch.main.html">evrptwv2g.run_batch.main</a></li>
+<li class="toctree-l3"><a class="reference internal" href="evrptwv2g.run_batch.run_evrptwv2g.html">evrptwv2g.run_batch.run_evrptwv2g</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="evrptwv2g.run_parallel.html">evrptwv2g.run_parallel</a></li>
 <li class="toctree-l2"><a class="reference internal" href="evrptwv2g.utils.html">evrptwv2g.utils</a></li>
 </ul>
@@ -65,9 +69,10 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>evrptwv2g</li>
+          <li><a href="evrptwv2g.html">evrptwv2g</a> &raquo;</li>
+      <li>evrptwv2g.run_batch</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/_autosummary/evrptwv2g.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/_autosummary/evrptwv2g.run_batch.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -75,34 +80,20 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-evrptwv2g">
-<span id="evrptwv2g"></span><h1>evrptwv2g<a class="headerlink" href="#module-evrptwv2g" title="Permalink to this heading"></a></h1>
+  <section id="module-evrptwv2g.run_batch">
+<span id="evrptwv2g-run-batch"></span><h1>evrptwv2g.run_batch<a class="headerlink" href="#module-evrptwv2g.run_batch" title="Permalink to this heading"></a></h1>
+<p class="rubric">Functions</p>
 <table class="autosummary longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="evrptwv2g.config.html#module-evrptwv2g.config" title="evrptwv2g.config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">evrptwv2g.config</span></code></a></p></td>
-<td><p></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="evrptwv2g.run_batch.main.html#evrptwv2g.run_batch.main" title="evrptwv2g.run_batch.main"><code class="xref py py-obj docutils literal notranslate"><span class="pre">main</span></code></a></p></td>
+<td><p>Runs multiple instances in sequence and outputs results in new columns for instances CSV :param fpath_instances: filepath to instances CSV :return: updates instances CSV with appended results</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="evrptwv2g.main.html#module-evrptwv2g.main" title="evrptwv2g.main"><code class="xref py py-obj docutils literal notranslate"><span class="pre">evrptwv2g.main</span></code></a></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="evrptwv2g.milp.html#module-evrptwv2g.milp" title="evrptwv2g.milp"><code class="xref py py-obj docutils literal notranslate"><span class="pre">evrptwv2g.milp</span></code></a></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="evrptwv2g.model_compare.html#module-evrptwv2g.model_compare" title="evrptwv2g.model_compare"><code class="xref py py-obj docutils literal notranslate"><span class="pre">evrptwv2g.model_compare</span></code></a></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="evrptwv2g.run_batch.html#module-evrptwv2g.run_batch" title="evrptwv2g.run_batch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">evrptwv2g.run_batch</span></code></a></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="evrptwv2g.run_parallel.html#module-evrptwv2g.run_parallel" title="evrptwv2g.run_parallel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">evrptwv2g.run_parallel</span></code></a></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="evrptwv2g.utils.html#module-evrptwv2g.utils" title="evrptwv2g.utils"><code class="xref py py-obj docutils literal notranslate"><span class="pre">evrptwv2g.utils</span></code></a></p></td>
-<td><p></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="evrptwv2g.run_batch.run_evrptwv2g.html#evrptwv2g.run_batch.run_evrptwv2g" title="evrptwv2g.run_batch.run_evrptwv2g"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_evrptwv2g</span></code></a></p></td>
+<td><p>Allows us to call the script from the command line :param process: filename of main process</p></td>
 </tr>
 </tbody>
 </table>
@@ -112,8 +103,8 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../index.html" class="btn btn-neutral float-left" title="Welcome to E-VRP-TW-V2G’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="evrptwv2g.config.html" class="btn btn-neutral float-right" title="evrptwv2g.config" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="evrptwv2g.model_compare.save_solution.html" class="btn btn-neutral float-left" title="evrptwv2g.model_compare.save_solution" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="evrptwv2g.run_batch.main.html" class="btn btn-neutral float-right" title="evrptwv2g.run_batch.main" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

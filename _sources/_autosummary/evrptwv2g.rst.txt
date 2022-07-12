@@ -30,6 +30,7 @@
    evrptwv2g.main
    evrptwv2g.milp
    evrptwv2g.model_compare
+   evrptwv2g.run_batch
    evrptwv2g.run_parallel
    evrptwv2g.utils
 

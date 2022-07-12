@@ -1,0 +1,6 @@
+evrptwv2g.run\_batch.run\_evrptwv2g
+===================================
+
+.. currentmodule:: evrptwv2g.run_batch
+
+.. autofunction:: run_evrptwv2g
