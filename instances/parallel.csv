@@ -1,5 +1,7 @@
 ﻿run,dir,instance,problem_type,dist_type
 TRUE,test_instances,r105C5_,schneider splitXp cycle,scipy
-TRUE,test_instances,r201C10_,schneider splitXp cycle,scipy
+TRUE,test_instances,r105C5_,schneider,scipy
+FALSE,test_instances,r105C15_,schneider splitXp cycle,scipy
+FALSE,test_instances,r201C10_,schneider splitXp cycle,scipy
 FALSE,test_instances,v2g_m06_s7_ca_tesla_dis_ea_t1_eff,splitXp start=end ea capex OpEx dcm NoExport cycle MaxVehicles,data/distances/v2g_m06_s7_ca_20210914-004451_googlemaps.csv
 FALSE,,v2g_m06_s7_ca,splitXp start=end ea capex OpEx dcm NoExport cycle MaxVehicles,data/distances/v2g_m06_s7_ca_20210914-004451_googlemaps.csv
