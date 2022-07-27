@@ -39,6 +39,7 @@ def run_evrptwv2g(instance: str, problem_type: str, dist_type: str):
         return m, m_stats, x, xp, traces, routes
     except:
         logging.info(f'Failed running {instance} {problem_type} {dist_type}')
+        logging.error(traceback.format_exc())
         return None
 
 def main(fpath_instances: str, n_processes: int=2):
