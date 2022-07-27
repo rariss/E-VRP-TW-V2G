@@ -2,18 +2,22 @@ import time
 import sys
 import os
 import logging.config
+import traceback
+import json
 
 import pandas as pd
 
 from datetime import datetime
+from pathlib import Path
 from milp.evrptwv2g_base import EVRPTWV2G
-from utils.utilities import generate_stats
+from utils.utilities import generate_stats, create_json_inputs, create_json_out, NpEncoder
 from utils.plot import plot_evrptwv2g
-from config.LOCAL_CONFIG import DIR_INSTANCES
+from config.LOCAL_CONFIG import DIR_INSTANCES, DIR_OUTPUT
 
 _HERE = os.path.dirname(__file__)
 _CONFIG = os.path.abspath(os.path.join(_HERE, 'config/loggingconfig.ini'))
 logging.config.fileConfig(_CONFIG)
+
 
 def run_evrptwv2g(instance: str, problem_type: str, dist_type: str):
     """
@@ -31,7 +35,8 @@ def run_evrptwv2g(instance: str, problem_type: str, dist_type: str):
 
     m_stats = generate_stats(m)
 
-    return m_stats, x, xp, traces, routes
+    return m, m_stats, x, xp, traces, routes
+
 
 def main(fpath_instances: str):
     """
@@ -44,8 +49,7 @@ def main(fpath_instances: str):
     instances = pd.read_csv(fpath_instances,
                             dtype={'dir': str, 'instance': str, 'problem_type': str, 'dist_type': str},
                             na_filter=False)
-    instances = instances.set_index(instances['dir'] + '_' + instances['instance'] + '_' +
-                                    instances['problem_type'] + '_' + instances['dist_type'])
+    instances = instances.set_index(instances['dir']+'_'+instances['instance']+'_'+instances['problem_type']+'_'+instances['dist_type'])
 
     # Filter to just instances to run
     run_instances = instances[instances['run']]  # == True
@@ -54,35 +58,59 @@ def main(fpath_instances: str):
     logging.info(f'Running a batch of {len(run_instances)} instances')
 
     results = {}
-    for instance in run_instances:
-        # TODO: Try/Catch for error handling
-        m_stats, x, xp, traces, routes = run_evrptwv2g(instance['dir']+'/'+instance['instance'],
-                                                       instance['problem_type'],
-                                                       instance['dist_type'])
-        results[instance.index] = {
-            'm_stats': m_stats,
-            'x': x,
-            'xp': xp,
-            'traces': traces,
-            'routes': routes
-        }
+    stats_results = []
+    for name, instance in run_instances.iterrows():
+        logging.info(f"Running {name}")
+        tic = time.time()
+        try:
+            m, m_stats, x, xp, traces, routes = run_evrptwv2g(f"{instance['dir']}/{instance['instance']}",
+                                                              instance['problem_type'],
+                                                              instance['dist_type'])
+            results[name] = {
+                'm_stats': m_stats,
+                'x': x,
+                'xp': xp,
+                'traces': traces,
+                'routes': routes
+            }
 
-        # TODO: Pickle results
+            stats_results.append({
+                'instance': name,
+                **m_stats
+            })
 
-    # Generate statistics
-    stats_dicts = []
-    for key, result in enumerate(results):
-        d = {'instance': key}  # unique instance name
-        d.update(result['m_stats'])
-        stats_dicts.append(d)  # append dict of instance stats to list
+            timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
 
-    stats = pd.DataFrame(stats_dicts).set_index('instance')  # generate dataframe from list of stats dicts
+            # Make results output folder
+            results_folder = f'{DIR_OUTPUT}/results/{timestamp}_{name}'
+            Path(results_folder).mkdir(parents=True, exist_ok=True)
+
+            # Save model inputs/outputs
+            create_json_inputs(m.p, f'{results_folder}/inputs')
+            create_json_out(m.instance, m.results, f'{results_folder}/output')
+
+            # Save stats and plot results
+            for key, result in results[name].items():
+                with open(f'{results_folder}/{key}.json', 'w') as fp:
+                    if isinstance(result, pd.DataFrame):
+                        json.dump(result.to_json(), fp)
+                    else:
+                        json.dump(result, fp, cls=NpEncoder, sort_keys=True, indent=4, separators=(',', ': '))
+
+            logging.info(f"({round(time.time()-tic, 4)} s) Success")
+        except:
+            logging.warning(f"({round(time.time()-tic, 4)} s) Failed")
+            logging.error(traceback.format_exc())
+
+    stats = pd.DataFrame(stats_results).set_index('instance')  # generate dataframe from list of stats dicts
 
     instances_stats = instances.merge(stats, how='outer', left_index=True, right_index=True)  # combine stats dataframes into original instances dataframe for output
 
     # Export instances results to CSV
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     instances_stats.to_csv(f'{os.path.dirname(fpath_instances)}/{timestamp}_{os.path.basename(fpath_instances)}')
+    logging.info("Output instance statistics to CSV")
+    logging.info("Done")
 
     return instances
 
