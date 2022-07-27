@@ -268,7 +268,7 @@ def merge_variable_results(m: 'obj', var_list: str, include_vehicle=False) -> 'p
         x.columns = ['node', 't', 'state']
     else:
         log.error('Must provide either "xgamma" or "xkappa" as first value in var_list.')
-        AttributeError
+        raise AttributeError
 
     for v in var_list:
         x_right = getattr(m.instance, v)
@@ -348,7 +348,7 @@ def results_to_dfs(m: 'obj', tol=1e-4):
     traces = trace_routes(m)
 
     # Generate route df (appended NaN row for D0 states)
-    routes = x[x['state'] > tol].append(x[np.isnan(x['state'])]).sort_values(['xw']).set_index(['from', 'to'])
+    routes = pd.concat([x[x['state'] > tol], x[np.isnan(x['state'])]]).sort_values(['xw']).set_index(['from', 'to'])
 
     # Create (D0, D0) row for starting states
     routes.reset_index(inplace=True)
@@ -364,6 +364,14 @@ def create_json_out(instance, results=None, output_file=None):
     # Initialize json dict output
     data_out = {}
     data_out['name'] = instance.name
+    data_out['instance_name'] = instance.instance_name
+    data_out['problem_type'] = instance.problem_type
+    data_out['dist_type'] = instance.dist_type
+    data_out['instance_filepath'] = instance.instance_filepath
+    data_out['s2s'] = instance.s2s
+    data_out['s_2s'] = instance.s_2s
+    data_out['i2v'] = instance.i2v
+    data_out['v2i'] = instance.v2i
 
     # Read out variable results
     for v in instance.component_objects(Var):
@@ -378,10 +386,14 @@ def create_json_out(instance, results=None, output_file=None):
     data_out['obj'] = instance.obj.expr()
 
     if results is not None:
-        gap = results['Problem'][0]
-        gap = (gap['Upper bound'] - gap['Lower bound']) / gap['Upper bound'] * 100
+        problem_info = results['Problem'][0]
+        if problem_info['Upper bound'] == 0:
+            gap = float("nan")
+        else:
+            gap = np.round(np.float64(problem_info['Upper bound'] - problem_info['Lower bound']) /
+                           np.float64(problem_info['Upper bound'] * 100.), 2)
         data_out['gap'] = gap  # outputs gap as percent
-        data_out['solve_time'] = results['Solver'][0]['Time']  # seconds
+        data_out['solve_time'] = results['Solver'][0]['Time'] if hasattr(results['Solver'][0], 'Time') else results['Solver'][0]['Wallclock time']  # SOLVER_TYPE = 'gurobi' or 'gurobi_direct'  # seconds
 
     # Generate json from dict
     json_outputs = json.dumps(data_out, cls=NpEncoder, sort_keys=True, indent=4, separators=(',', ': '))
@@ -410,7 +422,7 @@ def create_json_inputs(inputs, output_file=None):
         output_file = 'inputs'
 
     with open('{}.json'.format(output_file), 'w') as outfile:
-        json.dump(json_inputs, outfile, cls=NpEncoder, sort_keys=True, indent=4, separators=(',', ': '))
+        outfile.write(json_inputs)
     return json_inputs
 
 
@@ -513,7 +525,7 @@ def convert_txt_instances_to_csv(instance, folder=f'{LOCAL_CONFIG.DIR_INSTANCES}
         T_dict[k] = {s: v for s in S['node_id']}
     T = pd.DataFrame.from_dict(T_dict, orient='index')
     T = pd.DataFrame(T.stack()).T
-    T = T.append(T, ignore_index=True)
+    T = pd.concat([T, T], ignore_index=True)
     T.loc[1, 't'] = int(graph['tB'].max())
 
     # Write and output file
@@ -534,40 +546,57 @@ def generate_stats(m):
     stats = {
         # INPUTS
         'MQ_payload_constraints': m.instance.MQ.value,
-        'MT_service_time_constraints': m.MT,
-        'ME_energy_constraints': m.ME,
-        'cc_capital_cost': m.cc,
-        'co_operating_cost': m.co,
-        'cm_maintenance_cost': m.cm,
-        'cy_cycle_cost': m.cy,
-        'QMAX_max_payload': m.QMAX,
-        'EMAX_max_soe': m.EMAX,
-        'EMIN_min_soe': m.EMIN,
-        'PMAX_max_ev_power': m.PMAX,
-        'N_max_evs': m.N,
-        'r_ev_consumption_rate': m.r,
-        'v_speed': m.v,
-        't_T_time_horizon': m.t_T,
-        't_S_time_step': m.t_S,
-        't_H_hours_per_time_step': m.t_H,
-        'eff': m.eff or 1.,
+        'MT_service_time_constraints': m.instance.MT.value,
+        'ME_energy_constraints': m.instance.ME.value,
+        'cc_capital_cost': m.instance.cc.value,
+        'co_operating_cost': m.instance.co.value,
+        'cm_maintenance_cost': m.instance.cm.value,
+        'cy_cycle_cost': m.instance.cy.value,
+        'QMAX_max_payload': m.instance.QMAX.value,
+        'EMAX_max_soe': m.instance.EMAX.value,
+        'EMIN_min_soe': m.instance.EMIN.value,
+        'PMAX_max_ev_power': m.instance.PMAX.value,
+        'N_max_evs': m.instance.N.value,
+        'r_ev_consumption_rate': m.instance.r.value,
+        'v_speed': m.instance.v.value,
+        't_T_time_horizon': m.instance.t_T.value,
+        't_S_time_step': m.instance.t_S.value,
+        't_H_hours_per_time_step': m.instance.t_H.value,
+        'eff': m.instance.eff.value if hasattr(m.instance, "eff") else None,
         # SET
-        'V01__num_nodes': len(m.V01_),
-        'E_num_edges': len(m.E),
-        'S__num_stations_extended': len(m.S_),
-        'S_num_stations': len(m.S),
-        'M_num_customers': len(m.M),
-        'T_num_time': len(m.T),
+        'V01__num_nodes': len(m.instance.V01_),
+        'E_num_edges': len(m.instance.E),
+        'S__num_stations_extended': len(m.instance.S_),
+        'S_num_stations': len(m.instance.S),
+        'M_num_customers': len(m.instance.M),
+        'T_num_time': len(m.instance.T),
         # RESULTS
         'total_distance': m.total_distance(m.instance)(),
-        'fleet_size': m.C_fleet_capital_cost(m.instance)() / m.cc,
+        'fleet_size': m.C_fleet_capital_cost(m.instance)() / m.instance.cc.value,
         'C_fleet_capital_cost': m.C_fleet_capital_cost(m.instance)(),
         'O_delivery_operating_cost': m.O_delivery_operating_cost(m.instance)() + m.O_maintenance_operating_cost(m.instance)(),
         'R_delivery_revenue': m.R_delivery_revenue(m.instance)(),
         'R_energy_arbitrage_revenue': m.R_energy_arbitrage_revenue(m.instance)(),
         'R_peak_shaving_revenue': m.R_peak_shaving_revenue(m.instance)(),
-        'cycle_cost': m.cycle_cost(m.instance)()
+        'cycle_cost': m.cycle_cost(m.instance)(),
+        # METADATA
+        'model_build_duration': m.model_build_duration,
+        'model_solve_duration': m.model_solve_duration
     }
     # averaes over parameter sets
     # average decision variables per vehicle
     return stats
+
+
+def replace_nested_dict_keys(d):
+    new = {}
+    for k, v in d.items():
+        if isinstance(v, dict):
+            v = replace_nested_dict_keys(v)
+        if k == 'null':
+            new[None] = v
+        elif ("(" in k) & (")" in k):
+            new[eval(k)] = v
+        else:
+            new[k] = v
+    return new

@@ -23,7 +23,8 @@ def save_solution(sol_tag, m):
         sol_path = f'{DIR_OUTPUT}/model_compare/{sol_tag}'
         f = open(sol_path,'w+')
 
-        f.write('Objective: {:.2f}, \nGap: {:.2f}%, Solver time: {:.1f}s\n'.format(m.instance.obj.expr(), gap, m.results['Solver'][0]['Time']))
+        solve_time = m.results['Solver'][0]['Time'] if hasattr(m.results['Solver'][0], 'Time') else m.results['Solver'][0]['Wallclock time']  # SOLVER_TYPE = 'gurobi' or 'gurobi_direct'
+        f.write('Objective: {:.2f}, \nGap: {:.2f}%, Solver time: {:.1f}s\n'.format(m.instance.obj.expr(), gap, solve_time))
         f.write('Dist.: {:.2f}, CapEx: {:.2f}, OpEx: {:.2f}, Delivery: {:.2f}, EA: {:.2f}, DCM: {:.2f}, Cycle: {:.2f}'.format(*obj_breakdown))
         f.write('\nBuild duration: {:.2f}s'.format(m.model_build_duration))
         try:

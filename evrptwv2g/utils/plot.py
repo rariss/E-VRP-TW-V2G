@@ -25,10 +25,10 @@ def plot_evrptwv2g(m: 'obj', **kwargs):
     t_S = m.instance.t_S.value  # timestep size
     t_T = m.instance.t_T.value  # time horizon
     time = np.arange(0, t_T, t_S)   # time indices
-    t_major = (t_T / 10 - (t_T / 10) % t_S) # major ticks for time-based decisions grid
+    t_major = (t_T / 10 - (t_T / 10) % t_S)  # major ticks for time-based decisions grid
 
-    tA = m.instance.tA.extract_values() # start time window
-    tB = m.instance.tB.extract_values() # end time window
+    tA = m.instance.tA.extract_values()  # start time window
+    tB = m.instance.tB.extract_values()  # end time window
 
     # Vehicle and route parameters
     nt = len(traces)  # number of vehicles
@@ -41,8 +41,12 @@ def plot_evrptwv2g(m: 'obj', **kwargs):
     nus = len(unique_stations)  # number of unique stations
 
     # Optimality gap
-    gap = m.results['Problem'][0]
-    gap = round((gap['Upper bound'] - gap['Lower bound']) / gap['Upper bound'] * 100, 2)
+    problem_info = m.results['Problem'][0]
+    if problem_info['Upper bound'] == 0:
+        gap = float("nan")
+    else:
+        gap = np.round(np.float64(problem_info['Upper bound'] - problem_info['Lower bound']) /
+                       np.float64(problem_info['Upper bound'] * 100.), 2)
 
     # Load Profiles
     G = pd.Series(m.instance.G.extract_values())
@@ -112,13 +116,25 @@ def plot_evrptwv2g(m: 'obj', **kwargs):
     axs_tw = fig.add_subplot(gs[1, 0], sharex=axs_q)
 
     # Generate objective results for plot title
-    obj_breakdown = generate_stats(m).values()
+    obj_breakdown = generate_stats(m)
 
     # Generate plot title
     title = ''
     title += '{}: {}\n'.format(m.instance_name, m.problem_type)
-    title += 'Objective: {:.2f}, Gap: {:.2f}%, {:.1f}s\n'.format(m.instance.obj.expr(), gap, m.results['Solver'][0]['Time'])
-    title += 'Dist.: {:.2f}, CapEx: {:.2f}, OpEx: {:.2f}, Delivery: {:.2f}, EA: {:.2f}, DCM: {:.2f}, Cycle: {:.2f}'.format(*obj_breakdown)
+    title += 'Objective: {:.2f}, Gap: {:.2f}%, {:.1f}s\n'.format(
+        m.instance.obj.expr(),
+        gap,
+        m.results['Solver'][0]['Time'] if hasattr(m.results['Solver'][0], 'Time') else m.results['Solver'][0]['Wallclock time']  # SOLVER_TYPE = 'gurobi' or 'gurobi_direct'
+    )
+    title += 'Dist.: {:.2f}, CapEx: {:.2f}, OpEx: {:.2f}, Delivery: {:.2f}, EA: {:.2f}, DCM: {:.2f}, Cycle: {:.2f}'.format(
+        obj_breakdown['total_distance'],
+        obj_breakdown['C_fleet_capital_cost'],
+        obj_breakdown['O_delivery_operating_cost'],
+        obj_breakdown['R_delivery_revenue'],
+        obj_breakdown['R_energy_arbitrage_revenue'],
+        obj_breakdown['R_peak_shaving_revenue'],
+        obj_breakdown['cycle_cost']
+    )
     fig.suptitle(title, x=0.5, y=1.03, horizontalalignment='center', verticalalignment='top', size=SMALL_SIZE, weight=fweight)
 
     # Plot graph
