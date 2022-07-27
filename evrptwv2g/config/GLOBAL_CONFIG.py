@@ -13,3 +13,5 @@ node_colors_rgba_tuple = {'M': (240/255, 169/255, 171/255, 0.8), #alpha=0.4
                           'D': (191/255, 243/255, 180/255, 0.8),
                           'S': (167/255, 215/255, 241/255, 0.8)
                           }
+
+SOLVER_TYPE = 'gurobi'  # gurobi_direct, gurobi_persistent (not fully supported)
