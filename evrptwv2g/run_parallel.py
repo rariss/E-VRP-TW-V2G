@@ -24,18 +24,22 @@ def run_evrptwv2g(instance: str, problem_type: str, dist_type: str):
     Allows us to call the script from the command line
     :param process: filename of main process
     """
-    fpath = f'{DIR_INSTANCES}/{instance}.csv'
+    try:
+        fpath = f'{DIR_INSTANCES}/{instance}.csv'
 
-    m = EVRPTWV2G(problem_type=problem_type, dist_type=dist_type)
-    m.full_solve(fpath)
+        m = EVRPTWV2G(problem_type=problem_type, dist_type=dist_type)
+        m.full_solve(fpath)
 
-    print(m.results)
+        print(m.results)
 
-    x, xp, traces, routes = plot_evrptwv2g(m, save=True)
+        x, xp, traces, routes = plot_evrptwv2g(m, save=True)
 
-    m_stats = generate_stats(m)  # For parallelizing, need to generate stats so model with <locals> not returned (fails to pickle for pool)
+        m_stats = generate_stats(m)  # For parallelizing, need to generate stats so model with <locals> not returned (fails to pickle for pool)
 
-    return m, m_stats, x, xp, traces, routes
+        return m, m_stats, x, xp, traces, routes
+    except:
+        logging.info(f'Failed running {instance} {problem_type} {dist_type}')
+        return None
 
 def main(fpath_instances: str, n_processes: int=2):
     """
