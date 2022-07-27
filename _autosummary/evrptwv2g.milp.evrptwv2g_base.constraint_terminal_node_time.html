@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>evrptwv2g.milp.evrptwv2g_base.constraint_terminal_node_time &mdash; E-VRP-TW-V2G 1.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="evrptwv2g.milp.evrptwv2g_base.constraint_time_customer" href="evrptwv2g.milp.evrptwv2g_base.constraint_time_customer.html" />
+    <link rel="prev" title="evrptwv2g.milp.evrptwv2g_base.constraint_station_symmetry" href="evrptwv2g.milp.evrptwv2g_base.constraint_station_symmetry.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> E-VRP-TW-V2G
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="evrptwv2g.html">evrptwv2g</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="evrptwv2g.config.html">evrptwv2g.config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="evrptwv2g.main.html">evrptwv2g.main</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="evrptwv2g.milp.html">evrptwv2g.milp</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.html">evrptwv2g.milp.evrptwv2g_base</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.E_init.html">evrptwv2g.milp.evrptwv2g_base.E_init</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.constraint_energy_customer.html">evrptwv2g.milp.evrptwv2g_base.constraint_energy_customer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.constraint_energy_ev_limit_lb.html">evrptwv2g.milp.evrptwv2g_base.constraint_energy_ev_limit_lb</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.constraint_energy_ev_limit_lb_splitxp.html">evrptwv2g.milp.evrptwv2g_base.constraint_energy_ev_limit_lb_splitxp</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.constraint_energy_ev_limit_ub.html">evrptwv2g.milp.evrptwv2g_base.constraint_energy_ev_limit_ub</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.constraint_energy_ev_limit_ub_splitxp.html">evrptwv2g.milp.evrptwv2g_base.constraint_energy_ev_limit_ub_splitxp</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.constraint_energy_peak.html">evrptwv2g.milp.evrptwv2g_base.constraint_energy_peak</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.constraint_energy_peak_splitxp.html">evrptwv2g.milp.evrptwv2g_base.constraint_energy_peak_splitxp</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.constraint_energy_soe.html">evrptwv2g.milp.evrptwv2g_base.constraint_energy_soe</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.constraint_energy_soe_station.html">evrptwv2g.milp.evrptwv2g_base.constraint_energy_soe_station</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.constraint_energy_soe_station_splitxp.html">evrptwv2g.milp.evrptwv2g_base.constraint_energy_soe_station_splitxp</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.constraint_energy_start_end_soe.html">evrptwv2g.milp.evrptwv2g_base.constraint_energy_start_end_soe</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.constraint_energy_start_end_soe_ij.html">evrptwv2g.milp.evrptwv2g_base.constraint_energy_start_end_soe_ij</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.constraint_energy_station.html">evrptwv2g.milp.evrptwv2g_base.constraint_energy_station</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.constraint_energy_station_limit_lb.html">evrptwv2g.milp.evrptwv2g_base.constraint_energy_station_limit_lb</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.constraint_energy_station_limit_lb_splitxp.html">evrptwv2g.milp.evrptwv2g_base.constraint_energy_station_limit_lb_splitxp</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.constraint_energy_station_limit_ub.html">evrptwv2g.milp.evrptwv2g_base.constraint_energy_station_limit_ub</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.constraint_energy_station_limit_ub_splitxp.html">evrptwv2g.milp.evrptwv2g_base.constraint_energy_station_limit_ub_splitxp</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.constraint_energy_station_splitxp.html">evrptwv2g.milp.evrptwv2g_base.constraint_energy_station_splitxp</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.constraint_max_vehicles.html">evrptwv2g.milp.evrptwv2g_base.constraint_max_vehicles</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.constraint_min_vehicles.html">evrptwv2g.milp.evrptwv2g_base.constraint_min_vehicles</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.constraint_no_export.html">evrptwv2g.milp.evrptwv2g_base.constraint_no_export</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.constraint_no_export_splitxp.html">evrptwv2g.milp.evrptwv2g_base.constraint_no_export_splitxp</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.constraint_no_stationary_evs.html">evrptwv2g.milp.evrptwv2g_base.constraint_no_stationary_evs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.constraint_no_visit_duplicate_station.html">evrptwv2g.milp.evrptwv2g_base.constraint_no_visit_duplicate_station</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.constraint_node_time_window.html">evrptwv2g.milp.evrptwv2g_base.constraint_node_time_window</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.constraint_payload.html">evrptwv2g.milp.evrptwv2g_base.constraint_payload</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.constraint_payload_limit.html">evrptwv2g.milp.evrptwv2g_base.constraint_payload_limit</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.constraint_payload_station.html">evrptwv2g.milp.evrptwv2g_base.constraint_payload_station</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.constraint_single_route.html">evrptwv2g.milp.evrptwv2g_base.constraint_single_route</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.constraint_station_symmetry.html">evrptwv2g.milp.evrptwv2g_base.constraint_station_symmetry</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">evrptwv2g.milp.evrptwv2g_base.constraint_terminal_node_time</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.constraint_time_customer.html">evrptwv2g.milp.evrptwv2g_base.constraint_time_customer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.constraint_time_start_depot.html">evrptwv2g.milp.evrptwv2g_base.constraint_time_start_depot</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.constraint_time_station.html">evrptwv2g.milp.evrptwv2g_base.constraint_time_station</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.constraint_time_xkappa_lb.html">evrptwv2g.milp.evrptwv2g_base.constraint_time_xkappa_lb</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.constraint_time_xkappa_ub.html">evrptwv2g.milp.evrptwv2g_base.constraint_time_xkappa_ub</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.constraint_visit_customers.html">evrptwv2g.milp.evrptwv2g_base.constraint_visit_customers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.constraint_visit_stations.html">evrptwv2g.milp.evrptwv2g_base.constraint_visit_stations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.constraint_xgamma_xkappa.html">evrptwv2g.milp.evrptwv2g_base.constraint_xgamma_xkappa</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_base.EVRPTWV2G.html">evrptwv2g.milp.evrptwv2g_base.EVRPTWV2G</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_gdp.html">evrptwv2g.milp.evrptwv2g_gdp</a></li>
+<li class="toctree-l3"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_gdp_nested_all.html">evrptwv2g.milp.evrptwv2g_gdp_nested_all</a></li>
+<li class="toctree-l3"><a class="reference internal" href="evrptwv2g.milp.evrptwv2g_gdp_nested_station.html">evrptwv2g.milp.evrptwv2g_gdp_nested_station</a></li>
+<li class="toctree-l3"><a class="reference internal" href="evrptwv2g.milp.tsp.html">evrptwv2g.milp.tsp</a></li>
+<li class="toctree-l3"><a class="reference internal" href="evrptwv2g.milp.vrptw.html">evrptwv2g.milp.vrptw</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="evrptwv2g.model_compare.html">evrptwv2g.model_compare</a></li>
+<li class="toctree-l2"><a class="reference internal" href="evrptwv2g.run_batch.html">evrptwv2g.run_batch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="evrptwv2g.run_parallel.html">evrptwv2g.run_parallel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="evrptwv2g.utils.html">evrptwv2g.utils</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">E-VRP-TW-V2G</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="evrptwv2g.html">evrptwv2g</a> &raquo;</li>
+          <li><a href="evrptwv2g.milp.html">evrptwv2g.milp</a> &raquo;</li>
+          <li><a href="evrptwv2g.milp.evrptwv2g_base.html">evrptwv2g.milp.evrptwv2g_base</a> &raquo;</li>
+      <li>evrptwv2g.milp.evrptwv2g_base.constraint_terminal_node_time</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_autosummary/evrptwv2g.milp.evrptwv2g_base.constraint_terminal_node_time.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="evrptwv2g-milp-evrptwv2g-base-constraint-terminal-node-time">
+<h1>evrptwv2g.milp.evrptwv2g_base.constraint_terminal_node_time<a class="headerlink" href="#evrptwv2g-milp-evrptwv2g-base-constraint-terminal-node-time" title="Permalink to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="evrptwv2g.milp.evrptwv2g_base.constraint_terminal_node_time">
+<span class="sig-prename descclassname"><span class="pre">evrptwv2g.milp.evrptwv2g_base.</span></span><span class="sig-name descname"><span class="pre">constraint_terminal_node_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#evrptwv2g.milp.evrptwv2g_base.constraint_terminal_node_time" title="Permalink to this definition"></a></dt>
+<dd><p>Arrival time must be within time window for each node</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="evrptwv2g.milp.evrptwv2g_base.constraint_station_symmetry.html" class="btn btn-neutral float-left" title="evrptwv2g.milp.evrptwv2g_base.constraint_station_symmetry" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="evrptwv2g.milp.evrptwv2g_base.constraint_time_customer.html" class="btn btn-neutral float-right" title="evrptwv2g.milp.evrptwv2g_base.constraint_time_customer" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Rami Ariss.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

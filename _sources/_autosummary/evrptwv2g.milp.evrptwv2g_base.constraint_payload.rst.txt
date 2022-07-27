@@ -1,0 +1,6 @@
+evrptwv2g.milp.evrptwv2g\_base.constraint\_payload
+==================================================
+
+.. currentmodule:: evrptwv2g.milp.evrptwv2g_base
+
+.. autofunction:: constraint_payload

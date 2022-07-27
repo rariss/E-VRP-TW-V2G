@@ -1,0 +1,6 @@
+evrptwv2g.milp.evrptwv2g\_base.constraint\_no\_export\_splitxp
+==============================================================
+
+.. currentmodule:: evrptwv2g.milp.evrptwv2g_base
+
+.. autofunction:: constraint_no_export_splitxp

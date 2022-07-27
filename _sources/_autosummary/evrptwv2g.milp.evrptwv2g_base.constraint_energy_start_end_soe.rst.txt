@@ -1,0 +1,6 @@
+evrptwv2g.milp.evrptwv2g\_base.constraint\_energy\_start\_end\_soe
+==================================================================
+
+.. currentmodule:: evrptwv2g.milp.evrptwv2g_base
+
+.. autofunction:: constraint_energy_start_end_soe

@@ -1,0 +1,6 @@
+evrptwv2g.milp.evrptwv2g\_base.constraint\_node\_time\_window
+=============================================================
+
+.. currentmodule:: evrptwv2g.milp.evrptwv2g_base
+
+.. autofunction:: constraint_node_time_window

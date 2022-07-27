@@ -1,0 +1,6 @@
+evrptwv2g.milp.evrptwv2g\_base.constraint\_no\_stationary\_evs
+==============================================================
+
+.. currentmodule:: evrptwv2g.milp.evrptwv2g_base
+
+.. autofunction:: constraint_no_stationary_evs

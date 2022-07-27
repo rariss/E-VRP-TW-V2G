@@ -29,6 +29,7 @@ evrptwv2g.utils.utilities
       merge_variable_results
       parse_csv_tables
       read_instance_json_str
+      replace_nested_dict_keys
       results_to_dfs
       trace_routes
       trace_routes_util
