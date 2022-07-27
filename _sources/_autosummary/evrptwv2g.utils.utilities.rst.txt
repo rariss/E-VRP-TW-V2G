@@ -16,6 +16,7 @@ evrptwv2g.utils.utilities
       :nosignatures:
    
       calculate_distance_matrix
+      calculate_gap
       convert_txt_instances_to_csv
       create_coordinate_dict
       create_flat_distance_matrix
