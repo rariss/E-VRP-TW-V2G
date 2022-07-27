@@ -571,6 +571,8 @@ def generate_stats(m):
         'M_num_customers': len(m.instance.M),
         'T_num_time': len(m.instance.T),
         # RESULTS
+        'obj': m.instance.obj.expr(),
+        'gap': calculate_gap(m),
         'total_distance': m.total_distance(m.instance)(),
         'fleet_size': m.C_fleet_capital_cost(m.instance)() / m.instance.cc.value,
         'C_fleet_capital_cost': m.C_fleet_capital_cost(m.instance)(),
@@ -600,3 +602,13 @@ def replace_nested_dict_keys(d):
         else:
             new[k] = v
     return new
+
+
+def calculate_gap(m):
+    problem_info = m.results['Problem'][0]
+    if problem_info['Upper bound'] == 0:
+        gap = float("nan")
+    else:
+        gap = np.round(np.float64(problem_info['Upper bound'] - problem_info['Lower bound']) /
+                       np.float64(problem_info['Upper bound'] * 100.), 2)
+    return gap
