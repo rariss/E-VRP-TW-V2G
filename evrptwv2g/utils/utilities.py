@@ -391,7 +391,7 @@ def create_json_out(instance, results=None, output_file=None):
             gap = float("nan")
         else:
             gap = np.round(np.float64(problem_info['Upper bound'] - problem_info['Lower bound']) /
-                           np.float64(problem_info['Upper bound'] * 100.), 2)
+                           np.float64(problem_info['Upper bound']) * 100., 2)
         data_out['gap'] = gap  # outputs gap as percent
         data_out['solve_time'] = results['Solver'][0]['Time'] if hasattr(results['Solver'][0], 'Time') else results['Solver'][0]['Wallclock time']  # SOLVER_TYPE = 'gurobi' or 'gurobi_direct'  # seconds
 
@@ -573,6 +573,8 @@ def generate_stats(m):
         # RESULTS
         'obj': m.instance.obj.expr(),
         'gap': calculate_gap(m),
+        'upper_bound': m.results['Problem'][0]['Upper bound'],
+        'lower_bound': m.results['Problem'][0]['Lower bound'],
         'total_distance': m.total_distance(m.instance)(),
         'fleet_size': m.C_fleet_capital_cost(m.instance)() / m.instance.cc.value,
         'C_fleet_capital_cost': m.C_fleet_capital_cost(m.instance)(),
@@ -610,5 +612,5 @@ def calculate_gap(m):
         gap = float("nan")
     else:
         gap = np.round(np.float64(problem_info['Upper bound'] - problem_info['Lower bound']) /
-                       np.float64(problem_info['Upper bound'] * 100.), 2)
+                       np.float64(problem_info['Upper bound']) * 100., 2)
     return gap

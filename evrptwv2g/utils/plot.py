@@ -46,7 +46,7 @@ def plot_evrptwv2g(m: 'obj', **kwargs):
         gap = float("nan")
     else:
         gap = np.round(np.float64(problem_info['Upper bound'] - problem_info['Lower bound']) /
-                       np.float64(problem_info['Upper bound'] * 100.), 2)
+                       np.float64(problem_info['Upper bound']) * 100., 2)
 
     # Load Profiles
     G = pd.Series(m.instance.G.extract_values())
