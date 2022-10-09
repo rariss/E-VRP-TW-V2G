@@ -19,7 +19,7 @@ _CONFIG = os.path.abspath(os.path.join(_HERE, 'config/loggingconfig.ini'))
 logging.config.fileConfig(_CONFIG)
 
 
-def run_evrptwv2g(instance: str, problem_type: str, dist_type: str):
+def run_evrptwv2g(instance: str, problem_type: str, dist_type: str, save_folder: str=None):
     """
     Allows us to call the script from the command line
     :param process: filename of main process
@@ -31,7 +31,7 @@ def run_evrptwv2g(instance: str, problem_type: str, dist_type: str):
 
     print(m.results)
 
-    x, xp, traces, routes = plot_evrptwv2g(m, save=True)
+    x, xp, traces, routes = plot_evrptwv2g(m, save=True, save_folder=save_folder)
 
     m_stats = generate_stats(m)
 
@@ -63,9 +63,16 @@ def main(fpath_instances: str):
         logging.info(f"Running {name}")
         tic = time.time()
         try:
+            timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+
+            # Make results output folder
+            results_folder = f'{DIR_OUTPUT}/results/{timestamp}_{name}'
+            Path(results_folder).mkdir(parents=True, exist_ok=True)
+
             m, m_stats, x, xp, traces, routes = run_evrptwv2g(f"{instance['dir']}/{instance['instance']}",
                                                               instance['problem_type'],
-                                                              instance['dist_type'])
+                                                              instance['dist_type'],
+                                                              save_folder=results_folder)
             results[name] = {
                 'm_stats': m_stats,
                 'x': x,
@@ -79,12 +86,6 @@ def main(fpath_instances: str):
                 **m_stats
             })
 
-            timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-
-            # Make results output folder
-            results_folder = f'{DIR_OUTPUT}/results/{timestamp}_{name}'
-            Path(results_folder).mkdir(parents=True, exist_ok=True)
-
             # Save model inputs/outputs
             create_json_inputs(m.p, f'{results_folder}/inputs')
             create_json_out(m.instance, m.results, f'{results_folder}/output')
@@ -97,9 +98,9 @@ def main(fpath_instances: str):
                     else:
                         json.dump(result, fp, cls=NpEncoder, sort_keys=True, indent=4, separators=(',', ': '))
 
-            logging.info(f"({round(time.time()-tic, 4)} s) Success")
+            logging.info(f"Success after {round(time.time()-tic, 4)} s")
         except:
-            logging.warning(f"({round(time.time()-tic, 4)} s) Failed")
+            logging.warning(f"Failed after {round(time.time()-tic, 4)} s")
             logging.error(traceback.format_exc())
 
     stats = pd.DataFrame(stats_results).set_index('instance')  # generate dataframe from list of stats dicts

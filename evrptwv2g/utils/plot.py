@@ -341,15 +341,20 @@ def plot_evrptwv2g(m: 'obj', **kwargs):
 
     fig.tight_layout()
 
-    if 'save' in kwargs.keys():
-        if kwargs['save']:
-            timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-            save_path = f'{LOCAL_CONFIG.DIR_OUTPUT}/{timestamp}_{m.instance_name}_{m.problem_type}.png'
-            # fig.show()
-            fig.savefig(save_path, bbox_inches='tight')
-            log.info(f'Plot saved: {save_path}')
+    if kwargs.get('save', False):
+        if kwargs.get('save_folder', False):  # skips if None
+            save_folder = kwargs.get('save_folder')
+        else:
+            save_folder = LOCAL_CONFIG.DIR_OUTPUT
+
+        timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+        save_path = f'{save_folder}/{timestamp}_{m.instance_name}_{m.problem_type}.png'
+        # fig.show()
+        fig.savefig(save_path, bbox_inches='tight')
+        log.info(f'Plot saved: {save_path}')
 
     return x, xp, traces, routes
+
 
 def plot_interactive_graph(v: 'pd.DataFrame', **kwargs) -> 'fig':
     """

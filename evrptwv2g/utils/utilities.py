@@ -543,8 +543,8 @@ def generate_stats(m):
     :param m:
     :return:
     """
-    stats = {
-        # INPUTS
+    # INPUTS
+    inputs = {
         'MQ_payload_constraints': m.instance.MQ.value,
         'MT_service_time_constraints': m.instance.MT.value,
         'ME_energy_constraints': m.instance.ME.value,
@@ -562,14 +562,25 @@ def generate_stats(m):
         't_T_time_horizon': m.instance.t_T.value,
         't_S_time_step': m.instance.t_S.value,
         't_H_hours_per_time_step': m.instance.t_H.value,
-        'eff': m.instance.eff.value if hasattr(m.instance, "eff") else None,
-        # SET
+        'eff': m.instance.eff.value if hasattr(m.instance, "eff") else None
+    }
+    # SET
+    set_stats = {
         'V01__num_nodes': len(m.instance.V01_),
         'E_num_edges': len(m.instance.E),
         'S__num_stations_extended': len(m.instance.S_),
         'S_num_stations': len(m.instance.S),
         'M_num_customers': len(m.instance.M),
-        'T_num_time': len(m.instance.T),
+        'T_num_time': len(m.instance.T)
+    }
+    distance_stats = calculate_distance_stats(m.instance)
+    tariff_stats = calculate_tariff_stats(m.instance)
+    load_stats = calculate_load_stats(m.instance)
+
+    # average decision variables per vehicle
+    variable_stats = calculate_variable_stats(m.instance)
+    # model results
+    results = {
         # RESULTS
         'obj': m.instance.obj.expr(),
         'gap': calculate_gap(m),
@@ -587,8 +598,7 @@ def generate_stats(m):
         'model_build_duration': m.model_build_duration,
         'model_solve_duration': m.model_solve_duration
     }
-    # averaes over parameter sets
-    # average decision variables per vehicle
+    stats = {**inputs, **set_stats, **distance_stats, **tariff_stats, **load_stats, **variable_stats, **results}
     return stats
 
 
@@ -614,3 +624,111 @@ def calculate_gap(m):
         gap = np.round(np.float64(problem_info['Upper bound'] - problem_info['Lower bound']) /
                        np.float64(problem_info['Upper bound']) * 100., 2)
     return gap
+
+
+def calculate_distance_stats(instance):
+    d_stats = {}
+    if hasattr(instance, "d"):
+        data = {}
+        for k, v in instance.d.items():
+            data[k] = v
+        distances = pd.DataFrame(data.values(), index=pd.MultiIndex.from_tuples(data.keys(), names=['from_i', 'to_j']))
+
+        # all edges
+        for k, v in distances.describe()[0].items():
+            d_stats[f"d_{k}"] = v
+
+        # edges from start node
+        for k, v in distances.loc[instance.start_node].describe()[0].items():
+            d_stats[f"d_from_start_{k}"] = v
+
+        # edges from start node to S_
+        for k, v in distances.loc[(instance.start_node, instance.S_), :].describe()[0].items():
+            d_stats[f"d_from_start_to_S__{k}"] = v
+
+        # edges from start node to M
+        for k, v in distances.loc[(instance.start_node, instance.M), :].describe()[0].items():
+            d_stats[f"d_from_start_to_M_{k}"] = v
+
+        # edges from M to S_
+        for k, v in distances.loc[(instance.M, instance.S_), :].describe()[0].items():
+            d_stats[f"d_from_M_to_S__{k}"] = v
+
+    return d_stats
+
+
+def calculate_tariff_stats(instance):
+    tariff_stats = {}
+
+    # demand charges
+    if hasattr(instance, 'cg'):
+        cg = {}
+        for s in instance.S:
+            cg[s] = instance.cg[s].value
+        for k, v in pd.Series(cg).describe().items():
+            tariff_stats[f"cg_{k}"] = v
+
+    # energy charges
+    if hasattr(instance, 'ce'):
+        ce_data = {}
+        for (s, t), v in instance.ce.items():
+            ce_data[(s, t)] = v.value
+        ce = pd.DataFrame(ce_data.values(), index=pd.MultiIndex.from_tuples(ce_data.keys(), names=['S', 't']))
+
+        for k, v in ce.describe()[0].items():
+            tariff_stats[f"ce_{k}"] = v
+
+        for s in instance.S:
+            for k, v in ce.loc[s, :].describe()[0].items():
+                tariff_stats[f"ce_{s}_{k}"] = v
+
+    return tariff_stats
+
+
+def calculate_load_stats(instance):
+    load_stats = {}
+    if hasattr(instance, "G"):
+        G_data = {}
+        for (s, t), v in instance.G.items():
+            G_data[(s, t)] = v.value
+        G = pd.DataFrame(G_data.values(), index=pd.MultiIndex.from_tuples(G_data.keys(), names=['S', 't']))
+
+        for k, v in G.describe()[0].items():
+            load_stats[f"G_{k}"] = v
+
+        for s in instance.S:
+            for k, v in G.loc[s, :].describe()[0].items():
+                load_stats[f"G_{s}_{k}"] = v
+            load_stats[f"G_{s}_energy"] = G.loc[s, :].sum()[0] * instance.t_H.value * instance.t_S.value
+            load_stats[f"G_{s}_loadfactor"] = load_stats[f"G_{s}_energy"] / (G.loc[s, :].max()[0] * instance.t_H.value * instance.t_T.value)
+
+    return load_stats
+
+
+def calculate_variable_stats(instance):
+    variable_names = ['xg', 'xc', 'xp', 'xkappa', 'xd']
+    variable_stats = {}
+    for variable in variable_names:
+        if hasattr(instance, variable):
+            var = getattr(instance, variable)
+            x = {k: v.value for k, v in var.items()}
+
+            # variables to index by S
+            if variable in ['xd']:
+                for k, v in x.items():
+                    variable_stats[f"{variable}_{k}"] = v
+
+                df = pd.DataFrame(x.values(), index=x.keys())
+                for k, v in df.describe()[0].items():
+                    variable_stats[f"{variable}_{k}"] = v
+
+            # variables to index by (S_, t)
+            else:
+                df = pd.DataFrame(x.values(), index=pd.MultiIndex.from_tuples(x.keys(), names=['S_', 't']))
+                for k, v in df.describe()[0].items():
+                    variable_stats[f"{variable}_{k}"] = v
+
+                for s_ in instance.S_:
+                    for k, v in df.loc[s_, :].describe()[0].items():
+                        variable_stats[f"{variable}_{s_}_{k}"] = v
+    return variable_stats
