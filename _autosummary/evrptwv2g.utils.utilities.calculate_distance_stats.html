@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>evrptwv2g.utils.utilities.create_optimal_edges &mdash; E-VRP-TW-V2G 1.0 documentation</title>
+  <title>evrptwv2g.utils.utilities.calculate_distance_stats &mdash; E-VRP-TW-V2G 1.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -20,8 +20,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="evrptwv2g.utils.utilities.create_plotting_edges" href="evrptwv2g.utils.utilities.create_plotting_edges.html" />
-    <link rel="prev" title="evrptwv2g.utils.utilities.create_json_out" href="evrptwv2g.utils.utilities.create_json_out.html" /> 
+    <link rel="next" title="evrptwv2g.utils.utilities.calculate_gap" href="evrptwv2g.utils.utilities.calculate_gap.html" />
+    <link rel="prev" title="evrptwv2g.utils.utilities.calculate_distance_matrix" href="evrptwv2g.utils.utilities.calculate_distance_matrix.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -52,7 +52,7 @@
 <li class="toctree-l3"><a class="reference internal" href="evrptwv2g.utils.plot.html">evrptwv2g.utils.plot</a></li>
 <li class="toctree-l3 current"><a class="reference internal" href="evrptwv2g.utils.utilities.html">evrptwv2g.utils.utilities</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="evrptwv2g.utils.utilities.calculate_distance_matrix.html">evrptwv2g.utils.utilities.calculate_distance_matrix</a></li>
-<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.utils.utilities.calculate_distance_stats.html">evrptwv2g.utils.utilities.calculate_distance_stats</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">evrptwv2g.utils.utilities.calculate_distance_stats</a></li>
 <li class="toctree-l4"><a class="reference internal" href="evrptwv2g.utils.utilities.calculate_gap.html">evrptwv2g.utils.utilities.calculate_gap</a></li>
 <li class="toctree-l4"><a class="reference internal" href="evrptwv2g.utils.utilities.calculate_load_stats.html">evrptwv2g.utils.utilities.calculate_load_stats</a></li>
 <li class="toctree-l4"><a class="reference internal" href="evrptwv2g.utils.utilities.calculate_tariff_stats.html">evrptwv2g.utils.utilities.calculate_tariff_stats</a></li>
@@ -63,7 +63,7 @@
 <li class="toctree-l4"><a class="reference internal" href="evrptwv2g.utils.utilities.create_flat_optimal_edges.html">evrptwv2g.utils.utilities.create_flat_optimal_edges</a></li>
 <li class="toctree-l4"><a class="reference internal" href="evrptwv2g.utils.utilities.create_json_inputs.html">evrptwv2g.utils.utilities.create_json_inputs</a></li>
 <li class="toctree-l4"><a class="reference internal" href="evrptwv2g.utils.utilities.create_json_out.html">evrptwv2g.utils.utilities.create_json_out</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#">evrptwv2g.utils.utilities.create_optimal_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="evrptwv2g.utils.utilities.create_optimal_edges.html">evrptwv2g.utils.utilities.create_optimal_edges</a></li>
 <li class="toctree-l4"><a class="reference internal" href="evrptwv2g.utils.utilities.create_plotting_edges.html">evrptwv2g.utils.utilities.create_plotting_edges</a></li>
 <li class="toctree-l4"><a class="reference internal" href="evrptwv2g.utils.utilities.generate_index_mapping.html">evrptwv2g.utils.utilities.generate_index_mapping</a></li>
 <li class="toctree-l4"><a class="reference internal" href="evrptwv2g.utils.utilities.generate_stats.html">evrptwv2g.utils.utilities.generate_stats</a></li>
@@ -101,9 +101,9 @@
           <li><a href="evrptwv2g.html">evrptwv2g</a> &raquo;</li>
           <li><a href="evrptwv2g.utils.html">evrptwv2g.utils</a> &raquo;</li>
           <li><a href="evrptwv2g.utils.utilities.html">evrptwv2g.utils.utilities</a> &raquo;</li>
-      <li>evrptwv2g.utils.utilities.create_optimal_edges</li>
+      <li>evrptwv2g.utils.utilities.calculate_distance_stats</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/_autosummary/evrptwv2g.utils.utilities.create_optimal_edges.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/_autosummary/evrptwv2g.utils.utilities.calculate_distance_stats.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -111,11 +111,11 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="evrptwv2g-utils-utilities-create-optimal-edges">
-<h1>evrptwv2g.utils.utilities.create_optimal_edges<a class="headerlink" href="#evrptwv2g-utils-utilities-create-optimal-edges" title="Permalink to this heading"></a></h1>
+  <section id="evrptwv2g-utils-utilities-calculate-distance-stats">
+<h1>evrptwv2g.utils.utilities.calculate_distance_stats<a class="headerlink" href="#evrptwv2g-utils-utilities-calculate-distance-stats" title="Permalink to this heading"></a></h1>
 <dl class="py function">
-<dt class="sig sig-object py" id="evrptwv2g.utils.utilities.create_optimal_edges">
-<span class="sig-prename descclassname"><span class="pre">evrptwv2g.utils.utilities.</span></span><span class="sig-name descname"><span class="pre">create_optimal_edges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">pd.DataFrame</span></span></span><a class="headerlink" href="#evrptwv2g.utils.utilities.create_optimal_edges" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="evrptwv2g.utils.utilities.calculate_distance_stats">
+<span class="sig-prename descclassname"><span class="pre">evrptwv2g.utils.utilities.</span></span><span class="sig-name descname"><span class="pre">calculate_distance_stats</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instance</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#evrptwv2g.utils.utilities.calculate_distance_stats" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 </section>
@@ -124,8 +124,8 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="evrptwv2g.utils.utilities.create_json_out.html" class="btn btn-neutral float-left" title="evrptwv2g.utils.utilities.create_json_out" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="evrptwv2g.utils.utilities.create_plotting_edges.html" class="btn btn-neutral float-right" title="evrptwv2g.utils.utilities.create_plotting_edges" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="evrptwv2g.utils.utilities.calculate_distance_matrix.html" class="btn btn-neutral float-left" title="evrptwv2g.utils.utilities.calculate_distance_matrix" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="evrptwv2g.utils.utilities.calculate_gap.html" class="btn btn-neutral float-right" title="evrptwv2g.utils.utilities.calculate_gap" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

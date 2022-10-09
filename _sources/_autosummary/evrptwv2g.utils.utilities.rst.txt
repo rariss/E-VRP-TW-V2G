@@ -16,7 +16,11 @@ evrptwv2g.utils.utilities
       :nosignatures:
    
       calculate_distance_matrix
+      calculate_distance_stats
       calculate_gap
+      calculate_load_stats
+      calculate_tariff_stats
+      calculate_variable_stats
       convert_txt_instances_to_csv
       create_coordinate_dict
       create_flat_distance_matrix

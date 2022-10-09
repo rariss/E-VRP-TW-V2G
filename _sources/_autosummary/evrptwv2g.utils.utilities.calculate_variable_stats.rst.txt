@@ -1,0 +1,6 @@
+evrptwv2g.utils.utilities.calculate\_variable\_stats
+====================================================
+
+.. currentmodule:: evrptwv2g.utils.utilities
+
+.. autofunction:: calculate_variable_stats
