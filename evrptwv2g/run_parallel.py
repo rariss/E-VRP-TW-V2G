@@ -19,7 +19,7 @@ _HERE = os.path.dirname(__file__)
 _CONFIG = os.path.abspath(os.path.join(_HERE, 'config/loggingconfig.ini'))
 logging.config.fileConfig(_CONFIG)
 
-def run_evrptwv2g(instance: str, problem_type: str, dist_type: str):
+def run_evrptwv2g(instance: str, problem_type: str, dist_type: str, save_folder: str=None):
     """
     Allows us to call the script from the command line
     :param process: filename of main process
@@ -32,7 +32,7 @@ def run_evrptwv2g(instance: str, problem_type: str, dist_type: str):
 
         print(m.results)
 
-        x, xp, traces, routes = plot_evrptwv2g(m, save=True)
+        x, xp, traces, routes = plot_evrptwv2g(m, save=True, save_folder=save_folder)
 
         m_stats = generate_stats(m)  # For parallelizing, need to generate stats so model with <locals> not returned (fails to pickle for pool)
 

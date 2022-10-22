@@ -49,7 +49,14 @@ def main(fpath_instances: str):
     instances = pd.read_csv(fpath_instances,
                             dtype={'dir': str, 'instance': str, 'problem_type': str, 'dist_type': str},
                             na_filter=False)
-    instances = instances.set_index(instances['dir']+'_'+instances['instance']+'_'+instances['problem_type']+'_'+instances['dist_type'])
+    dist_type = []
+    for instance_dist_type in instances['dist_type']:
+        if '.csv' in instance_dist_type:
+            dist_type.append('csv')
+        else:
+            dist_type.append(instance_dist_type)
+    dist_type = pd.Series(dist_type)
+    instances = instances.set_index(instances['dir']+'_'+instances['instance']+'_'+instances['problem_type']+'_'+dist_type)
 
     # Filter to just instances to run
     run_instances = instances[instances['run']]  # == True
@@ -83,6 +90,7 @@ def main(fpath_instances: str):
 
             stats_results.append({
                 'instance': name,
+                'results_folder': results_folder,
                 **m_stats
             })
 
