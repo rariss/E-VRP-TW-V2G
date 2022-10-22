@@ -15,6 +15,7 @@ evrptwv2g.utils.utilities
       :toctree:
       :nosignatures:
    
+      calculate_dcm_diff_stats
       calculate_distance_matrix
       calculate_distance_stats
       calculate_gap

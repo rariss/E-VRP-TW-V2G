@@ -1,0 +1,6 @@
+evrptwv2g.utils.utilities.calculate\_dcm\_diff\_stats
+=====================================================
+
+.. currentmodule:: evrptwv2g.utils.utilities
+
+.. autofunction:: calculate_dcm_diff_stats
