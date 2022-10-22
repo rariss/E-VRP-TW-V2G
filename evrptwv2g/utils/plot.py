@@ -49,8 +49,9 @@ def plot_evrptwv2g(m: 'obj', **kwargs):
                        np.float64(problem_info['Upper bound']) * 100., 2)
 
     # Load Profiles
-    G = pd.Series(m.instance.G.extract_values())
-    G = G.reset_index().pivot(index='level_1', columns='level_0', values=0)
+    if hasattr(m.instance, 'G'):
+        G = pd.Series(m.instance.G.extract_values())
+        G = G.reset_index().pivot(index='level_1', columns='level_0', values=0)
 
     # Energy Price
     ce = pd.Series(m.instance.ce.extract_values())
@@ -58,7 +59,10 @@ def plot_evrptwv2g(m: 'obj', **kwargs):
 
     # PLOTTING PARAMETERS
     # General
-    n_plots = 7
+    if hasattr(m.instance, 'G'):
+        n_plots = 7
+    else:
+        n_plots = 6
     style_label = u'seaborn-white'
     vehicle_cmap = 'Dark2'
     station_cmap = 'viridis'
@@ -106,13 +110,15 @@ def plot_evrptwv2g(m: 'obj', **kwargs):
     fig = plt.figure(figsize=(10, 20), num=style_label)
 
     # Create the subplot grid with ratios dependent on number of embedded plots in each subplot
-    gs = GridSpec(n_plots, 1, width_ratios=[1], height_ratios=[np.ceil(n_plots/2), 1, nt, nt, 1, 1, ns])
+    height_ratios = [np.ceil(n_plots/2), 1, nt, nt, 1, 1, ns]
+    gs = GridSpec(n_plots, 1, width_ratios=[1], height_ratios=height_ratios[:n_plots])
     axs_graph = fig.add_subplot(gs[0, 0])
     axs_q = fig.add_subplot(gs[2, 0])
     axs_soe = fig.add_subplot(gs[3, 0], sharex=axs_q)
     axs_p = fig.add_subplot(gs[4, 0], sharex=axs_q)
     axs_ce = fig.add_subplot(gs[5, 0], sharex=axs_q)
-    axs_g = fig.add_subplot(gs[6, 0], sharex=axs_q)
+    if hasattr(m.instance, 'G'):
+        axs_g = fig.add_subplot(gs[6, 0], sharex=axs_q)
     axs_tw = fig.add_subplot(gs[1, 0], sharex=axs_q)
 
     # Generate objective results for plot title
@@ -302,39 +308,40 @@ def plot_evrptwv2g(m: 'obj', **kwargs):
     axs_ce.xaxis.set_minor_locator(MultipleLocator(t_S))
     axs_ce.grid(True, which='both', axis='x', alpha=a, linestyle=':')
 
-    # Plot load profiles
-    G.loc[t_T] = G.loc[t_T - t_S]
+    if hasattr(m.instance, 'G'):
+        # Plot load profiles
+        G.loc[t_T] = G.loc[t_T - t_S]
 
-    # calculate total power for each station
-    temp = xp.copy()
-    temp['s'] = temp['node'].apply(lambda x: m.s_2s[x])
-    total_power = temp.groupby(['s', 't']).sum()
+        # calculate total power for each station
+        temp = xp.copy()
+        temp['s'] = temp['node'].apply(lambda x: m.s_2s[x])
+        total_power = temp.groupby(['s', 't']).sum()
 
-    for si, s in enumerate(unique_stations):
-        # create an inset axis in the current axes:
-        ax_g = axs_g.inset_axes([0, si * 1 / nus, 1, .8 * 1 / nus])
-        ax_g.step(G[s].index, G[s], where='post', label='_nolegend_', alpha=a, color=us_color[s])
+        for si, s in enumerate(unique_stations):
+            # create an inset axis in the current axes:
+            ax_g = axs_g.inset_axes([0, si * 1 / nus, 1, .8 * 1 / nus])
+            ax_g.step(G[s].index, G[s], where='post', label='_nolegend_', alpha=a, color=us_color[s])
 
-        net_load = G[s].copy()
-        net_load[total_power.loc[s].index] += total_power.loc[s]['xp']
-        ax_g.fill_between(net_load.index, net_load, step="post", alpha=a, color='black')
+            net_load = G[s].copy()
+            net_load[total_power.loc[s].index] += total_power.loc[s]['xp']
+            ax_g.fill_between(net_load.index, net_load, step="post", alpha=a, color='black')
 
-        ax_g.get_shared_x_axes().join(ax_g, axs_g)
-        ax_g.get_shared_y_axes().join(ax_g, axs_g)
-        ax_g.set_xticklabels([])
-        axs_g.set_yticklabels([])
-        axs_g.set_xlim([0, t_T])
-        ax_g.title.set_text('{}: ${}/kW'.format(s, m.instance.cg.extract_values()[s]))
+            ax_g.get_shared_x_axes().join(ax_g, axs_g)
+            ax_g.get_shared_y_axes().join(ax_g, axs_g)
+            ax_g.set_xticklabels([])
+            axs_g.set_yticklabels([])
+            axs_g.set_xlim([0, t_T])
+            ax_g.title.set_text('{}: ${}/kW'.format(s, m.instance.cg.extract_values()[s]))
 
-        ax_g.xaxis.set_major_locator(MultipleLocator(t_major))
-        ax_g.xaxis.set_minor_locator(MultipleLocator(t_S))
-        ax_g.grid(True, which='both', axis='x', alpha=a, linestyle=':')
+            ax_g.xaxis.set_major_locator(MultipleLocator(t_major))
+            ax_g.xaxis.set_minor_locator(MultipleLocator(t_S))
+            ax_g.grid(True, which='both', axis='x', alpha=a, linestyle=':')
 
-    axs_g.spines['right'].set_visible(False)
-    axs_g.spines['top'].set_visible(False)
-    axs_g.spines['bottom'].set_visible(False)
-    axs_g.spines['left'].set_visible(False)
-    axs_g.set_title('Load Profile', fontdict=fdict)
+        axs_g.spines['right'].set_visible(False)
+        axs_g.spines['top'].set_visible(False)
+        axs_g.spines['bottom'].set_visible(False)
+        axs_g.spines['left'].set_visible(False)
+        axs_g.set_title('Load Profile', fontdict=fdict)
 
     fig.legend(loc="lower right",
                bbox_to_anchor=(1.05, 0.01));  # ncol=round(nus), , bbox_to_anchor=(1.05, .4)
@@ -352,6 +359,9 @@ def plot_evrptwv2g(m: 'obj', **kwargs):
         # fig.show()
         fig.savefig(save_path, bbox_inches='tight')
         log.info(f'Plot saved: {save_path}')
+
+        plt.close(fig)
+        fig.clear()
 
     return x, xp, traces, routes
 
