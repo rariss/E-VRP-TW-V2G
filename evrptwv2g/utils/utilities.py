@@ -3,6 +3,7 @@ import datetime
 import json
 import pathlib
 import googlemaps
+import math
 import numpy as np
 import pandas as pd
 
@@ -579,6 +580,10 @@ def generate_stats(m):
 
     # average decision variables per vehicle
     variable_stats = calculate_variable_stats(m.instance)
+
+    # DCM difference
+    dcm_diff_stats = calculate_dcm_diff_stats(m.instance, load_stats, variable_stats)
+
     # model results
     results = {
         # RESULTS
@@ -587,18 +592,21 @@ def generate_stats(m):
         'upper_bound': m.results['Problem'][0]['Upper bound'],
         'lower_bound': m.results['Problem'][0]['Lower bound'],
         'total_distance': m.total_distance(m.instance)(),
+        'total_time': m.total_time(m.instance)(),
         'fleet_size': m.C_fleet_capital_cost(m.instance)() / m.instance.cc.value,
         'C_fleet_capital_cost': m.C_fleet_capital_cost(m.instance)(),
-        'O_delivery_operating_cost': m.O_delivery_operating_cost(m.instance)() + m.O_maintenance_operating_cost(m.instance)(),
+        'O_delivery_operating_cost': m.O_delivery_operating_cost(m.instance)(),
+        'O_maintenance_operating_cost': m.O_maintenance_operating_cost(m.instance)(),
         'R_delivery_revenue': m.R_delivery_revenue(m.instance)(),
         'R_energy_arbitrage_revenue': m.R_energy_arbitrage_revenue(m.instance)(),
-        'R_peak_shaving_revenue': m.R_peak_shaving_revenue(m.instance)(),
+        'R_peak_shaving_revenue': m.R_peak_shaving_revenue(m.instance)() if hasattr(m.instance, 'G') else np.nan,
         'cycle_cost': m.cycle_cost(m.instance)(),
         # METADATA
         'model_build_duration': m.model_build_duration,
         'model_solve_duration': m.model_solve_duration
     }
-    stats = {**inputs, **set_stats, **distance_stats, **tariff_stats, **load_stats, **variable_stats, **results}
+    stats = {**inputs, **set_stats, **distance_stats, **tariff_stats, **load_stats, **variable_stats, **dcm_diff_stats,
+             **results}
     return stats
 
 
@@ -618,7 +626,8 @@ def replace_nested_dict_keys(d):
 
 def calculate_gap(m):
     problem_info = m.results['Problem'][0]
-    if problem_info['Upper bound'] == 0:
+    if (problem_info['Upper bound'] == 0) or (type(problem_info['Upper bound']) == str) \
+            or (math.isinf(problem_info['Upper bound'])) or (math.isinf(problem_info['Lower bound'])):
         gap = float("nan")
     else:
         gap = np.round(np.float64(problem_info['Upper bound'] - problem_info['Lower bound']) /
@@ -665,6 +674,7 @@ def calculate_tariff_stats(instance):
         cg = {}
         for s in instance.S:
             cg[s] = instance.cg[s].value
+            tariff_stats[f"cg_{s}"] = cg[s]
         for k, v in pd.Series(cg).describe().items():
             tariff_stats[f"cg_{k}"] = v
 
@@ -700,7 +710,10 @@ def calculate_load_stats(instance):
             for k, v in G.loc[s, :].describe()[0].items():
                 load_stats[f"G_{s}_{k}"] = v
             load_stats[f"G_{s}_energy"] = G.loc[s, :].sum()[0] * instance.t_H.value * instance.t_S.value
-            load_stats[f"G_{s}_loadfactor"] = load_stats[f"G_{s}_energy"] / (G.loc[s, :].max()[0] * instance.t_H.value * instance.t_T.value)
+            if G.loc[s, :].max()[0] == 0:
+                load_stats[f"G_{s}_loadfactor"] = np.nan
+            else:
+                load_stats[f"G_{s}_loadfactor"] = load_stats[f"G_{s}_energy"] / (G.loc[s, :].max()[0] * instance.t_H.value * instance.t_T.value)
 
     return load_stats
 
@@ -732,3 +745,14 @@ def calculate_variable_stats(instance):
                     for k, v in df.loc[s_, :].describe()[0].items():
                         variable_stats[f"{variable}_{s_}_{k}"] = v
     return variable_stats
+
+
+def calculate_dcm_diff_stats(instance, load_stats, variable_stats):
+    dcm_diff_stats = {}
+    if hasattr(instance, 'xd') and hasattr(instance, 'G'):
+        for s in instance.S:
+            dcm_diff_stats[f"dcm_diff_{s}"] = variable_stats[f"xd_{s}"] - load_stats[f"G_{s}_max"]
+        df = pd.DataFrame(dcm_diff_stats.values(), index=dcm_diff_stats.keys())
+        for k, v in df.describe()[0].items():
+            dcm_diff_stats[f"dcm_diff_{k}"] = v
+    return dcm_diff_stats
