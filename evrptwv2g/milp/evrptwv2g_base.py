@@ -438,7 +438,7 @@ class EVRPTWV2G:
             self.m.constraint_energy_soe_station = Constraint(self.m.S_, self.m.T, rule=constraint_energy_soe_station)
             if 'noxd' not in self.problem_types:
                 self.m.constraint_energy_peak = Constraint(self.m.S, self.m.T, rule=constraint_energy_peak)
-            if 'noexport' not in self.problem_types:
+            if 'noexport' in self.problem_types:
                 self.m.constraint_no_export = Constraint(self.m.S, self.m.T, rule=constraint_no_export)
 
         self.m.constraint_energy_customer = Constraint(self.m.M | self.m.start_node, self.m.V1_, rule=constraint_energy_customer)
