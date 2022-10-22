@@ -285,7 +285,7 @@ class EVRPTWV2G:
     def __init__(self, problem_type: str, dist_type: str='scipy', save_dist_matrix: bool=False):
         """
         :param problem_type: Objective options include: {Schneider} OR {OpEx, CapEx, Cycle, EA, DCM, Delivery}
-         Constraint options include: {Start=End, FullStart=End, NoXkappaBounds, NoMinVehicles, MaxVehicles, NoSymmetry, NoXd, SplitXp, StationaryEVs, NoExport}
+         Constraint options include: {Start=End, FullStart=End, NoXkappaBounds, NoMinVehicles, MaxVehicles, NoSymmetry, NoXd, SplitXp, StationaryEVs, NoExport, NoG}
         """
         self.problem_type = problem_type
         self.problem_types = self.problem_type.lower().split()
@@ -351,9 +351,10 @@ class EVRPTWV2G:
         self.m.tB = Param(self.m.V01_, mutable=True, doc='Time window end time at node i')
         self.m.SMAX = Param(self.m.S_, mutable=True, doc='Maximum station inverter limit')
         self.m.SMIN = Param(self.m.S_, mutable=True, doc='Minimum station inverter limit')
-        self.m.G = Param(self.m.S, self.m.T, mutable=True, doc='Station electric demand profile')
-        self.m.GMAX = Param(self.m.S, mutable=True, doc='Maximum station electric demand')
-        self.m.cg = Param(self.m.S, mutable=True, doc='Amortized operating cost for demand charges')
+        if 'nog' not in self.problem_types:
+            self.m.G = Param(self.m.S, self.m.T, mutable=True, doc='Station electric demand profile')
+            self.m.GMAX = Param(self.m.S, mutable=True, doc='Maximum station electric demand')
+            self.m.cg = Param(self.m.S, mutable=True, doc='Amortized operating cost for demand charges')
         self.m.ce = Param(self.m.S, self.m.T, mutable=True, doc='Amortized operating cost for energy charges')
         self.m.cq = Param(self.m.M, mutable=True, doc='Amortized revenue for deliveries')
         self.m.Smap = Param(self.m.S, domain=Any, doc='Mapping from original charging station to all its duplicates')
