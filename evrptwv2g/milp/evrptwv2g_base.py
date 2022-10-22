@@ -427,7 +427,7 @@ class EVRPTWV2G:
             self.m.constraint_energy_soe_station = Constraint(self.m.S_, self.m.T, rule=constraint_energy_soe_station_splitxp)
             if 'noxd' not in self.problem_types:
                 self.m.constraint_energy_peak = Constraint(self.m.S, self.m.T, rule=constraint_energy_peak_splitxp)
-            if 'noexport' not in self.problem_types:
+            if 'noexport' in self.problem_types:
                 self.m.constraint_no_export = Constraint(self.m.S, self.m.T, rule=constraint_no_export_splitxp)
         else:
             self.m.constraint_energy_station = Constraint(self.m.S_, self.m.V1_, rule=constraint_energy_station)
