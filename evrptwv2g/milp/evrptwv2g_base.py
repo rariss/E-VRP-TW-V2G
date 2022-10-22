@@ -478,7 +478,8 @@ class EVRPTWV2G:
             if 'distance' in self.problem_types:
                 obj_result += self.total_distance(m)
             if 'opex' in self.problem_types:
-                obj_result += self.O_maintenance_operating_cost(m) + self.O_delivery_operating_cost(m)
+                obj_result += self.O_maintenance_operating_cost(m)
+                obj_result += self.O_delivery_operating_cost(m)
             if 'capex' in self.problem_types:
                 obj_result += self.C_fleet_capital_cost(m)
             if 'cycle' in self.problem_types:
