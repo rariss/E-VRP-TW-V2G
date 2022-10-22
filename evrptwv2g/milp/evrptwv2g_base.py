@@ -661,13 +661,13 @@ class EVRPTWV2G:
 
         self.model_build_end_time = datetime.datetime.now()
 
-    # For Gurobi solver options, see: https://www.gurobi.com/documentation/9.1/refman/parameters.html
-    def make_solver(self, solve_options={'TimeLimit': 60 * 5}):  #, 'MIPFocus': 3, 'Cuts': 3
+    # For Gurobi solver options, see: https://www.gurobi.com/documentation/9.5/refman/parameters.html
+    def make_solver(self, solve_options={'TimeLimit': 60 * 180}):  #'MIPGap': 1e-2, 'MIPFocus': 3, 'Cuts': 3
         # Specify solver
         self.opt = SolverFactory(SOLVER_TYPE, io_format='python')
 
         # Solver options
-        self.solve_options = solve_options  # 'Symmetry': 2
+        self.solve_options = solve_options
 
     def full_solve(self, instance_filepath: str):
         # Import data
