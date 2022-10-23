@@ -760,6 +760,27 @@ def calculate_dcm_diff_stats(instance, load_stats, variable_stats):
     return dcm_diff_stats
 
 
+def calculate_vmt_stats(instance, traces):
+    vmt_stats = {}
+    vmts = {}
+    for t in traces:
+        vmt = 0
+        for i in range(1, len(t)):
+            vmt += instance.d[(t[i - 1], t[i])]
+        vmts[t] = vmt
+
+    i = 1
+    for path, vmt in vmts.items():
+        vmt_stats[f"route_{i}"] = path
+        vmt_stats[f"route_{i}_vmt"] = vmt
+        i += 1
+
+    for k, v in pd.Series(vmts.values()).describe().items():
+        vmt_stats[f"vmt_{k}"] = v
+
+    return vmt_stats
+
+
 def get_route(origin_lon, origin_lat, dest_lon, dest_lat):
     """
     requires running osrm-backend for routing. See: https://github.com/Project-OSRM/osrm-backend

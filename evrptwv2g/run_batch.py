@@ -10,7 +10,7 @@ import pandas as pd
 from datetime import datetime
 from pathlib import Path
 from milp.evrptwv2g_base import EVRPTWV2G
-from utils.utilities import generate_stats, create_json_inputs, create_json_out, NpEncoder
+from utils.utilities import generate_stats, calculate_vmt_stats, create_json_inputs, create_json_out, NpEncoder
 from utils.plot import plot_evrptwv2g
 from config.LOCAL_CONFIG import DIR_INSTANCES, DIR_OUTPUT
 
@@ -34,6 +34,10 @@ def run_evrptwv2g(instance: str, problem_type: str, dist_type: str, save_folder:
     x, xp, traces, routes = plot_evrptwv2g(m, save=True, save_folder=save_folder, add_basemap=True)
 
     m_stats = generate_stats(m)
+
+    vmt_stats = calculate_vmt_stats(m.instance, traces)
+
+    m_stats = {**m_stats, **vmt_stats}
 
     return m, m_stats, x, xp, traces, routes
 
