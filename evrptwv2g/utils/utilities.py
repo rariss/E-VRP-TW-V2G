@@ -4,6 +4,8 @@ import json
 import pathlib
 import googlemaps
 import math
+import requests
+import polyline
 import numpy as np
 import pandas as pd
 
@@ -756,3 +758,30 @@ def calculate_dcm_diff_stats(instance, load_stats, variable_stats):
         for k, v in df.describe()[0].items():
             dcm_diff_stats[f"dcm_diff_{k}"] = v
     return dcm_diff_stats
+
+
+def get_route(origin_lon, origin_lat, dest_lon, dest_lat):
+    """
+    requires running osrm-backend for routing. See: https://github.com/Project-OSRM/osrm-backend
+    """
+    loc = "{},{};{},{}".format(origin_lon, origin_lat, dest_lon, dest_lat)
+    url = "http://127.0.0.1:5000/route/v1/driving/"
+    r = requests.get(f"{url}{loc}?steps=true")
+    if r.status_code != 200:
+        print(r)
+        return {}
+
+    res = r.json()
+    routes = polyline.decode(res['routes'][0]['geometry'])
+    start_point = [res['waypoints'][0]['location'][1], res['waypoints'][0]['location'][0]]
+    end_point = [res['waypoints'][1]['location'][1], res['waypoints'][1]['location'][0]]
+    distance = res['routes'][0]['distance']
+
+    out = {
+        'route': routes,
+        'start_point': start_point,
+        'end_point': end_point,
+        'distance': distance
+    }
+
+    return out

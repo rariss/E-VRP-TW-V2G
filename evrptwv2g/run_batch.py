@@ -31,7 +31,7 @@ def run_evrptwv2g(instance: str, problem_type: str, dist_type: str, save_folder:
 
     print(m.results)
 
-    x, xp, traces, routes = plot_evrptwv2g(m, save=True, save_folder=save_folder)
+    x, xp, traces, routes = plot_evrptwv2g(m, save=True, save_folder=save_folder, add_basemap=True)
 
     m_stats = generate_stats(m)
 

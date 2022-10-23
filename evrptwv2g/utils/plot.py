@@ -1,5 +1,9 @@
 import logging
 import pathlib
+import folium
+import folium.plugins
+import matplotlib.cm
+import matplotlib.colors
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -10,8 +14,9 @@ import evrptwv2g.config.GLOBAL_CONFIG as GLOBAL_CONFIG
 from datetime import datetime
 from matplotlib.gridspec import GridSpec
 from matplotlib.ticker import MultipleLocator
+from mpl_toolkits.basemap import Basemap
 from plotly.subplots import make_subplots
-from evrptwv2g.utils.utilities import create_plotting_edges, results_to_dfs, generate_stats
+from evrptwv2g.utils.utilities import create_plotting_edges, results_to_dfs, generate_stats, get_route
 
 log = logging.getLogger('root')
 
@@ -144,9 +149,39 @@ def plot_evrptwv2g(m: 'obj', **kwargs):
     fig.suptitle(title, x=0.5, y=1.03, horizontalalignment='center', verticalalignment='top', size=SMALL_SIZE, weight=fweight)
 
     # Plot graph
+    # add basemap
+    if kwargs.get('add_basemap', False):
+        zoom_frac = [height_ratios[0]*0.01, 0.01]  # x, y
+        min_lon, min_lat = m.data['V_'][['d_x', 'd_y']].min()
+        max_lon, max_lat = m.data['V_'][['d_x', 'd_y']].max()
+        llcrnrlon = min_lon * (1 - np.sign(min_lon) * zoom_frac[0])
+        llcrnrlat = min_lat * (1 - np.sign(min_lat) * zoom_frac[1])
+        urcrnrlon = max_lon * (1 + np.sign(max_lon) * zoom_frac[0])
+        urcrnrlat = max_lat * (1 + np.sign(max_lat) * zoom_frac[1])
+        basemap = Basemap(llcrnrlon=llcrnrlon,
+                          llcrnrlat=llcrnrlat,
+                          urcrnrlon=urcrnrlon,
+                          urcrnrlat=urcrnrlat,
+                          projection='merc',
+                          resolution='h',
+                          ax=axs_graph)
+        basemap.drawmapboundary(fill_color='white', linewidth=0, ax=axs_graph)
+        basemap.fillcontinents(color=(0.3, 0.3, 0.3), alpha=0.2, lake_color='lightblue', ax=axs_graph, zorder=1)
+        basemap.drawrivers(linewidth=0.25, color='lightblue', ax=axs_graph, zorder=2)
+        basemap.drawcoastlines(linewidth=0.25, color="k", ax=axs_graph)
+        basemap.drawcountries(linewidth=0.25, linestyle='solid', color='k', ax=axs_graph)
+        basemap.drawstates(linewidth=0.25, linestyle='solid', color='k', ax=axs_graph)
+        counties = basemap.drawcounties(linewidth=0.25, linestyle='solid', color='k', ax=axs_graph, zorder=0)  # facecolor=(0.3, 0.3, 0.3, 0.2),
+        counties.set_label('_nolegend_')
+        basemap.drawparallels(np.arange(np.floor(llcrnrlat), np.ceil(urcrnrlat), 1), labels=[1, 0, 1, 0], linewidth=0, ax=axs_graph)
+        basemap.drawmeridians(np.arange(np.floor(llcrnrlon), np.ceil(urcrnrlon), 2), labels=[1, 0, 1, 0], linewidth=0, ax=axs_graph)
+        basemap.drawmapscale(urcrnrlon * (1 - np.sign(max_lon) * zoom_frac[0]/10), llcrnrlat, max_lon, llcrnrlat, length=100, units='km', ax=axs_graph)
+    else:
+        basemap = lambda d_x, d_y: (d_x, d_y)
+
     for i, n in enumerate('SDM'):
         # Plot the nodes
-        axs_graph.scatter(m.data[n]['d_x'], m.data[n]['d_y'],
+        axs_graph.scatter(*basemap(m.data[n]['d_x'], m.data[n]['d_y']),
                      c=[GLOBAL_CONFIG.node_colors_rgba_tuple[n]] * len(m.data[n]), s=100)
 
         # Annotate the nodes
@@ -164,7 +199,7 @@ def plot_evrptwv2g(m: 'obj', **kwargs):
             if txt == 'D1':
                 offset = [0, -scale]
 
-            axs_graph.annotate(txt, (m.data[n]['d_x'][j] + offset[0], m.data[n]['d_y'][j] + offset[1]))
+            axs_graph.annotate(txt, basemap(m.data[n]['d_x'][j] + offset[0], m.data[n]['d_y'][j] + offset[1]))
 
     # Plot time windows
     i = 0
@@ -206,14 +241,29 @@ def plot_evrptwv2g(m: 'obj', **kwargs):
 
         # Plot the route edges for each vehicle on the graph
         for ki, k in enumerate(t[:-1]):
-            arrow_x = m.data['V_'].loc[t[ki], 'd_x']
-            arrow_y = m.data['V_'].loc[t[ki], 'd_y']
-            arrow_dx = m.data['V_'].loc[t[ki + 1], 'd_x'] - arrow_x
-            arrow_dy = m.data['V_'].loc[t[ki + 1], 'd_y'] - arrow_y
+            if kwargs.get('add_basemap', False):
+                arrow_x, arrow_y = basemap(m.data['V_'].loc[t[ki], 'd_x'], m.data['V_'].loc[t[ki], 'd_y'])
+                end_arrow_x, end_arrow_y = basemap(m.data['V_'].loc[t[ki + 1], 'd_x'], m.data['V_'].loc[t[ki + 1], 'd_y'])
+                arrow_dx = end_arrow_x - arrow_x
+                arrow_dy = end_arrow_y - arrow_y
 
-            axs_graph.arrow(arrow_x, arrow_y, arrow_dx, arrow_dy, alpha=a, linewidth=2,
-                       length_includes_head=True, head_width=scale/2, head_length=scale/2, overhang=0,
-                       color=colors[ti])
+                axs_graph.arrow(arrow_x, arrow_y, arrow_dx, arrow_dy, alpha=a, linewidth=2,
+                                length_includes_head=True, head_width=1.e5 * scale / 2, head_length=1.e5 * scale / 2, overhang=0,
+                                color=colors[ti])
+
+                # arrow_x, arrow_y = (m.data['V_'].loc[t[ki], 'd_x'], m.data['V_'].loc[t[ki], 'd_y'])
+                # end_arrow_x, end_arrow_y = (m.data['V_'].loc[t[ki + 1], 'd_x'], m.data['V_'].loc[t[ki + 1], 'd_y'])
+                #
+                # basemap.drawgreatcircle(arrow_x, arrow_y, end_arrow_x, end_arrow_y, linewidth=2, color=colors[ti])
+            else:
+                arrow_x = m.data['V_'].loc[t[ki], 'd_x']
+                arrow_y = m.data['V_'].loc[t[ki], 'd_y']
+                arrow_dx = m.data['V_'].loc[t[ki + 1], 'd_x'] - arrow_x
+                arrow_dy = m.data['V_'].loc[t[ki + 1], 'd_y'] - arrow_y
+
+                axs_graph.arrow(arrow_x, arrow_y, arrow_dx, arrow_dy, alpha=a, linewidth=2,
+                           length_includes_head=True, head_width=scale/2, head_length=scale/2, overhang=0,
+                           color=colors[ti])
 
         axs_graph.set_aspect('equal', adjustable='datalim')
 
@@ -343,10 +393,13 @@ def plot_evrptwv2g(m: 'obj', **kwargs):
         axs_g.spines['left'].set_visible(False)
         axs_g.set_title('Load Profile', fontdict=fdict)
 
-    fig.legend(loc="lower right",
-               bbox_to_anchor=(1.05, 0.01));  # ncol=round(nus), , bbox_to_anchor=(1.05, .4)
-
     fig.tight_layout()
+
+    fig.legend(
+        loc="lower right",
+        bbox_to_anchor=(1.08, 0.01),
+        bbox_transform=plt.gcf().transFigure
+    );  # ncol=round(nus), , bbox_to_anchor=(1.05, .4)
 
     if kwargs.get('save', False):
         if kwargs.get('save_folder', False):  # skips if None
@@ -493,3 +546,80 @@ def plot_interactive_graph(v: 'pd.DataFrame', **kwargs) -> 'fig':
     )
 
     fig.show()
+
+
+def plot_folium_map(m, traces):
+    """
+    requires running osrm-backend for routing. See: https://github.com/Project-OSRM/osrm-backend
+    """
+    min_lon, min_lat = m.data['V_'][['d_x', 'd_y']].min()
+    max_lon, max_lat = m.data['V_'][['d_x', 'd_y']].max()
+    fmap = folium.Map(
+        location=[(min_lat + max_lat) / 2,  # lat
+                  (min_lon + max_lon) / 2],  # lon
+        zoom_start=7)
+    folium.TileLayer('cartodbpositron').add_to(fmap)  # cartodbpositron, stamentoner
+
+    cmap = matplotlib.cm.get_cmap('Dark2')
+    i_route_colors = list(np.linspace(0., 1., len(traces)))
+    route_colors = [matplotlib.colors.to_hex(cmap(i), keep_alpha=True) for i in i_route_colors]
+
+    osrm_routes = {}
+    for t in traces:
+        osrm_route = {}
+        route_color = route_colors.pop()
+        for i in range(1, len(t)):
+            origin_lon, origin_lat = m.data['V_'].loc[t[i - 1]][['d_x', 'd_y']]
+            dest_lon, dest_lat = m.data['V_'].loc[t[i]][['d_x', 'd_y']]
+            osrm_route[(t[i - 1], t[i])] = get_route(origin_lon, origin_lat, dest_lon, dest_lat)
+        osrm_routes[t] = osrm_route
+
+        # Print routes
+        opacity = list(np.linspace(0.6, 0.1, len(osrm_route)))
+        for od, route in osrm_route.items():
+            folium.plugins.AntPath(
+                route['route'],
+                weight=8,
+                color=route_color,
+                opacity=opacity.pop()
+            ).add_to(fmap)
+
+    node_size = {
+        'D': 6,
+        'S': 4,
+        'M': 2
+    }
+    for name, row in m.data['V'].iterrows():
+        node_loc = [row['d_y'], row['d_x']]
+        node_type = row['node_type'].upper()
+        node_color = matplotlib.colors.to_hex(GLOBAL_CONFIG.node_colors_rgba_tuple[node_type])
+        folium.CircleMarker(
+            location=node_loc,
+            radius=node_size[node_type],
+            popup=row['node_description'],
+            color=node_color,
+            fill=True,
+            fill_color=node_color,
+        ).add_to(fmap)
+
+        scale = .4
+        if node_type == 'D':
+            offset = [scale, scale]
+        elif node_type == 'S':
+            offset = [0, -scale]
+        else:
+            offset = [0, 0]
+        if row.name == 'D1':
+            offset = [0, scale]
+
+        folium.map.Marker(
+            [sum(tup) for tup in zip(node_loc, offset)],
+            icon=folium.DivIcon(
+                icon_size=(250, 36),
+                icon_anchor=(0, 0),
+                html=f'<div style="font-size: 16pt; color: {node_color}">{name}</div>',
+            )
+        ).add_to(fmap)
+
+    fmap.fit_bounds([(min_lat, min_lon), (max_lat, max_lon)])
+    return fmap
