@@ -1,6 +1,0 @@
-evrptwv2g.utils.utilities.update\_instance\_json
-================================================
-
-.. currentmodule:: evrptwv2g.utils.utilities
-
-.. autofunction:: update_instance_json

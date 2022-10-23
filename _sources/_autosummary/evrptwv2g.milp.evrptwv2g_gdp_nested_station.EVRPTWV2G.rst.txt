@@ -1,6 +1,0 @@
-evrptwv2g.milp.evrptwv2g\_gdp\_nested\_station.EVRPTWV2G
-========================================================
-
-.. currentmodule:: evrptwv2g.milp.evrptwv2g_gdp_nested_station
-
-.. autoclass:: EVRPTWV2G

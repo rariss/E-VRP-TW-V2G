@@ -1,6 +1,0 @@
-evrptwv2g.utils.utilities.calculate\_load\_stats
-================================================
-
-.. currentmodule:: evrptwv2g.utils.utilities
-
-.. autofunction:: calculate_load_stats

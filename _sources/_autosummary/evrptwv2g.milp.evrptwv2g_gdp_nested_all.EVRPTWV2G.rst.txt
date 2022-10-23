@@ -1,6 +1,0 @@
-evrptwv2g.milp.evrptwv2g\_gdp\_nested\_all.EVRPTWV2G
-====================================================
-
-.. currentmodule:: evrptwv2g.milp.evrptwv2g_gdp_nested_all
-
-.. autoclass:: EVRPTWV2G

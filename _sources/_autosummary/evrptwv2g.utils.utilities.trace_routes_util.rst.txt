@@ -1,6 +1,0 @@
-evrptwv2g.utils.utilities.trace\_routes\_util
-=============================================
-
-.. currentmodule:: evrptwv2g.utils.utilities
-
-.. autofunction:: trace_routes_util

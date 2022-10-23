@@ -1,6 +1,0 @@
-evrptwv2g.model\_compare.save\_solution
-=======================================
-
-.. currentmodule:: evrptwv2g.model_compare
-
-.. autofunction:: save_solution

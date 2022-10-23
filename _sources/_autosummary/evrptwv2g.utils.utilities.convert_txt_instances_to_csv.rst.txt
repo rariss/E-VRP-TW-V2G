@@ -1,6 +1,0 @@
-evrptwv2g.utils.utilities.convert\_txt\_instances\_to\_csv
-==========================================================
-
-.. currentmodule:: evrptwv2g.utils.utilities
-
-.. autofunction:: convert_txt_instances_to_csv

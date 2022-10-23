@@ -1,6 +1,0 @@
-evrptwv2g.utils.graph.draw\_graph
-=================================
-
-.. currentmodule:: evrptwv2g.utils.graph
-
-.. autofunction:: draw_graph

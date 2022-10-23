@@ -1,6 +1,0 @@
-evrptwv2g.utils.plot.plot\_interactive\_graph
-=============================================
-
-.. currentmodule:: evrptwv2g.utils.plot
-
-.. autofunction:: plot_interactive_graph

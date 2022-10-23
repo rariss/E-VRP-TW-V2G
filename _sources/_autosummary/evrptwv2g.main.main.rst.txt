@@ -1,6 +1,0 @@
-evrptwv2g.main.main
-===================
-
-.. currentmodule:: evrptwv2g.main
-
-.. autofunction:: main

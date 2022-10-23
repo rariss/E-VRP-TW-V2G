@@ -1,6 +1,0 @@
-evrptwv2g.utils.utilities.calculate\_distance\_matrix
-=====================================================
-
-.. currentmodule:: evrptwv2g.utils.utilities
-
-.. autofunction:: calculate_distance_matrix

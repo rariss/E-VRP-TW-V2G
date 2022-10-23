@@ -1,6 +1,0 @@
-evrptwv2g.utils.utilities.create\_flat\_optimal\_edges
-======================================================
-
-.. currentmodule:: evrptwv2g.utils.utilities
-
-.. autofunction:: create_flat_optimal_edges

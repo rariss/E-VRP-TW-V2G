@@ -1,6 +1,0 @@
-evrptwv2g.utils.utilities.create\_plotting\_edges
-=================================================
-
-.. currentmodule:: evrptwv2g.utils.utilities
-
-.. autofunction:: create_plotting_edges

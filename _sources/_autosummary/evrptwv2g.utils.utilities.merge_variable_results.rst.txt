@@ -1,6 +1,0 @@
-evrptwv2g.utils.utilities.merge\_variable\_results
-==================================================
-
-.. currentmodule:: evrptwv2g.utils.utilities
-
-.. autofunction:: merge_variable_results

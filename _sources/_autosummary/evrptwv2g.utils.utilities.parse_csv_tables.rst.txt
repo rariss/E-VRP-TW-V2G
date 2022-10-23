@@ -1,6 +1,0 @@
-evrptwv2g.utils.utilities.parse\_csv\_tables
-============================================
-
-.. currentmodule:: evrptwv2g.utils.utilities
-
-.. autofunction:: parse_csv_tables

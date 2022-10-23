@@ -1,6 +1,0 @@
-evrptwv2g.milp.evrptwv2g\_base.constraint\_energy\_ev\_limit\_lb\_splitxp
-=========================================================================
-
-.. currentmodule:: evrptwv2g.milp.evrptwv2g_base
-
-.. autofunction:: constraint_energy_ev_limit_lb_splitxp

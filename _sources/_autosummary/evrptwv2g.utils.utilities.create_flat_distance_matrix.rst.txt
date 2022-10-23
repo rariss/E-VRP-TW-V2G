@@ -1,6 +1,0 @@
-evrptwv2g.utils.utilities.create\_flat\_distance\_matrix
-========================================================
-
-.. currentmodule:: evrptwv2g.utils.utilities
-
-.. autofunction:: create_flat_distance_matrix

@@ -1,6 +1,0 @@
-evrptwv2g.utils.utilities.generate\_index\_mapping
-==================================================
-
-.. currentmodule:: evrptwv2g.utils.utilities
-
-.. autofunction:: generate_index_mapping

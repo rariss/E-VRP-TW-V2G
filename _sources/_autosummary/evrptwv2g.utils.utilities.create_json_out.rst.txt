@@ -1,6 +1,0 @@
-evrptwv2g.utils.utilities.create\_json\_out
-===========================================
-
-.. currentmodule:: evrptwv2g.utils.utilities
-
-.. autofunction:: create_json_out
