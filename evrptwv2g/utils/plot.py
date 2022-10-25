@@ -151,7 +151,7 @@ def plot_evrptwv2g(m: 'obj', **kwargs):
     # Plot graph
     # add basemap
     if kwargs.get('add_basemap', False):
-        zoom_frac = [height_ratios[0]*0.01, 0.01]  # x, y
+        zoom_frac = [0.04, 0.01]  # x, y
         min_lon, min_lat = m.data['V_'][['d_x', 'd_y']].min()
         max_lon, max_lat = m.data['V_'][['d_x', 'd_y']].max()
         llcrnrlon = min_lon * (1 - np.sign(min_lon) * zoom_frac[0])
@@ -171,11 +171,11 @@ def plot_evrptwv2g(m: 'obj', **kwargs):
         basemap.drawcoastlines(linewidth=0.25, color="k", ax=axs_graph)
         basemap.drawcountries(linewidth=0.25, linestyle='solid', color='k', ax=axs_graph)
         basemap.drawstates(linewidth=0.25, linestyle='solid', color='k', ax=axs_graph)
-        counties = basemap.drawcounties(linewidth=0.25, linestyle='solid', color='k', ax=axs_graph, zorder=0)  # facecolor=(0.3, 0.3, 0.3, 0.2),
-        counties.set_label('_nolegend_')
+        # counties = basemap.drawcounties(linewidth=0.25, linestyle='solid', color='k', ax=axs_graph, zorder=0)  # facecolor=(0.3, 0.3, 0.3, 0.2),
+        # counties.set_label('_nolegend_')
         basemap.drawparallels(np.arange(np.floor(llcrnrlat), np.ceil(urcrnrlat), 1), labels=[1, 0, 1, 0], linewidth=0, ax=axs_graph)
         basemap.drawmeridians(np.arange(np.floor(llcrnrlon), np.ceil(urcrnrlon), 2), labels=[1, 0, 1, 0], linewidth=0, ax=axs_graph)
-        basemap.drawmapscale(urcrnrlon * (1 - np.sign(max_lon) * zoom_frac[0]/10), llcrnrlat, max_lon, llcrnrlat, length=100, units='km', ax=axs_graph)
+        basemap.drawmapscale(urcrnrlon * (1 - np.sign(max_lon) * zoom_frac[0]/2), llcrnrlat, max_lon, llcrnrlat, length=100, units='km', ax=axs_graph)
     else:
         basemap = lambda d_x, d_y: (d_x, d_y)
 
