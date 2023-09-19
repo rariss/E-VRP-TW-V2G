@@ -141,6 +141,11 @@ def constraint_time_xkappa_ub(m, i, j, t):
 #     return m.xp[i, t] == m.xc[i, t] - m.xg[i, t]
 
 
+def constraint_no_discharge_splitxp(m, i, t):
+    """Ensures no discharging."""
+    return m.xg[i, t] <= m.ME * (1 - m.xkappa[i, t])
+
+
 def constraint_energy_station_splitxp(m, i, j):  # TODO: Check if number of xkappa variables can be reduced for same energy / depot periods
     """Energy transition for each EV while at an intermediate charging station node i and traveling across edge (i, j)"""
     if i != j:
@@ -447,6 +452,8 @@ class EVRPTWV2G:
                     self.m.constraint_inverse_energy_peak = Constraint(self.m.S, self.m.T, rule=constraint_inverse_energy_peak_splitxp)
                 else:
                     self.m.constraint_energy_peak = Constraint(self.m.S, self.m.T, rule=constraint_energy_peak_splitxp)
+            if 'nodischarge' in self.problem_types:
+                self.m.constraint_no_discharge_splitxp = Constraint(self.m.S_, self.m.T, rule=constraint_no_discharge_splitxp)
             if 'noexport' in self.problem_types:
                 self.m.constraint_no_export = Constraint(self.m.S, self.m.T, rule=constraint_no_export_splitxp)
         else:
