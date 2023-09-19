@@ -45,6 +45,11 @@ def constraint_max_vehicles(m, i):
     return sum(m.xgamma[i, j] for j in m.V1_ if i != j) <= m.N
 
 
+def constraint_fixed_vehicles(m, i):
+    """Requires exactly N vehicle assignments"""
+    return sum(m.xgamma[i, j] for j in m.V1_ if i != j) == m.N
+
+
 def constraint_station_symmetry(m, i):
     """Orders the stations with more than one instance"""
     duplicate_number = eval(i.split('_')[-1])
@@ -234,9 +239,19 @@ def constraint_energy_peak_splitxp(m, s, t):
     return m.G[s, t] + sum(m.xc[i, t] - m.xg[i, t] for i in m.Smap[s]) <= m.xd[s]
 
 
+def constraint_inverse_energy_peak_splitxp(m, s, t):
+    """Inverts peak electric demand for each physical station s(i) ∈ S"""
+    return m.G[s, t] - sum(m.xc[i, t] - m.xg[i, t] for i in m.Smap[s]) <= m.xd[s]
+
+
 def constraint_energy_peak(m, s, t):
     """Peak electric demand for each physical station s(i) ∈ S"""
     return m.G[s, t] + sum(m.xp[i, t] for i in m.Smap[s]) <= m.xd[s]
+
+
+def constraint_inverse_energy_peak(m, s, t):
+    """Inverts peak electric demand for each physical station s(i) ∈ S"""
+    return m.G[s, t] - sum(m.xp[i, t] for i in m.Smap[s]) <= m.xd[s]
 
 
 def constraint_no_export_splitxp(m, s, t):
@@ -274,18 +289,16 @@ def constraint_payload_limit(m, i):
         return m.xq[i] <= m.QMAX  # xq is NonNegative
 
 
-
-
 class EVRPTWV2G:
     """
     Implementation of E-VRP-TW-V2G
-    Authors: Rami Ariss and Leandre Berwa
+    Authors: Rami Ariss
     """
 
     def __init__(self, problem_type: str, dist_type: str='scipy', save_dist_matrix: bool=False):
         """
-        :param problem_type: Objective options include: {Schneider} OR {OpEx, CapEx, Cycle, EA, DCM, Delivery}
-         Constraint options include: {Start=End, FullStart=End, NoXkappaBounds, NoMinVehicles, MaxVehicles, NoSymmetry, NoXd, SplitXp, StationaryEVs, NoExport, NoG}
+        :param problem_type: Objective options include: {Schneider} OR {OpEx, CapEx, Cycle, EA, DCM, Delivery, InverseEA, InverseDCM}
+         Constraint options include: {Start=End, FullStart=End, NoXkappaBounds, NoMinVehicles, MaxVehicles, FixedVehicles, NoSymmetry, NoXd, SplitXp, StationaryEVs, NoExport, NoG}
         """
         self.problem_type = problem_type
         self.problem_types = self.problem_type.lower().split()
@@ -390,6 +403,9 @@ class EVRPTWV2G:
         if 'maxvehicles' in self.problem_types:
             self.m.constraint_max_vehicles = Constraint(self.m.start_node, rule=constraint_max_vehicles)
 
+        if 'fixedvehicles' in self.problem_types:
+            self.m.constraint_fixed_vehicles = Constraint(self.m.start_node, rule=constraint_fixed_vehicles)
+
         if 'nosymmetry' not in self.problem_types:
             self.m.constraint_station_symmetry = Constraint(self.m.S_, rule=constraint_station_symmetry)
 
@@ -427,7 +443,10 @@ class EVRPTWV2G:
             self.m.constraint_energy_station_limit_ub = Constraint(self.m.S_, self.m.T, rule=constraint_energy_station_limit_ub_splitxp)
             self.m.constraint_energy_soe_station = Constraint(self.m.S_, self.m.T, rule=constraint_energy_soe_station_splitxp)
             if 'noxd' not in self.problem_types:
-                self.m.constraint_energy_peak = Constraint(self.m.S, self.m.T, rule=constraint_energy_peak_splitxp)
+                if 'inversedcm' in self.problem_types:
+                    self.m.constraint_inverse_energy_peak = Constraint(self.m.S, self.m.T, rule=constraint_inverse_energy_peak_splitxp)
+                else:
+                    self.m.constraint_energy_peak = Constraint(self.m.S, self.m.T, rule=constraint_energy_peak_splitxp)
             if 'noexport' in self.problem_types:
                 self.m.constraint_no_export = Constraint(self.m.S, self.m.T, rule=constraint_no_export_splitxp)
         else:
@@ -438,7 +457,10 @@ class EVRPTWV2G:
             self.m.constraint_energy_station_limit_ub = Constraint(self.m.S_, self.m.T, rule=constraint_energy_station_limit_ub)
             self.m.constraint_energy_soe_station = Constraint(self.m.S_, self.m.T, rule=constraint_energy_soe_station)
             if 'noxd' not in self.problem_types:
-                self.m.constraint_energy_peak = Constraint(self.m.S, self.m.T, rule=constraint_energy_peak)
+                if 'inversedcm' in self.problem_types:
+                    self.m.constraint_inverse_energy_peak = Constraint(self.m.S, self.m.T, rule=constraint_inverse_energy_peak)
+                else:
+                    self.m.constraint_energy_peak = Constraint(self.m.S, self.m.T, rule=constraint_energy_peak)
             if 'noexport' in self.problem_types:
                 self.m.constraint_no_export = Constraint(self.m.S, self.m.T, rule=constraint_no_export)
 
@@ -486,10 +508,12 @@ class EVRPTWV2G:
                 obj_result += self.cycle_cost(m)
             if 'ea' in self.problem_types:
                 obj_result -= self.R_energy_arbitrage_revenue(m)
-            if 'dcm' in self.problem_types:
+            if ('dcm' in self.problem_types) or ('inversedcm' in self.problem_types):
                 obj_result -= self.R_peak_shaving_revenue(m)
             if 'delivery' in self.problem_types:
                 obj_result -= self.R_delivery_revenue(m)
+            if 'inverseea':
+                obj_result += self.R_energy_arbitrage_revenue(m)
 
         return obj_result
 
@@ -662,7 +686,7 @@ class EVRPTWV2G:
         self.model_build_end_time = datetime.datetime.now()
 
     # For Gurobi solver options, see: https://www.gurobi.com/documentation/9.5/refman/parameters.html
-    def make_solver(self, solve_options={'TimeLimit': 60 * 180}):  #'MIPGap': 1e-2, 'MIPFocus': 3, 'Cuts': 3
+    def make_solver(self, solve_options={'TimeLimit': 60 * 1}):  #'MIPGap': 1e-2, 'MIPFocus': 3, 'Cuts': 3
         # Specify solver
         self.opt = SolverFactory(SOLVER_TYPE, io_format='python')
 
