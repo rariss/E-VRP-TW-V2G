@@ -143,7 +143,7 @@ def constraint_time_xkappa_ub(m, i, j, t):
 
 def constraint_energy_zero_xg_splitxp(m, i, t):
     """Ensures no discharging."""
-    return m.xg[i, t] <= m.ME * (1 - m.xkappa[i, t])
+    return m.xg[i, t] == 0
 
 
 def constraint_energy_station_splitxp(m, i, j):  # TODO: Check if number of xkappa variables can be reduced for same energy / depot periods
@@ -151,6 +151,24 @@ def constraint_energy_station_splitxp(m, i, j):  # TODO: Check if number of xkap
     if i != j:
         return m.xa[j] <= m.xa[i] + m.t_H * m.t_S * sum(m.eff * m.xc[i, t] - m.xg[i, t] / m.eff for t in m.T) - \
                (m.r * m.d[i, j]) * m.xgamma[i, j] + m.ME * (1 - m.xgamma[i, j])
+    else:
+        return Constraint.Skip
+
+
+def constraint_energy_station_exact_splitxp(m, i, j):  # TODO: Check if number of xkappa variables can be reduced for same energy / depot periods
+    """Cap for exact energy transition for each EV while at an intermediate charging station node i and traveling across edge (i, j)"""
+    if i != j:
+        return m.xa[j] >= m.xa[i] + m.t_H * m.t_S * sum(m.eff * m.xc[i, t] - m.xg[i, t] / m.eff for t in m.T) - \
+               (m.r * m.d[i, j]) * m.xgamma[i, j] - m.ME * (1 - m.xgamma[i, j])
+    else:
+        return Constraint.Skip
+
+
+def constraint_energy_station_exact(m, i, j):  # TODO: Check if number of xkappa variables can be reduced for same energy / depot periods
+    """Cap for exact energy transition for each EV while at an intermediate charging station node i and traveling across edge (i, j)"""
+    if i != j:
+        return m.xa[j] >= m.xa[i] + m.t_H * m.t_S * sum(m.xp[i, t] for t in m.T) - \
+               (m.r * m.d[i, j]) * m.xgamma[i, j] - m.ME * (1 - m.xgamma[i, j])
     else:
         return Constraint.Skip
 
@@ -168,6 +186,14 @@ def constraint_energy_customer(m, i, j):  # TODO: Can we drop this constraint fo
     """Energy transition for each EV while at customer node i and traveling across edge (i, j)"""
     if i != j:
         return m.xa[j] <= m.xa[i] - (m.r * m.d[i, j]) * m.xgamma[i, j] + m.ME * (1 - m.xgamma[i, j])
+    else:
+        return Constraint.Skip
+
+
+def constraint_energy_customer_exact(m, i, j):  # TODO: Can we drop this constraint for the start_node?
+    """Energy transition for each EV while at customer node i and traveling across edge (i, j)"""
+    if i != j:
+        return m.xa[j] >= m.xa[i] - (m.r * m.d[i, j]) * m.xgamma[i, j] - m.ME * (1 - m.xgamma[i, j])
     else:
         return Constraint.Skip
 
@@ -244,9 +270,19 @@ def constraint_energy_peak_splitxp(m, s, t):
     return m.G[s, t] + sum(m.xc[i, t] - m.xg[i, t] for i in m.Smap[s]) <= m.xd[s]
 
 
-def constraint_inverse_energy_peak_splitxp(m, s, t):
+def constraint_inverse_energy_peak_xomega(m, s):
+    """xomega sums to 1 across time for each physical station s ∈ S"""
+    return sum(m.xomega[s, t] for t in m.T) == 1
+
+
+def constraint_inverse_energy_peak_splitxp_ub(m, s, t):
     """Inverts peak electric demand for each physical station s(i) ∈ S"""
-    return m.G[s, t] - sum(m.xc[i, t] - m.xg[i, t] for i in m.Smap[s]) <= m.xd[s]
+    return m.G[s, t] + sum(m.xc[i, t] - m.xg[i, t] for i in m.Smap[s]) + m.MG * (1 - m.xomega[s, t]) >= m.xd[s]
+
+
+def constraint_inverse_energy_peak_splitxp_lb(m, s, t):
+    """Inverts peak electric demand for each physical station s(i) ∈ S"""
+    return m.G[s, t] + sum(m.xc[i, t] - m.xg[i, t] for i in m.Smap[s]) - m.MG * m.xomega[s, t] <= m.xd[s]
 
 
 def constraint_energy_peak(m, s, t):
@@ -254,9 +290,14 @@ def constraint_energy_peak(m, s, t):
     return m.G[s, t] + sum(m.xp[i, t] for i in m.Smap[s]) <= m.xd[s]
 
 
-def constraint_inverse_energy_peak(m, s, t):
+def constraint_inverse_energy_peak_ub(m, s, t):
     """Inverts peak electric demand for each physical station s(i) ∈ S"""
-    return m.G[s, t] - sum(m.xp[i, t] for i in m.Smap[s]) <= m.xd[s]
+    return m.G[s, t] + sum(m.xp[i, t] for i in m.Smap[s]) + m.MG * (1 - m.xomega[s, t]) >= m.xd[s]
+
+
+def constraint_inverse_energy_peak_lb(m, s, t):
+    """Inverts peak electric demand for each physical station s(i) ∈ S"""
+    return m.G[s, t] + sum(m.xp[i, t] for i in m.Smap[s]) - m.MG * m.xomega[s, t] <= m.xd[s]
 
 
 def constraint_no_export_splitxp(m, s, t):
@@ -327,6 +368,8 @@ class EVRPTWV2G:
         self.m.MQ = Param(doc='Large value for big M payload constraints')
         self.m.MT = Param(doc='Large value for big M service time constraints')
         self.m.ME = Param(doc='Large value for big M energy constraints')
+        if 'inversedcm' in self.problem_types:
+            self.m.MG = Param(doc='Large value for big M demand constraints')
         self.m.cc = Param(mutable=True, doc='Amortized capital cost for purchasing a vehicle')
         self.m.co = Param(mutable=True, doc='Amortized operating cost for delivery (wages)')
         self.m.cm = Param(mutable=True, doc='Amortized operating cost for maintenance')
@@ -381,6 +424,8 @@ class EVRPTWV2G:
         # Defining variables
         self.m.xgamma = Var(self.m.E, within=Boolean, initialize=0)  # Route decision of each edge for each EV
         self.m.xkappa = Var(self.m.S_, self.m.T, within=Boolean, initialize=0)
+        if 'inversedcm' in self.problem_types:
+            self.m.xomega = Var(self.m.S, self.m.T, within=Boolean, initialize=0)
         self.m.xw = Var(self.m.V01_, within=NonNegativeReals)  # Arrival time for each vehicle at each node
         self.m.xq = Var(self.m.V01_, within=NonNegativeReals)  # Payload of each vehicle before visiting each node
         self.m.xa = Var(self.m.V01_, within=NonNegativeReals, initialize=self.m.EMAX)  # Energy of each EV arriving at each node
@@ -442,6 +487,8 @@ class EVRPTWV2G:
         if 'splitxp' in self.problem_types:
             # self.m.constraint_xp = Constraint(self.m.S_, self.m.T, rule=constraint_xp)
             self.m.constraint_energy_station = Constraint(self.m.S_, self.m.V1_, rule=constraint_energy_station_splitxp)
+            if 'exactsoe' in self.problem_types:
+                self.m.constraint_energy_station_exact = Constraint(self.m.S_, self.m.V1_, rule=constraint_energy_station_exact_splitxp)
             self.m.constraint_energy_ev_limit_lb = Constraint(self.m.S_, self.m.T, rule=constraint_energy_ev_limit_lb_splitxp)
             self.m.constraint_energy_ev_limit_ub = Constraint(self.m.S_, self.m.T, rule=constraint_energy_ev_limit_ub_splitxp)
             self.m.constraint_energy_station_limit_lb = Constraint(self.m.S_, self.m.T, rule=constraint_energy_station_limit_lb_splitxp)
@@ -449,7 +496,9 @@ class EVRPTWV2G:
             self.m.constraint_energy_soe_station = Constraint(self.m.S_, self.m.T, rule=constraint_energy_soe_station_splitxp)
             if 'noxd' not in self.problem_types:
                 if 'inversedcm' in self.problem_types:
-                    self.m.constraint_inverse_energy_peak = Constraint(self.m.S, self.m.T, rule=constraint_inverse_energy_peak_splitxp)
+                    self.m.constraint_inverse_energy_peak_xomega = Constraint(self.m.S, rule=constraint_inverse_energy_peak_xomega)
+                    self.m.constraint_inverse_energy_peak_ub = Constraint(self.m.S, self.m.T, rule=constraint_inverse_energy_peak_splitxp_ub)
+                    self.m.constraint_inverse_energy_peak_lb = Constraint(self.m.S, self.m.T, rule=constraint_inverse_energy_peak_splitxp_lb)
                 else:
                     self.m.constraint_energy_peak = Constraint(self.m.S, self.m.T, rule=constraint_energy_peak_splitxp)
             if 'zeroxg' in self.problem_types:
@@ -458,6 +507,8 @@ class EVRPTWV2G:
                 self.m.constraint_no_export = Constraint(self.m.S, self.m.T, rule=constraint_no_export_splitxp)
         else:
             self.m.constraint_energy_station = Constraint(self.m.S_, self.m.V1_, rule=constraint_energy_station)
+            if 'exactsoe' in self.problem_types:
+                self.m.constraint_energy_station_exact = Constraint(self.m.S_, self.m.V1_, rule=constraint_energy_station_exact)
             self.m.constraint_energy_ev_limit_lb = Constraint(self.m.S_, self.m.T, rule=constraint_energy_ev_limit_lb)
             self.m.constraint_energy_ev_limit_ub = Constraint(self.m.S_, self.m.T, rule=constraint_energy_ev_limit_ub)
             self.m.constraint_energy_station_limit_lb = Constraint(self.m.S_, self.m.T, rule=constraint_energy_station_limit_lb)
@@ -465,13 +516,17 @@ class EVRPTWV2G:
             self.m.constraint_energy_soe_station = Constraint(self.m.S_, self.m.T, rule=constraint_energy_soe_station)
             if 'noxd' not in self.problem_types:
                 if 'inversedcm' in self.problem_types:
-                    self.m.constraint_inverse_energy_peak = Constraint(self.m.S, self.m.T, rule=constraint_inverse_energy_peak)
+                    self.m.constraint_inverse_energy_peak_xomega = Constraint(self.m.S, rule=constraint_inverse_energy_peak_xomega)
+                    self.m.constraint_inverse_energy_peak_ub = Constraint(self.m.S, self.m.T, rule=constraint_inverse_energy_peak_ub)
+                    self.m.constraint_inverse_energy_peak_lb = Constraint(self.m.S, self.m.T, rule=constraint_inverse_energy_peak_lb)
                 else:
                     self.m.constraint_energy_peak = Constraint(self.m.S, self.m.T, rule=constraint_energy_peak)
             if 'noexport' in self.problem_types:
                 self.m.constraint_no_export = Constraint(self.m.S, self.m.T, rule=constraint_no_export)
 
         self.m.constraint_energy_customer = Constraint(self.m.M | self.m.start_node, self.m.V1_, rule=constraint_energy_customer)
+        if 'exactsoe' in self.problem_types:
+            self.m.constraint_energy_customer_exact = Constraint(self.m.M | self.m.start_node, self.m.V1_,  rule=constraint_energy_customer_exact)
 
         if 'start=end' in self.problem_types:
             self.m.constraint_energy_start_end_soe = Constraint(self.m.start_node, self.m.end_node, rule=constraint_energy_start_end_soe_ij)
@@ -515,12 +570,14 @@ class EVRPTWV2G:
                 obj_result += self.cycle_cost(m)
             if 'ea' in self.problem_types:
                 obj_result -= self.R_energy_arbitrage_revenue(m)
-            if ('dcm' in self.problem_types) or ('inversedcm' in self.problem_types):
+            if 'dcm' in self.problem_types:
                 obj_result -= self.R_peak_shaving_revenue(m)
             if 'delivery' in self.problem_types:
                 obj_result -= self.R_delivery_revenue(m)
             if 'inverseea':
                 obj_result += self.R_energy_arbitrage_revenue(m)
+            if 'inversedcm' in self.problem_types:
+                obj_result += self.R_peak_shaving_revenue(m)
 
         return obj_result
 
@@ -617,8 +674,10 @@ class EVRPTWV2G:
                 'GMAX': self.data['G'].max().to_dict(),
                 'cg': self.data['S']['cg'].to_dict()})
 
-#         'V01_type': self.data['V']['node_type'].to_dict(),
-#         'num_nodes': {None: len(self.data['V'])},
+        if 'inversedcm' in self.problem_types:
+            self.p[None].update({
+                'MG': {None: max(self.p[None]['GMAX'].values()) + self.p[None]['N'][None] * self.p[None]['PMAX'][None]},
+            })
 
     def import_instance(self, instance_filepath: str):
         self.instance_filepath = instance_filepath
@@ -693,7 +752,7 @@ class EVRPTWV2G:
         self.model_build_end_time = datetime.datetime.now()
 
     # For Gurobi solver options, see: https://www.gurobi.com/documentation/9.5/refman/parameters.html
-    def make_solver(self, solve_options={'TimeLimit': 60 * 1}):  #'MIPGap': 1e-2, 'MIPFocus': 3, 'Cuts': 3
+    def make_solver(self, solve_options={'TimeLimit': 60 * 5}):  #'MIPGap': 1e-2, 'MIPFocus': 3, 'Cuts': 3
         # Specify solver
         self.opt = SolverFactory(SOLVER_TYPE, io_format='python')
 
@@ -807,3 +866,22 @@ class EVRPTWV2G:
         xg = self.instance.xg.extract_values()
         self.instance.xp.set_values(
             {k: xc[k]-xg[k] for k in self.instance.xp.extract_values().keys()})
+
+    def set_xd(self):
+        """Set's the current instance's xd values to max of G + (xc - xg)."""
+        # Get the pre-fleet load
+        G = pd.Series(self.instance.G.extract_values())
+        G = G.reset_index().pivot(index='level_1', columns='level_0', values=0)
+
+        # Get the fleet load
+        xp = self.instance.xp.extract_values()
+
+        # Calculate the post-fleet load
+        G_xd = G.copy()
+        for s in G:
+            for t in G[s].index:
+                G_xd.loc[t, s] = G[s][t] + sum(xp[(i, t)] for i in self.instance.Smap[s])
+
+        # Set xd to the max of the pre-fleet and post-fleet load
+        xd = G_xd.max()
+        self.instance.xd.set_values({k: xd[k] for k in self.instance.xd.extract_values().keys()})
