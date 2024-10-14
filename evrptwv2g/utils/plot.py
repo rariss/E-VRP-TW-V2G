@@ -140,7 +140,7 @@ def plot_evrptwv2g(m: 'obj', **kwargs):
     title += 'Dist.: {:.2f}, CapEx: {:.2f}, OpEx: {:.2f}, Delivery: {:.2f}, EA: {:.2f}, DCM: {:.2f}, Cycle: {:.2f}'.format(
         obj_breakdown['total_distance'],
         obj_breakdown['C_fleet_capital_cost'],
-        obj_breakdown['O_delivery_operating_cost'],
+        obj_breakdown['O_delivery_operating_cost'] + obj_breakdown['O_maintenance_operating_cost'],
         obj_breakdown['R_delivery_revenue'],
         obj_breakdown['R_energy_arbitrage_revenue'],
         obj_breakdown['R_peak_shaving_revenue'],

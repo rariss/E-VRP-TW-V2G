@@ -2,6 +2,7 @@ import logging
 import datetime
 import json
 import pathlib
+import copy
 import googlemaps
 import math
 import requests
@@ -540,12 +541,20 @@ def convert_txt_instances_to_csv(instance, folder=f'{LOCAL_CONFIG.DIR_INSTANCES}
             df.to_csv(f, index=False, sep=',')
             f.write(','*csv_rows+'\n')
 
-def generate_stats(m):
+
+def generate_stats(m_orig):
     """
     Calculates output statistics
-    :param m:
+    :param m_orig:
     :return:
     """
+    m = copy.deepcopy(m_orig)
+    obj = m.instance.obj.expr()  # original objective
+
+    # Recalculate xd for inverse DCM
+    if 'inversedcm' in m.problem_types:
+        m.set_xd()  # recalculate xd for actual net demand
+
     # INPUTS
     inputs = {
         'MQ_payload_constraints': m.instance.MQ.value,
@@ -589,7 +598,7 @@ def generate_stats(m):
     # model results
     results = {
         # RESULTS
-        'obj': m.instance.obj.expr(),
+        'obj': obj,
         'gap': calculate_gap(m),
         'upper_bound': m.results['Problem'][0]['Upper bound'],
         'lower_bound': m.results['Problem'][0]['Lower bound'],
